@@ -60,6 +60,18 @@ final class Product extends Model
         return $this->belongsTo(TaxRate::class);
     }
 
+    /** @return HasMany<ProductBranchStock, $this> */
+    public function branchStock(): HasMany
+    {
+        return $this->hasMany(ProductBranchStock::class);
+    }
+
+    /** @return HasMany<StockMovement, $this> */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
     /** @return HasMany<ProductBranchPrice, $this> */
     public function branchPrices(): HasMany
     {

@@ -53,6 +53,11 @@ final class PermissionCatalog
                 'suppliers.archive' => 'Archive suppliers',
                 'products.import' => 'Import products from Excel',
                 'products.import-history' => 'View product import history',
+                'inventory.view' => 'View branch inventory',
+                'inventory.movements.view' => 'View stock movement ledger',
+                'inventory.intake' => 'Record stock intake',
+                'inventory.transfer' => 'Transfer stock between branches',
+                'inventory.adjust' => 'Adjust stock with a reason',
             ],
             'security' => [
                 'security-events.view' => 'View security events',

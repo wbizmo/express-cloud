@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\Catalog\ProductController;
 use App\Http\Controllers\Admin\Catalog\SupplierController;
 use App\Http\Controllers\Admin\Catalog\TaxRateController;
 use App\Http\Controllers\Admin\Imports\ProductImportController;
+use App\Http\Controllers\Admin\Inventory\InventoryController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\StaffController;
@@ -163,6 +164,28 @@ Route::middleware([
         )
             ->middleware('permission:products.import-history')
             ->name('products.errors');
+    });
+
+    Route::prefix('inventory')->name('inventory.')->group(function (): void {
+        Route::get('/', [InventoryController::class, 'index'])
+            ->middleware('permission:inventory.view')
+            ->name('index');
+
+        Route::get('/movements', [InventoryController::class, 'movements'])
+            ->middleware('permission:inventory.movements.view')
+            ->name('movements');
+
+        Route::post('/intake', [InventoryController::class, 'intake'])
+            ->middleware('permission:inventory.intake')
+            ->name('intake');
+
+        Route::post('/transfer', [InventoryController::class, 'transfer'])
+            ->middleware('permission:inventory.transfer')
+            ->name('transfer');
+
+        Route::post('/adjust', [InventoryController::class, 'adjust'])
+            ->middleware('permission:inventory.adjust')
+            ->name('adjust');
     });
 
 });
