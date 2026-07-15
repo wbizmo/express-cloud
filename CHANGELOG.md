@@ -118,3 +118,10 @@
 - Added server-side PDF generation and local embedded verification QR codes.
 - Added product label printing.
 - Added the unified reports hub and CSV exports.
+
+### Sprint 14
+
+- Added system-wide and product-specific activity views.
+- Added live session inspection and force termination.
+- Added structured production JSON error responses.
+- Added targeted regression tests for known historical defects.

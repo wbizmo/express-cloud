@@ -343,3 +343,12 @@ verification QR codes, product labels, a unified reports hub, and CSV exports.
 See:
 
     docs/features/documents-and-reporting-exports.md
+
+## Activity and production hardening
+
+Sprint 14 adds product history, the system activity log, live session
+management, structured production errors, and targeted regression protection.
+
+See:
+
+    docs/features/activity-sessions-and-error-hardening.md
