@@ -334,3 +334,12 @@ Express Cloud is not an accounting system.
 See:
 
     docs/features/alerts-dashboard-and-digests.md
+
+## Documents and reporting exports
+
+Sprint 13 adds thermal receipts, A4 invoices and quotes, PDF downloads, local
+verification QR codes, product labels, a unified reports hub, and CSV exports.
+
+See:
+
+    docs/features/documents-and-reporting-exports.md

@@ -111,3 +111,10 @@
 - Added idempotent end-of-day digest compilation and email delivery.
 - Added staff-performance ranking and operational reporting.
 - Added a secret-path HTTP cron endpoint for shared-hosting deployment.
+
+### Sprint 13
+
+- Added isolated thermal and A4 sale documents.
+- Added server-side PDF generation and local embedded verification QR codes.
+- Added product label printing.
+- Added the unified reports hub and CSV exports.
