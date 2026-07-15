@@ -189,3 +189,42 @@ key. They may change only their profile picture.
 See:
 
     docs/features/authentication-and-profiles.md
+
+## Organisation and authorization
+
+Sprint 4 adds company, branch, staff, role, permission, session-control, and
+audit-log foundations.
+
+Accounts may be granted all-branch access or explicitly assigned branches.
+Custom roles use stable permission slugs, and every sensitive administrative
+change is designed to produce a safe audit record.
+
+See:
+
+    docs/features/organisation-roles-and-branches.md
+
+## Organisation and authorization
+
+Sprint 4 adds company, branch, staff, role, permission, session-control, and
+audit-log foundations.
+
+Accounts may be granted all-branch access or explicitly assigned branches.
+Custom roles use stable permission slugs, and every sensitive administrative
+change is designed to produce a safe audit record.
+
+See:
+
+    docs/features/organisation-roles-and-branches.md
+
+## Organisation and authorization
+
+Sprint 4 adds company, branch, staff, role, permission, session-control, and
+audit-log foundations.
+
+Accounts may be granted all-branch access or explicitly assigned branches.
+Custom roles use stable permission slugs, and every sensitive administrative
+change is designed to produce a safe audit record.
+
+See:
+
+    docs/features/organisation-roles-and-branches.md

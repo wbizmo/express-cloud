@@ -29,3 +29,24 @@
 - Added account-session and security-event models.
 - Added read-only profiles with profile-picture management.
 - Activated secure logout and session inactivity controls.
+
+### Sprint 4
+
+- Added company, branch, role, permission, and audit-log foundations.
+- Added granular permission middleware and branch-scoped account access.
+- Added staff administration with role and branch assignment.
+- Added session revocation and scalable active-session administration.
+
+### Sprint 4
+
+- Added company, branch, role, permission, and audit-log foundations.
+- Added granular permission middleware and branch-scoped account access.
+- Added staff administration with role and branch assignment.
+- Added session revocation and scalable active-session administration.
+
+### Sprint 4
+
+- Added company, branch, role, permission, and audit-log foundations.
+- Added granular permission middleware and branch-scoped account access.
+- Added staff administration with role and branch assignment.
+- Added session revocation and scalable active-session administration.
