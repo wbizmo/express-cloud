@@ -50,3 +50,11 @@
 - Added granular permission middleware and branch-scoped account access.
 - Added staff administration with role and branch assignment.
 - Added session revocation and scalable active-session administration.
+
+### Sprint 5
+
+- Added product categories, brands, tax rates, suppliers, and products.
+- Added tracked and untracked product behaviour.
+- Added default and branch-specific pricing.
+- Added encrypted supplier contact and tax fields.
+- Added catalogue administration interfaces and permissions.

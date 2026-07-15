@@ -228,3 +228,15 @@ change is designed to produce a safe audit record.
 See:
 
     docs/features/organisation-roles-and-branches.md
+
+## Catalogue and suppliers
+
+Sprint 5 adds the product catalogue, categories, brands, tax rates,
+suppliers, tracked/untracked item behaviour, default pricing, and optional
+branch price overrides.
+
+Stock changes remain deliberately separate from product creation and editing.
+
+See:
+
+    docs/features/catalog-suppliers-and-pricing.md
