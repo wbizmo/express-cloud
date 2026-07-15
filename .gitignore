@@ -25,3 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+.sprint-logs/
+engineering-audit-report.txt
+express-cloud-sprint-*.sh
+cleanup-sprint-*.sh
