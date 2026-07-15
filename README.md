@@ -286,3 +286,12 @@ Stock intake, transfer, and adjustment are separate from product creation.
 See:
 
     docs/features/inventory-ledger.md
+
+## Procurement and low stock
+
+Sprint 8 adds purchase orders, approved goods receipt, supplier-linked stock
+intake, and automatically maintained low-stock alerts.
+
+See:
+
+    docs/features/procurement-and-low-stock.md

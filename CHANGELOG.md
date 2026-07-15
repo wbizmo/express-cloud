@@ -72,3 +72,10 @@
 - Added append-only stock movement ledger.
 - Added stock intake, transfer, and adjustment workflows.
 - Added milliunit quantity precision and negative-stock protection.
+
+### Sprint 8
+
+- Added purchase orders and supplier-linked goods receipt.
+- Added partial and complete receiving states.
+- Added automatic low-stock alert creation and resolution.
+- Added low-stock reporting.
