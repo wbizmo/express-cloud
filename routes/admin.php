@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\Catalog\ClassificationController;
+use App\Http\Controllers\Admin\Catalog\ProductController;
+use App\Http\Controllers\Admin\Catalog\SupplierController;
+use App\Http\Controllers\Admin\Catalog\TaxRateController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\StaffController;
@@ -21,7 +25,10 @@ Route::middleware([
         ->middleware('permission:branches.create')
         ->name('branches.store');
 
-    Route::patch('/branches/{branch}/deactivate', [BranchController::class, 'deactivate'])
+    Route::patch(
+        '/branches/{branch}/deactivate',
+        [BranchController::class, 'deactivate'],
+    )
         ->middleware('permission:branches.deactivate')
         ->name('branches.deactivate');
 
@@ -33,7 +40,10 @@ Route::middleware([
         ->middleware('permission:staff.create')
         ->name('staff.store');
 
-    Route::patch('/staff/{account}/suspend', [StaffController::class, 'suspend'])
+    Route::patch(
+        '/staff/{account}/suspend',
+        [StaffController::class, 'suspend'],
+    )
         ->middleware('permission:staff.suspend')
         ->name('staff.suspend');
 
@@ -45,11 +55,75 @@ Route::middleware([
         ->middleware('permission:roles.create')
         ->name('roles.store');
 
-    Route::get('/security/sessions', [SessionController::class, 'index'])
+    Route::get(
+        '/security/sessions',
+        [SessionController::class, 'index'],
+    )
         ->middleware('permission:staff.sessions.view')
         ->name('security.sessions.index');
 
-    Route::patch('/security/sessions/{session}/revoke', [SessionController::class, 'revoke'])
+    Route::patch(
+        '/security/sessions/{session}/revoke',
+        [SessionController::class, 'revoke'],
+    )
         ->middleware('permission:staff.sessions.revoke')
         ->name('security.sessions.revoke');
+
+    Route::prefix('catalog')->name('catalog.')->group(function (): void {
+        Route::get('/products', [ProductController::class, 'index'])
+            ->middleware('permission:products.view')
+            ->name('products.index');
+
+        Route::get('/products/create', [ProductController::class, 'create'])
+            ->middleware('permission:products.create')
+            ->name('products.create');
+
+        Route::post('/products', [ProductController::class, 'store'])
+            ->middleware('permission:products.create')
+            ->name('products.store');
+
+        Route::get(
+            '/categories',
+            [ClassificationController::class, 'categories'],
+        )
+            ->middleware('permission:categories.manage')
+            ->name('categories.index');
+
+        Route::post(
+            '/categories',
+            [ClassificationController::class, 'storeCategory'],
+        )
+            ->middleware('permission:categories.manage')
+            ->name('categories.store');
+
+        Route::get(
+            '/brands',
+            [ClassificationController::class, 'brands'],
+        )
+            ->middleware('permission:brands.manage')
+            ->name('brands.index');
+
+        Route::post(
+            '/brands',
+            [ClassificationController::class, 'storeBrand'],
+        )
+            ->middleware('permission:brands.manage')
+            ->name('brands.store');
+
+        Route::get('/tax-rates', [TaxRateController::class, 'index'])
+            ->middleware('permission:tax-rates.manage')
+            ->name('tax-rates.index');
+
+        Route::post('/tax-rates', [TaxRateController::class, 'store'])
+            ->middleware('permission:tax-rates.manage')
+            ->name('tax-rates.store');
+
+        Route::get('/suppliers', [SupplierController::class, 'index'])
+            ->middleware('permission:suppliers.view')
+            ->name('suppliers.index');
+
+        Route::post('/suppliers', [SupplierController::class, 'store'])
+            ->middleware('permission:suppliers.create')
+            ->name('suppliers.store');
+    });
 });
