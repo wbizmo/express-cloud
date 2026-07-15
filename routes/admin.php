@@ -7,8 +7,10 @@ use App\Http\Controllers\Admin\Catalog\ClassificationController;
 use App\Http\Controllers\Admin\Catalog\ProductController;
 use App\Http\Controllers\Admin\Catalog\SupplierController;
 use App\Http\Controllers\Admin\Catalog\TaxRateController;
+use App\Http\Controllers\Admin\Customers\CustomerController;
 use App\Http\Controllers\Admin\Imports\ProductImportController;
 use App\Http\Controllers\Admin\Inventory\InventoryController;
+use App\Http\Controllers\Admin\Payments\PaymentMethodController;
 use App\Http\Controllers\Admin\Procurement\LowStockReportController;
 use App\Http\Controllers\Admin\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Admin\RoleController;
@@ -211,5 +213,37 @@ Route::middleware([
     Route::get('/reports/low-stock', LowStockReportController::class)
         ->middleware('permission:reports.low-stock')
         ->name('reports.low-stock');
+
+    Route::prefix('customers')->name('customers.')->group(function (): void {
+        Route::get('/', [CustomerController::class, 'index'])
+            ->middleware('permission:customers.view')
+            ->name('index');
+
+        Route::get('/search', [CustomerController::class, 'search'])
+            ->middleware('permission:customers.view')
+            ->name('search');
+
+        Route::post('/', [CustomerController::class, 'store'])
+            ->middleware('permission:customers.create')
+            ->name('store');
+    });
+
+    Route::prefix('payment-methods')->name('payment-methods.')->group(function (): void {
+        Route::get('/', [PaymentMethodController::class, 'index'])
+            ->middleware('permission:payment-methods.view')
+            ->name('index');
+
+        Route::post('/', [PaymentMethodController::class, 'store'])
+            ->middleware('permission:payment-methods.manage')
+            ->name('store');
+
+        Route::patch('/{method}/default', [PaymentMethodController::class, 'setDefault'])
+            ->middleware('permission:payment-methods.manage')
+            ->name('default');
+
+        Route::patch('/{method}/toggle', [PaymentMethodController::class, 'toggle'])
+            ->middleware('permission:payment-methods.manage')
+            ->name('toggle');
+    });
 
 });

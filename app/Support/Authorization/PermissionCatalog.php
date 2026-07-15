@@ -63,6 +63,11 @@ final class PermissionCatalog
                 'procurement.approve' => 'Approve purchase orders',
                 'procurement.receive' => 'Receive goods against purchase orders',
                 'reports.low-stock' => 'View low-stock report',
+                'customers.view' => 'View customers',
+                'customers.create' => 'Create customers',
+                'customers.update' => 'Update customers',
+                'payment-methods.view' => 'View payment methods',
+                'payment-methods.manage' => 'Manage payment methods',
             ],
             'security' => [
                 'security-events.view' => 'View security events',
