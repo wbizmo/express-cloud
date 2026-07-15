@@ -13,7 +13,9 @@ final class DesignSystemTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('Express Cloud')
-            ->assertSee('shared administrator and staff login');
+            ->assertSee('Sign in')
+            ->assertSee('Staff member')
+            ->assertSee('Access key');
     }
 
     public function test_local_ui_preview_renders_the_responsive_shell(): void
