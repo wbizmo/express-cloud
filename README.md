@@ -110,3 +110,47 @@ logs, test fixtures, development `.env`, and editor state.
     php artisan test --testsuite=Unit
     npm audit --audit-level=high
     npm run build
+
+## Architecture philosophy
+
+Express Cloud uses a modular Laravel monolith. The architecture prioritizes
+correctness, shared-hosting deployment, low operational overhead, strong
+authorization boundaries, and long-term maintainability.
+
+Business logic belongs in actions, queries, services, policies, and value
+objects rather than controllers or Blade templates.
+
+## Module map
+
+See `docs/architecture/module-map.md`.
+
+## Architecture decisions
+
+Permanent decisions are stored under:
+
+    docs/architecture/decisions/
+
+These records explain the selected approach, alternatives, and consequences.
+
+## Coding standards
+
+See:
+
+    docs/architecture/coding-standards.md
+
+## Git and release workflow
+
+See:
+
+    docs/architecture/git-and-release-workflow.md
+
+## What not to do
+
+- Do not add a second frontend application.
+- Do not introduce microservices without a measured operational need.
+- Do not store money as floating-point values.
+- Do not expose unrestricted business data to Lisa AI.
+- Do not place plaintext credentials in logs or exports.
+- Do not load entire historical tables into browser state.
+- Do not introduce infrastructure dependencies that break shared hosting.
+- Do not ship development scripts or environment files in the customer ZIP.
