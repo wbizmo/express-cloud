@@ -11,12 +11,16 @@ use App\Models\Branch;
 use App\Models\Product;
 use App\Models\ProductBranchStock;
 use App\Models\StockMovement;
+use App\Services\Procurement\LowStockAlertService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final readonly class StockLedger
 {
-    public function __construct(private Quantity $quantity) {}
+    public function __construct(
+        private Quantity $quantity,
+        private LowStockAlertService $alerts,
+    ) {}
 
     public function intake(
         Product $product,
@@ -206,6 +210,8 @@ final readonly class StockLedger
                 'quantity_milliunits' => $newBalance,
                 'last_movement_at' => now(),
             ])->save();
+
+            $this->alerts->refresh($stock);
 
             return StockMovement::query()->create([
                 'product_id' => $product->getKey(),

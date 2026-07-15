@@ -58,6 +58,11 @@ final class PermissionCatalog
                 'inventory.intake' => 'Record stock intake',
                 'inventory.transfer' => 'Transfer stock between branches',
                 'inventory.adjust' => 'Adjust stock with a reason',
+                'procurement.view' => 'View purchase orders',
+                'procurement.create' => 'Create purchase orders',
+                'procurement.approve' => 'Approve purchase orders',
+                'procurement.receive' => 'Receive goods against purchase orders',
+                'reports.low-stock' => 'View low-stock report',
             ],
             'security' => [
                 'security-events.view' => 'View security events',

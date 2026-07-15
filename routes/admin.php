@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\Catalog\SupplierController;
 use App\Http\Controllers\Admin\Catalog\TaxRateController;
 use App\Http\Controllers\Admin\Imports\ProductImportController;
 use App\Http\Controllers\Admin\Inventory\InventoryController;
+use App\Http\Controllers\Admin\Procurement\LowStockReportController;
+use App\Http\Controllers\Admin\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\StaffController;
@@ -187,5 +189,27 @@ Route::middleware([
             ->middleware('permission:inventory.adjust')
             ->name('adjust');
     });
+
+    Route::prefix('procurement')->name('procurement.')->group(function (): void {
+        Route::get('/orders', [PurchaseOrderController::class, 'index'])
+            ->middleware('permission:procurement.view')
+            ->name('orders.index');
+
+        Route::post('/orders', [PurchaseOrderController::class, 'store'])
+            ->middleware('permission:procurement.create')
+            ->name('orders.store');
+
+        Route::patch('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])
+            ->middleware('permission:procurement.approve')
+            ->name('orders.approve');
+
+        Route::post('/orders/{order}/receive', [PurchaseOrderController::class, 'receive'])
+            ->middleware('permission:procurement.receive')
+            ->name('orders.receive');
+    });
+
+    Route::get('/reports/low-stock', LowStockReportController::class)
+        ->middleware('permission:reports.low-stock')
+        ->name('reports.low-stock');
 
 });
