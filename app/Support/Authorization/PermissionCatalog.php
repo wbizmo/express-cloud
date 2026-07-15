@@ -79,6 +79,11 @@ final class PermissionCatalog
                 'supplier-returns.view' => 'View supplier returns',
                 'supplier-returns.create' => 'Create supplier returns',
                 'reports.supplier-balances' => 'View supplier balances',
+                'dashboard.view' => 'View admin dashboard',
+                'alerts.view' => 'View operational alerts',
+                'alerts.manage-recipients' => 'Manage alert recipients',
+                'settings.business.manage' => 'Manage business settings',
+                'reports.staff-performance' => 'View staff performance',
             ],
             'security' => [
                 'security-events.view' => 'View security events',

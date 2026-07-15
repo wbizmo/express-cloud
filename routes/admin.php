@@ -10,6 +10,11 @@ use App\Http\Controllers\Admin\Catalog\TaxRateController;
 use App\Http\Controllers\Admin\Customers\CustomerController;
 use App\Http\Controllers\Admin\Imports\ProductImportController;
 use App\Http\Controllers\Admin\Inventory\InventoryController;
+use App\Http\Controllers\Admin\Operations\AdminDashboardController;
+use App\Http\Controllers\Admin\Operations\AdminNotificationController;
+use App\Http\Controllers\Admin\Operations\AlertRecipientController;
+use App\Http\Controllers\Admin\Operations\BusinessSettingsController;
+use App\Http\Controllers\Admin\Operations\StaffPerformanceController;
 use App\Http\Controllers\Admin\Payments\PaymentMethodController;
 use App\Http\Controllers\Admin\Procurement\LowStockReportController;
 use App\Http\Controllers\Admin\Procurement\PurchaseOrderController;
@@ -312,5 +317,39 @@ Route::middleware([
     Route::get('/reports/supplier-balances', SupplierBalanceReportController::class)
         ->middleware('permission:reports.supplier-balances')
         ->name('reports.supplier-balances');
+
+    Route::get('/dashboard', AdminDashboardController::class)
+        ->middleware('permission:dashboard.view')
+        ->name('dashboard');
+
+    Route::prefix('operations')->name('operations.')->group(function (): void {
+        Route::get('/alert-recipients', [AlertRecipientController::class, 'index'])
+            ->middleware('permission:alerts.manage-recipients')
+            ->name('alert-recipients.index');
+
+        Route::post('/alert-recipients', [AlertRecipientController::class, 'store'])
+            ->middleware('permission:alerts.manage-recipients')
+            ->name('alert-recipients.store');
+
+        Route::patch('/alert-recipients/{recipient}/toggle', [AlertRecipientController::class, 'toggle'])
+            ->middleware('permission:alerts.manage-recipients')
+            ->name('alert-recipients.toggle');
+
+        Route::get('/settings', [BusinessSettingsController::class, 'edit'])
+            ->middleware('permission:settings.business.manage')
+            ->name('settings.edit');
+
+        Route::patch('/settings', [BusinessSettingsController::class, 'update'])
+            ->middleware('permission:settings.business.manage')
+            ->name('settings.update');
+
+        Route::patch('/notifications/{notification}/read', [AdminNotificationController::class, 'markRead'])
+            ->middleware('permission:alerts.view')
+            ->name('notifications.read');
+    });
+
+    Route::get('/reports/staff-performance', StaffPerformanceController::class)
+        ->middleware('permission:reports.staff-performance')
+        ->name('reports.staff-performance');
 
 });

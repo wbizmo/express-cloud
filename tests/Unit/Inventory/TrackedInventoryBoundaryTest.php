@@ -7,6 +7,7 @@ namespace Tests\Unit\Inventory;
 use App\Models\Product;
 use App\Services\Inventory\Quantity;
 use App\Services\Inventory\StockLedger;
+use App\Services\Operations\AdminNotificationService;
 use App\Services\Procurement\LowStockAlertService;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +17,9 @@ final class TrackedInventoryBoundaryTest extends TestCase
     {
         $ledger = new StockLedger(
             new Quantity,
-            new LowStockAlertService,
+            new LowStockAlertService(
+                new AdminNotificationService,
+            ),
         );
 
         $product = new Product([
