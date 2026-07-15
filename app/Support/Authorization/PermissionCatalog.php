@@ -68,6 +68,10 @@ final class PermissionCatalog
                 'customers.update' => 'Update customers',
                 'payment-methods.view' => 'View payment methods',
                 'payment-methods.manage' => 'Manage payment methods',
+                'sales.view' => 'View sales',
+                'sales.create' => 'Create invoices, quotes, and POS sales',
+                'sales.payments' => 'Record sale payments',
+                'sales.convert-quotes' => 'Convert quotes',
             ],
             'security' => [
                 'security-events.view' => 'View security events',

@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\Payments\PaymentMethodController;
 use App\Http\Controllers\Admin\Procurement\LowStockReportController;
 use App\Http\Controllers\Admin\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\Sales\SaleController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\StaffController;
 use Illuminate\Support\Facades\Route;
@@ -244,6 +245,32 @@ Route::middleware([
         Route::patch('/{method}/toggle', [PaymentMethodController::class, 'toggle'])
             ->middleware('permission:payment-methods.manage')
             ->name('toggle');
+    });
+
+    Route::prefix('sales')->name('sales.')->group(function (): void {
+        Route::get('/', [SaleController::class, 'index'])
+            ->middleware('permission:sales.view')
+            ->name('index');
+
+        Route::get('/create', [SaleController::class, 'create'])
+            ->middleware('permission:sales.create')
+            ->name('create');
+
+        Route::post('/', [SaleController::class, 'store'])
+            ->middleware('permission:sales.create')
+            ->name('store');
+
+        Route::get('/{sale}', [SaleController::class, 'show'])
+            ->middleware('permission:sales.view')
+            ->name('show');
+
+        Route::post('/{sale}/payments', [SaleController::class, 'addPayment'])
+            ->middleware('permission:sales.payments')
+            ->name('payments.store');
+
+        Route::post('/quotes/{quote}/convert', [SaleController::class, 'convert'])
+            ->middleware('permission:sales.convert-quotes')
+            ->name('quotes.convert');
     });
 
 });
