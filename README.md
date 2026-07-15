@@ -277,3 +277,12 @@ processed after explicit confirmation.
 See:
 
     docs/features/product-excel-imports.md
+
+## Inventory ledger
+
+Sprint 7 adds per-branch balances and an immutable stock movement ledger.
+Stock intake, transfer, and adjustment are separate from product creation.
+
+See:
+
+    docs/features/inventory-ledger.md

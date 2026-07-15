@@ -65,3 +65,10 @@
 - Added the downloadable sample Excel workbook.
 - Added import preview, history, and downloadable error workbooks.
 - Added transaction-safe product creation and update behavior.
+
+### Sprint 7
+
+- Added per-branch stock balances and minimum-stock thresholds.
+- Added append-only stock movement ledger.
+- Added stock intake, transfer, and adjustment workflows.
+- Added milliunit quantity precision and negative-stock protection.
