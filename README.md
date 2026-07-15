@@ -172,3 +172,20 @@ The design system documentation is available at:
 A local-only preview is available at:
 
     /ui-preview
+
+## Authentication implementation
+
+Sprint 3 implements the shared administrator and staff sign-in flow.
+
+Guests use `/`, search for their first or last name, select the correct
+account, and enter an eight-character access key.
+
+There is no login email field, password field, IP ban, permanent account
+lockout, or role selector.
+
+Authenticated users may review their account information and assigned access
+key. They may change only their profile picture.
+
+See:
+
+    docs/features/authentication-and-profiles.md

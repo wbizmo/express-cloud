@@ -21,3 +21,11 @@
 - Added reusable buttons, fields, cards, toasts, skeletons, modals, and drawers.
 - Added custom common-error page foundations.
 - Added a local-only interface preview.
+
+### Sprint 3
+
+- Added shared staff-selector and access-key authentication.
+- Added encrypted access-key and blind-index foundations.
+- Added account-session and security-event models.
+- Added read-only profiles with profile-picture management.
+- Activated secure logout and session inactivity controls.
