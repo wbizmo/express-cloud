@@ -13,3 +13,11 @@
 - shared-login architecture
 - scalable security-event architecture
 - release packaging policy
+
+### Sprint 2
+
+- Added the responsive Express Cloud application shell.
+- Added collapsible desktop and mobile navigation.
+- Added reusable buttons, fields, cards, toasts, skeletons, modals, and drawers.
+- Added custom common-error page foundations.
+- Added a local-only interface preview.

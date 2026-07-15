@@ -154,3 +154,21 @@ See:
 - Do not load entire historical tables into browser state.
 - Do not introduce infrastructure dependencies that break shared hosting.
 - Do not ship development scripts or environment files in the customer ZIP.
+
+## Interface foundation
+
+Sprint 2 introduces the reusable Express Cloud application shell and design
+system.
+
+The desktop sidebar expands to 280px and collapses to 72px. Mobile uses a
+dedicated navigation drawer. The shell includes global search placement,
+notifications, profile access, a visible logout action, and Lisa AI as a
+first-class menu item.
+
+The design system documentation is available at:
+
+    docs/features/design-system.md
+
+A local-only preview is available at:
+
+    /ui-preview
