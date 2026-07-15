@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+@source "../../vendor/livewire/livewire/src/Features/SupportPagination/views/*.blade.php";
+@source "../views/**/*.blade.php";
+@source "../js/**/*.js";
+
+:root {
+    color-scheme: light;
+    --zivora-navy: #0b1f3a;
+    --zivora-blue: #2563eb;
+    --zivora-red: #dc2626;
+    --surface: #f5f7fb;
+    --panel: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+}
+
+html {
+    background: var(--surface);
+    color: var(--text);
+}
