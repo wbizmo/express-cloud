@@ -79,3 +79,9 @@
 - Added partial and complete receiving states.
 - Added automatic low-stock alert creation and resolution.
 - Added low-stock reporting.
+
+### Sprint 9
+
+- Added customers, quick-add creation, search, credit limits, and balances.
+- Added protected and custom payment methods.
+- Added a single explicit default payment method for POS.

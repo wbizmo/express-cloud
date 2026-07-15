@@ -295,3 +295,12 @@ intake, and automatically maintained low-stock alerts.
 See:
 
     docs/features/procurement-and-low-stock.md
+
+## Customers and payment methods
+
+Sprint 9 adds customer records and managed payment methods for the unified
+sales engine.
+
+See:
+
+    docs/features/customers-and-payment-methods.md
