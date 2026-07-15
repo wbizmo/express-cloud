@@ -58,3 +58,10 @@
 - Added default and branch-specific pricing.
 - Added encrypted supplier contact and tax fields.
 - Added catalogue administration interfaces and permissions.
+
+### Sprint 6
+
+- Added Excel-only product import validation and processing.
+- Added the downloadable sample Excel workbook.
+- Added import preview, history, and downloadable error workbooks.
+- Added transaction-safe product creation and update behavior.

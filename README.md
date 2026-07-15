@@ -240,3 +240,40 @@ Stock changes remain deliberately separate from product creation and editing.
 See:
 
     docs/features/catalog-suppliers-and-pricing.md
+
+## Spreadsheet runtime requirements
+
+Product Excel import and export uses the maintained
+`phpoffice/phpspreadsheet` package.
+
+Production PHP must enable:
+
+- `ext-zip`
+- `ext-gd`
+- `ext-dom`
+- `ext-fileinfo`
+- `ext-iconv`
+- `ext-libxml`
+- `ext-mbstring`
+- `ext-simplexml`
+- `ext-xml`
+- `ext-xmlreader`
+- `ext-xmlwriter`
+- `ext-zlib`
+
+Codespaces may install the Composer package while ignoring only `ext-zip`
+and `ext-gd` because this build environment is used for code generation and
+static verification. The final shared-hosting environment must enable both
+extensions before deployment.
+
+## Product Excel imports
+
+Sprint 6 adds a validate-first Excel product-import workflow.
+
+The Product Imports page includes a working **Download Sample Excel File**
+button. Uploaded `.xlsx` files are normalized, validated, previewed, and only
+processed after explicit confirmation.
+
+See:
+
+    docs/features/product-excel-imports.md
