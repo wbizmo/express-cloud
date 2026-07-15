@@ -85,3 +85,11 @@
 - Added customers, quick-add creation, search, credit limits, and balances.
 - Added protected and custom payment methods.
 - Added a single explicit default payment method for POS.
+
+### Sprint 10
+
+- Added unified invoice, quote, and POS sales engine.
+- Added idempotent sale creation and line snapshots.
+- Added transactional tracked-stock deduction.
+- Added split and later payments.
+- Added quote conversion and sales history.

@@ -304,3 +304,12 @@ sales engine.
 See:
 
     docs/features/customers-and-payment-methods.md
+
+## Unified sales engine
+
+Sprint 10 adds invoices, quotes, and POS transactions through one idempotent,
+transaction-safe engine.
+
+See:
+
+    docs/features/unified-sales-engine.md
