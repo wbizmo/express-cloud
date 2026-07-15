@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\Catalog\ClassificationController;
 use App\Http\Controllers\Admin\Catalog\ProductController;
 use App\Http\Controllers\Admin\Catalog\SupplierController;
 use App\Http\Controllers\Admin\Catalog\TaxRateController;
+use App\Http\Controllers\Admin\Imports\ProductImportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\StaffController;
@@ -126,4 +127,42 @@ Route::middleware([
             ->middleware('permission:suppliers.create')
             ->name('suppliers.store');
     });
+    Route::prefix('imports')->name('imports.')->group(function (): void {
+        Route::get('/products', [ProductImportController::class, 'index'])
+            ->middleware('permission:products.import-history')
+            ->name('products.index');
+
+        Route::get(
+            '/products/template',
+            [ProductImportController::class, 'template'],
+        )
+            ->middleware('permission:products.import')
+            ->name('products.template');
+
+        Route::post('/products', [ProductImportController::class, 'store'])
+            ->middleware('permission:products.import')
+            ->name('products.store');
+
+        Route::get(
+            '/products/{import}',
+            [ProductImportController::class, 'show'],
+        )
+            ->middleware('permission:products.import-history')
+            ->name('products.show');
+
+        Route::post(
+            '/products/{import}/process',
+            [ProductImportController::class, 'process'],
+        )
+            ->middleware('permission:products.import')
+            ->name('products.process');
+
+        Route::get(
+            '/products/{import}/errors',
+            [ProductImportController::class, 'errors'],
+        )
+            ->middleware('permission:products.import-history')
+            ->name('products.errors');
+    });
+
 });

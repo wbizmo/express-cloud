@@ -51,6 +51,8 @@ final class PermissionCatalog
                 'suppliers.create' => 'Create suppliers',
                 'suppliers.update' => 'Update suppliers',
                 'suppliers.archive' => 'Archive suppliers',
+                'products.import' => 'Import products from Excel',
+                'products.import-history' => 'View product import history',
             ],
             'security' => [
                 'security-events.view' => 'View security events',
