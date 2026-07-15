@@ -313,3 +313,12 @@ transaction-safe engine.
 See:
 
     docs/features/unified-sales-engine.md
+
+## Supplier finance
+
+Sprint 11 adds supplier bills, bill payments, supporting documents, supplier
+returns, and outstanding supplier balances.
+
+See:
+
+    docs/features/supplier-finance.md

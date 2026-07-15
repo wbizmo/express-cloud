@@ -93,3 +93,11 @@
 - Added transactional tracked-stock deduction.
 - Added split and later payments.
 - Added quote conversion and sales history.
+
+### Sprint 11
+
+- Added supplier bills and purchase invoices.
+- Added partial and complete supplier bill payments.
+- Added supplier supporting documents.
+- Added supplier returns with stock-ledger movements.
+- Added outstanding supplier-balance reporting.
