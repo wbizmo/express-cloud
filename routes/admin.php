@@ -17,6 +17,9 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\Sales\SaleController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\SupplierFinance\SupplierBalanceReportController;
+use App\Http\Controllers\Admin\SupplierFinance\SupplierBillController;
+use App\Http\Controllers\Admin\SupplierFinance\SupplierReturnController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([
@@ -272,5 +275,42 @@ Route::middleware([
             ->middleware('permission:sales.convert-quotes')
             ->name('quotes.convert');
     });
+
+    Route::prefix('supplier-finance')->name('supplier-finance.')->group(function (): void {
+        Route::get('/bills', [SupplierBillController::class, 'index'])
+            ->middleware('permission:supplier-bills.view')
+            ->name('bills.index');
+
+        Route::post('/bills', [SupplierBillController::class, 'store'])
+            ->middleware('permission:supplier-bills.create')
+            ->name('bills.store');
+
+        Route::get('/bills/{bill}', [SupplierBillController::class, 'show'])
+            ->middleware('permission:supplier-bills.view')
+            ->name('bills.show');
+
+        Route::post('/bills/{bill}/payments', [SupplierBillController::class, 'pay'])
+            ->middleware('permission:supplier-bills.pay')
+            ->name('bills.payments.store');
+
+        Route::get(
+            '/bills/{bill}/documents/{document}',
+            [SupplierBillController::class, 'downloadDocument'],
+        )
+            ->middleware('permission:supplier-documents.download')
+            ->name('bills.documents.download');
+
+        Route::get('/returns', [SupplierReturnController::class, 'index'])
+            ->middleware('permission:supplier-returns.view')
+            ->name('returns.index');
+
+        Route::post('/returns', [SupplierReturnController::class, 'store'])
+            ->middleware('permission:supplier-returns.create')
+            ->name('returns.store');
+    });
+
+    Route::get('/reports/supplier-balances', SupplierBalanceReportController::class)
+        ->middleware('permission:reports.supplier-balances')
+        ->name('reports.supplier-balances');
 
 });

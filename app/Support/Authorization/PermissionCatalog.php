@@ -72,6 +72,13 @@ final class PermissionCatalog
                 'sales.create' => 'Create invoices, quotes, and POS sales',
                 'sales.payments' => 'Record sale payments',
                 'sales.convert-quotes' => 'Convert quotes',
+                'supplier-bills.view' => 'View supplier bills',
+                'supplier-bills.create' => 'Create supplier bills',
+                'supplier-bills.pay' => 'Record supplier bill payments',
+                'supplier-documents.download' => 'Download supplier documents',
+                'supplier-returns.view' => 'View supplier returns',
+                'supplier-returns.create' => 'Create supplier returns',
+                'reports.supplier-balances' => 'View supplier balances',
             ],
             'security' => [
                 'security-events.view' => 'View security events',
