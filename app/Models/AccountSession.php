@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class AccountSession extends Model
 {
@@ -13,9 +14,7 @@ final class AccountSession extends Model
 
     protected $table = 'account_sessions';
 
-    /**
-     * @var list<string>
-     */
+    /** @var list<string> */
     protected $fillable = [
         'account_id',
         'session_identifier',
@@ -24,6 +23,12 @@ final class AccountSession extends Model
         'last_activity_at',
         'revoked_at',
     ];
+
+    /** @return BelongsTo<Account, $this> */
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
+    }
 
     protected function casts(): array
     {

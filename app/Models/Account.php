@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\Authentication\AccountStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -30,6 +31,7 @@ final class Account extends Authenticatable
         'profile_picture_path',
         'status',
         'last_authenticated_at',
+        'is_allowed_all_branches',
     ];
 
     /**
@@ -48,12 +50,35 @@ final class Account extends Authenticatable
             'status' => AccountStatus::class,
             'login_key_version' => 'integer',
             'last_authenticated_at' => 'immutable_datetime',
+            'is_allowed_all_branches' => 'boolean',
         ];
     }
 
     public function getAuthPassword(): string
     {
         return '';
+    }
+
+    /** @return BelongsToMany<Role, $this> */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'account_role',
+            'account_id',
+            'role_id',
+        )->withTimestamps();
+    }
+
+    /** @return BelongsToMany<Branch, $this> */
+    public function branches(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Branch::class,
+            'account_branch',
+            'account_id',
+            'branch_id',
+        )->withTimestamps();
     }
 
     public function displayName(): string

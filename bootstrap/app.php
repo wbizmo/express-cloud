@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnforceSessionInactivity;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Http\Middleware\RequirePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'account.active' => EnsureAccountIsActive::class,
             'session.inactivity' => EnforceSessionInactivity::class,
+            'permission' => RequirePermission::class,
+            'permission' => RequirePermission::class,
+            'permission' => RequirePermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
