@@ -23,6 +23,7 @@ final class Sale extends Model
         'sale_type',
         'branch_id',
         'customer_id',
+        'discount_voucher_id',
         'sold_by_account_id',
         'converted_from_sale_id',
         'sale_date',
@@ -34,6 +35,7 @@ final class Sale extends Model
         'status',
         'idempotency_key',
         'notes',
+        'credit_note',
         'confirmed_at',
     ];
 
@@ -83,6 +85,12 @@ final class Sale extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /** @return HasMany<SaleReturn, $this> */
+    public function returns(): HasMany
+    {
+        return $this->hasMany(SaleReturn::class);
     }
 
     public function balanceDueKobo(): int

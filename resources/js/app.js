@@ -92,3 +92,97 @@ window.ExpressCloud = {
 
     refreshIcons: renderIcons,
 };
+
+/* Sprint 15 enterprise control enhancement */
+const normalizeText = (value) => value.trim().toLocaleLowerCase();
+
+const sortSelectOptions = (select) => {
+    const options = Array.from(select.options);
+    const placeholders = options.filter(
+        (option) => option.value === "" || option.disabled,
+    );
+    const values = options
+        .filter((option) => option.value !== "" && !option.disabled)
+        .sort((a, b) => a.text.localeCompare(b.text, undefined, {
+            numeric: true,
+            sensitivity: "base",
+        }));
+
+    select.replaceChildren(...placeholders, ...values);
+    select.dataset.sortableSelect = "ready";
+};
+
+const enhanceSelects = (root = document) => {
+    root.querySelectorAll("select:not([data-no-sort])").forEach((select) => {
+        if (select.dataset.sortableSelect === "ready") return;
+        sortSelectOptions(select);
+        select.setAttribute("data-sortable-select", "ready");
+    });
+};
+
+const enhanceCheckboxes = (root = document) => {
+    root.querySelectorAll('input[type="checkbox"]:not([data-native-control])')
+        .forEach((input) => {
+            if (input.closest(".ec-toggle")) return;
+
+            const wrapper = document.createElement("label");
+            wrapper.className = "ec-toggle";
+            input.parentNode.insertBefore(wrapper, input);
+            wrapper.appendChild(input);
+
+            const track = document.createElement("span");
+            track.className = "ec-toggle-track";
+            track.setAttribute("aria-hidden", "true");
+            wrapper.appendChild(track);
+
+            const text = document.createElement("span");
+            text.className = "ec-toggle-label";
+            text.textContent = input.dataset.label
+                || input.getAttribute("aria-label")
+                || "Enabled";
+            wrapper.appendChild(text);
+        });
+};
+
+const addBackButtons = (root = document) => {
+    root.querySelectorAll("[data-page-header]").forEach((header) => {
+        if (header.querySelector(".ec-back-button")) return;
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "ec-back-button";
+        button.innerHTML = "← <span>Back</span>";
+        button.addEventListener("click", () => {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.assign("/");
+            }
+        });
+
+        header.prepend(button);
+    });
+};
+
+const enhanceCommercialControls = (root = document) => {
+    enhanceSelects(root);
+    enhanceCheckboxes(root);
+    addBackButtons(root);
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    enhanceCommercialControls();
+});
+
+new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+            if (node instanceof HTMLElement) {
+                enhanceCommercialControls(node);
+            }
+        });
+    }
+}).observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+});

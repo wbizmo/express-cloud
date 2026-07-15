@@ -98,6 +98,17 @@ final class PermissionCatalog
                 'audit-log.view' => 'View audit logs',
                 'audit-log.export' => 'Export audit logs',
             ],
+
+            'Commercial' => [
+                'sales.view.own' => 'View own sales',
+                'sales.view.all' => 'View all sales',
+                'sales.payments.record' => 'Record sale payments',
+                'sales.returns.create' => 'Create sale returns',
+                'vouchers.manage' => 'Manage discount vouchers',
+                'vouchers.apply' => 'Apply discount vouchers',
+                'customers.receivables.view' => 'View customer receivables',
+                'purchases.record' => 'Record direct purchases',
+            ],
         ];
     }
 

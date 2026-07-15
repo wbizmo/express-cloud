@@ -84,6 +84,9 @@ final readonly class CreateSale
                 'notes' => $request->filled('notes')
                     ? $request->string('notes')->trim()->toString()
                     : null,
+                'credit_note' => $request->filled('credit_note')
+                    ? $request->string('credit_note')->trim()->toString()
+                    : null,
                 'confirmed_at' => $type === SaleType::Quote
                     ? null
                     : now(),

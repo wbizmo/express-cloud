@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnforceSessionInactivity;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Http\Middleware\EnsureSaleVisibility;
 use App\Http\Middleware\RequirePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'account.active' => EnsureAccountIsActive::class,
             'session.inactivity' => EnforceSessionInactivity::class,
             'permission' => RequirePermission::class,
+            'sale.visible' => EnsureSaleVisibility::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

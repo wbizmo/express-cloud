@@ -27,6 +27,8 @@ final class StoreSaleRequest extends FormRequest
             'branch_id' => ['required', 'ulid'],
             'customer_id' => ['nullable', 'ulid'],
             'notes' => ['nullable', 'string', 'max:3000'],
+            'voucher_code' => ['nullable', 'string', 'max:80'],
+            'credit_note' => ['nullable', 'string', 'max:255'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'ulid'],
             'items.*.quantity' => ['required', 'regex:/^\d+(?:\.\d{1,3})?$/'],

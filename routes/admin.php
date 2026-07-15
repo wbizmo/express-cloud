@@ -9,6 +9,9 @@ use App\Http\Controllers\Admin\Catalog\ClassificationController;
 use App\Http\Controllers\Admin\Catalog\ProductController;
 use App\Http\Controllers\Admin\Catalog\SupplierController;
 use App\Http\Controllers\Admin\Catalog\TaxRateController;
+use App\Http\Controllers\Admin\Commercial\CustomerReceivableController;
+use App\Http\Controllers\Admin\Commercial\PurchaseReceiptController;
+use App\Http\Controllers\Admin\Commercial\VoucherController;
 use App\Http\Controllers\Admin\Customers\CustomerController;
 use App\Http\Controllers\Admin\Documents\ProductBarcodeController;
 use App\Http\Controllers\Admin\Documents\SaleDocumentController;
@@ -405,5 +408,31 @@ Route::middleware([
     Route::delete('/security/sessions/{session}', [LiveSessionController::class, 'destroy'])
         ->middleware('permission:security.sessions.terminate')
         ->name('security.sessions.destroy');
+
+    Route::prefix('commercial')->name('commercial.')->group(function (): void {
+        Route::get('/vouchers', [VoucherController::class, 'index'])
+            ->middleware('permission:vouchers.manage')
+            ->name('vouchers.index');
+        Route::post('/vouchers', [VoucherController::class, 'store'])
+            ->middleware('permission:vouchers.manage')
+            ->name('vouchers.store');
+
+        Route::get('/receivables', [CustomerReceivableController::class, 'index'])
+            ->middleware('permission:customers.receivables.view')
+            ->name('receivables.index');
+        Route::get('/receivables/{customer}', [CustomerReceivableController::class, 'show'])
+            ->middleware('permission:customers.receivables.view')
+            ->name('receivables.show');
+
+        Route::get('/purchases', [PurchaseReceiptController::class, 'index'])
+            ->middleware('permission:purchases.record')
+            ->name('purchases.index');
+        Route::get('/purchases/create', [PurchaseReceiptController::class, 'create'])
+            ->middleware('permission:purchases.record')
+            ->name('purchases.create');
+        Route::post('/purchases', [PurchaseReceiptController::class, 'store'])
+            ->middleware('permission:purchases.record')
+            ->name('purchases.store');
+    });
 
 });

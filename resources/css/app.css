@@ -166,3 +166,153 @@ textarea:focus-visible {
         transition-duration: 1ms !important;
     }
 }
+
+/* Sprint 15 enterprise form controls */
+[data-sortable-select] {
+    appearance: none;
+    min-height: 2.75rem;
+    width: 100%;
+    border: 1px solid rgb(203 213 225);
+    border-radius: .65rem;
+    background:
+        linear-gradient(45deg, transparent 50%, rgb(100 116 139) 50%)
+            calc(100% - 17px) 50% / 5px 5px no-repeat,
+        linear-gradient(135deg, rgb(100 116 139) 50%, transparent 50%)
+            calc(100% - 12px) 50% / 5px 5px no-repeat,
+        white;
+    padding: .65rem 2.5rem .65rem .85rem;
+    transition: border-color .16s ease, box-shadow .16s ease,
+        transform .16s ease;
+}
+
+[data-sortable-select]:focus {
+    border-color: rgb(15 23 42);
+    box-shadow: 0 0 0 3px rgb(15 23 42 / .1);
+    outline: none;
+}
+
+.ec-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: .65rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.ec-toggle input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ec-toggle-track {
+    position: relative;
+    width: 2.7rem;
+    height: 1.5rem;
+    border: 1px solid rgb(203 213 225);
+    border-radius: 999px;
+    background: rgb(226 232 240);
+    transition: background .18s ease, border-color .18s ease,
+        box-shadow .18s ease;
+}
+
+.ec-toggle-track::after {
+    content: "";
+    position: absolute;
+    top: .17rem;
+    left: .17rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 4px rgb(15 23 42 / .22);
+    transition: transform .2s cubic-bezier(.2,.8,.2,1);
+}
+
+.ec-toggle input:checked + .ec-toggle-track {
+    border-color: rgb(15 23 42);
+    background: rgb(15 23 42);
+}
+
+.ec-toggle input:checked + .ec-toggle-track::after {
+    transform: translateX(1.18rem);
+}
+
+.ec-toggle input:focus-visible + .ec-toggle-track {
+    box-shadow: 0 0 0 3px rgb(15 23 42 / .16);
+}
+
+.ec-choice-group {
+    display: grid;
+    gap: .65rem;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.ec-choice {
+    position: relative;
+}
+
+.ec-choice input {
+    position: absolute;
+    opacity: 0;
+}
+
+.ec-choice label {
+    display: flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    border: 1px solid rgb(203 213 225);
+    border-radius: .7rem;
+    background: white;
+    padding: .7rem;
+    color: rgb(71 85 105);
+    font-size: .875rem;
+    font-weight: 650;
+    cursor: pointer;
+    transition: transform .16s ease, border-color .16s ease,
+        background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.ec-choice input:checked + label {
+    border-color: rgb(15 23 42);
+    background: rgb(15 23 42);
+    color: white;
+    box-shadow: 0 8px 24px rgb(15 23 42 / .16);
+    transform: translateY(-1px);
+}
+
+.ec-back-button {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: .45rem;
+    border: 1px solid rgb(226 232 240);
+    border-radius: .65rem;
+    background: white;
+    padding: 0 .85rem;
+    color: rgb(71 85 105);
+    font-size: .82rem;
+    font-weight: 700;
+    transition: border-color .16s ease, color .16s ease,
+        transform .16s ease;
+}
+
+.ec-back-button:hover {
+    border-color: rgb(148 163 184);
+    color: rgb(15 23 42);
+    transform: translateX(-2px);
+}
+
+.ec-zero-stock {
+    border-color: rgb(254 202 202) !important;
+    background: rgb(254 242 242) !important;
+    color: rgb(153 27 27) !important;
+}
+
+.ec-low-stock {
+    border-color: rgb(253 230 138) !important;
+    background: rgb(255 251 235) !important;
+}
