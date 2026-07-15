@@ -352,3 +352,13 @@ management, structured production errors, and targeted regression protection.
 See:
 
     docs/features/activity-sessions-and-error-hardening.md
+
+## Commercial controls
+
+Sprint 15 adds customer receivables, credit settlement, sale returns,
+discount vouchers, direct purchase recording, creator-scoped sales access,
+and system-wide enterprise form controls.
+
+See:
+
+    docs/features/commercial-controls.md

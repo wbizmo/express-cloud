@@ -125,3 +125,12 @@
 - Added live session inspection and force termination.
 - Added structured production JSON error responses.
 - Added targeted regression tests for known historical defects.
+
+### Sprint 15
+
+- Added customer credit and outstanding-balance workflows.
+- Added creator-scoped sales visibility and payment audit logging.
+- Added sale returns with stock-restoration movements.
+- Added reusable discount vouchers and redemption logs.
+- Added direct purchase recording for catalogue products.
+- Added global sortable selects, animated toggles, choice cards, and back-button enhancement.
