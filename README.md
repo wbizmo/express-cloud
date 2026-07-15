@@ -1,58 +1,112 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Express Cloud by Zivora
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Express Cloud is a standalone enterprise sales, invoicing, purchasing,
+supplier, customer, and physical-inventory platform.
 
-## About Laravel
+The application is being built through 17 implementation sprints.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Locked technical foundation
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Laravel 13
+- PHP 8.4 target; PHP 8.3 minimum
+- Blade, Livewire 4, Alpine, and Tailwind CSS
+- MySQL-compatible production schema
+- NGN as the only v1 transaction currency
+- integer-kobo monetary calculations
+- selective field encryption
+- keyed blind indexes for exact sensitive-value lookup
+- no demonstration business data
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Development workflow decision
 
-## Learning Laravel
+Development builds the project files only.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+The sprint workflow does not install or run:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Docker;
+- MySQL;
+- SQLite;
+- Redis;
+- Codespaces containers;
+- database-dependent tests.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Database migrations will be written alongside the relevant features. The
+final shared-hosting release will include a generated MySQL installation SQL
+file matching those migrations and required system records.
 
-## Agentic Development
+Live deployment is the first full database integration environment under the
+user's chosen workflow.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Locked authentication model
 
-```bash
-composer require laravel/boost --dev
+The root route `/` becomes the shared administrator and staff login screen in
+Sprint 3.
 
-php artisan boost:install
-```
+The login form uses:
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+- a searchable staff-name combobox;
+- no staff email exposure;
+- a cryptographically generated access key;
+- the format `K7M4-P9XR`;
+- no IP banning;
+- no permanent account lockout;
+- only short-lived endpoint throttling;
+- generic invalid-credential responses.
 
-## Contributing
+The staff selector requires typed search, returns a fixed-height scrollable
+result panel, supports keyboard navigation, and shows branch or department
+only when needed to distinguish duplicate names.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Users may view their own assigned access key from their read-only profile.
+Authorised administrators may reveal staff keys. Users cannot change names,
+roles, login keys, emails, or branch assignments. They may change only their
+profile picture.
 
-## Code of Conduct
+Access keys are encrypted for authorised display and separately blind-indexed
+for exact login lookup.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Security-event scale
 
-## Security Vulnerabilities
+The administration security area must remain usable with anything from zero
+records to millions of historical events.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+It will use:
 
-## License
+- indexed server-side queries;
+- bounded date filters;
+- cursor pagination;
+- server-side sorting;
+- searchable event history;
+- event detail drawers;
+- streamed exports;
+- retention and archival rules.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Sensitive plaintext credentials never enter logs, exports, analytics, email,
+or Lisa AI context.
+
+## Final customer deliverable
+
+The customer receives:
+
+- the production application ZIP;
+- production-built assets;
+- Composer dependencies for no-shell deployment;
+- one importable MySQL installation SQL file;
+- `.env.example`;
+- installation documentation;
+- administrator, manager, and staff documentation;
+- backup, restore, security, and operations documentation;
+- checksums and release metadata.
+
+The final ZIP excludes development-only files such as sprint scripts, local
+logs, test fixtures, development `.env`, and editor state.
+
+## Quality commands that do not require a database
+
+    composer validate --strict
+    composer audit
+    vendor/bin/pint --test
+    vendor/bin/phpstan analyse
+    php artisan test --testsuite=Unit
+    npm audit --audit-level=high
+    npm run build
