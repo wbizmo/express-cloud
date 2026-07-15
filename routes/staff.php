@@ -2,19 +2,23 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Profile\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Staff Routes
-|--------------------------------------------------------------------------
-|
-| Protected staff routes will be registered here from Sprint 3.
-|
-*/
+Route::middleware([
+    'auth',
+    'account.active',
+    'session.inactivity',
+])->prefix('staff')->name('staff.')->group(function (): void {
+    Route::view('/dashboard', 'staff.dashboard')
+        ->name('dashboard');
 
-Route::prefix('staff')
-    ->name('staff.')
-    ->group(function (): void {
-        //
-    });
+    Route::get('/profile', [ProfileController::class, 'show'])
+        ->name('profile.show');
+
+    Route::patch('/profile/picture', [ProfileController::class, 'updatePicture'])
+        ->name('profile.picture.update');
+
+    Route::delete('/profile/picture', [ProfileController::class, 'destroyPicture'])
+        ->name('profile.picture.destroy');
+});

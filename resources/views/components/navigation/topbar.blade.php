@@ -44,15 +44,29 @@
                 @click="open = !open"
                 @click.outside="open = false"
             >
-                <div class="grid h-8 w-8 place-items-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">
-                    WA
-                </div>
+                @auth
+                    @if (auth()->user()->profile_picture_path)
+                        <img
+                            src="{{ Storage::disk(config('authentication.profile_picture.disk'))->url(auth()->user()->profile_picture_path) }}"
+                            alt="{{ auth()->user()->displayName() }}"
+                            class="h-8 w-8 rounded-full object-cover"
+                        >
+                    @else
+                        <div class="grid h-8 w-8 place-items-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">
+                            {{ auth()->user()->initials() }}
+                        </div>
+                    @endif
+                @else
+                    <div class="grid h-8 w-8 place-items-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">
+                        EC
+                    </div>
+                @endauth
 
                 <div class="hidden text-left md:block">
                     <p class="max-w-40 truncate text-sm font-semibold text-slate-900">
-                        Williams Ashibuogwu
+                        {{ auth()->user()?->displayName() ?? 'Express Cloud user' }}
                     </p>
-                    <p class="text-xs text-slate-500">Administrator preview</p>
+                    <p class="text-xs text-slate-500">Authorised account</p>
                 </div>
 
                 <x-ui.icon name="chevron-down" :size="16" class="hidden text-slate-400 md:block" />
@@ -67,19 +81,19 @@
             >
                 <div class="border-b border-slate-100 px-3 py-2 md:hidden">
                     <p class="truncate text-sm font-semibold text-slate-950">
-                        Williams Ashibuogwu
+                        {{ auth()->user()?->displayName() ?? 'Express Cloud user' }}
                     </p>
-                    <p class="text-xs text-slate-500">Administrator preview</p>
+                    <p class="text-xs text-slate-500">Authorised account</p>
                 </div>
 
-                <button
-                    type="button"
+                <a
+                    href="{{ route('staff.profile.show') }}"
                     class="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-sm text-slate-700 hover:bg-slate-100"
                     role="menuitem"
                 >
                     <x-ui.icon name="user-round" :size="17" />
                     My profile
-                </button>
+                </a>
 
                 <button
                     type="button"
@@ -92,15 +106,17 @@
 
                 <div class="my-1 border-t border-slate-100"></div>
 
-                <button
-                    type="button"
-                    class="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-red-700 hover:bg-red-50"
-                    role="menuitem"
-                    title="Logout is activated with authentication in Sprint 3"
-                >
-                    <x-ui.icon name="log-out" :size="17" />
-                    Log out
-                </button>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button
+                        type="submit"
+                        class="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-red-700 hover:bg-red-50"
+                        role="menuitem"
+                    >
+                        <x-ui.icon name="log-out" :size="17" />
+                        Log out
+                    </button>
+                </form>
             </div>
         </div>
     </div>
