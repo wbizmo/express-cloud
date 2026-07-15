@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\Operations\CronDigestController;
+use App\Http\Controllers\Public\SaleVerificationController;
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
@@ -17,3 +18,8 @@ Route::get(
     '/cron/{secret}/end-of-day-digest',
     CronDigestController::class,
 )->name('cron.end-of-day-digest');
+
+Route::get(
+    '/verify/sales/{sale}/{token}',
+    SaleVerificationController::class,
+)->name('public.sales.verify');

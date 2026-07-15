@@ -84,6 +84,10 @@ final class PermissionCatalog
                 'alerts.manage-recipients' => 'Manage alert recipients',
                 'settings.business.manage' => 'Manage business settings',
                 'reports.staff-performance' => 'View staff performance',
+                'reports.hub.view' => 'View reports hub',
+                'reports.export' => 'Export reports',
+                'documents.sales.print' => 'Print and download sale documents',
+                'documents.products.labels' => 'Print product labels',
             ],
             'security' => [
                 'security-events.view' => 'View security events',

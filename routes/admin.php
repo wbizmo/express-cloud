@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\Catalog\ProductController;
 use App\Http\Controllers\Admin\Catalog\SupplierController;
 use App\Http\Controllers\Admin\Catalog\TaxRateController;
 use App\Http\Controllers\Admin\Customers\CustomerController;
+use App\Http\Controllers\Admin\Documents\ProductBarcodeController;
+use App\Http\Controllers\Admin\Documents\SaleDocumentController;
 use App\Http\Controllers\Admin\Imports\ProductImportController;
 use App\Http\Controllers\Admin\Inventory\InventoryController;
 use App\Http\Controllers\Admin\Operations\AdminDashboardController;
@@ -18,6 +20,8 @@ use App\Http\Controllers\Admin\Operations\StaffPerformanceController;
 use App\Http\Controllers\Admin\Payments\PaymentMethodController;
 use App\Http\Controllers\Admin\Procurement\LowStockReportController;
 use App\Http\Controllers\Admin\Procurement\PurchaseOrderController;
+use App\Http\Controllers\Admin\Reports\ReportExportController;
+use App\Http\Controllers\Admin\Reports\ReportsHubController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\Sales\SaleController;
 use App\Http\Controllers\Admin\SessionController;
@@ -351,5 +355,36 @@ Route::middleware([
     Route::get('/reports/staff-performance', StaffPerformanceController::class)
         ->middleware('permission:reports.staff-performance')
         ->name('reports.staff-performance');
+
+    Route::get('/reports', ReportsHubController::class)
+        ->middleware('permission:reports.hub.view')
+        ->name('reports.hub');
+
+    Route::prefix('reports/exports')->name('reports.exports.')->group(function (): void {
+        Route::get('/sales', [ReportExportController::class, 'sales'])
+            ->middleware('permission:reports.export')
+            ->name('sales');
+        Route::get('/staff', [ReportExportController::class, 'staff'])
+            ->middleware('permission:reports.export')
+            ->name('staff');
+        Route::get('/low-stock', [ReportExportController::class, 'lowStock'])
+            ->middleware('permission:reports.export')
+            ->name('low-stock');
+    });
+
+    Route::prefix('documents')->name('documents.')->group(function (): void {
+        Route::get('/sales/{sale}/thermal', [SaleDocumentController::class, 'thermal'])
+            ->middleware('permission:documents.sales.print')
+            ->name('sales.thermal');
+        Route::get('/sales/{sale}/a4', [SaleDocumentController::class, 'a4'])
+            ->middleware('permission:documents.sales.print')
+            ->name('sales.a4');
+        Route::get('/sales/{sale}/pdf', [SaleDocumentController::class, 'pdf'])
+            ->middleware('permission:documents.sales.print')
+            ->name('sales.pdf');
+        Route::get('/products/{product}/label', ProductBarcodeController::class)
+            ->middleware('permission:documents.products.labels')
+            ->name('products.label');
+    });
 
 });
