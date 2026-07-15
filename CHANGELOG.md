@@ -101,3 +101,13 @@
 - Added supplier supporting documents.
 - Added supplier returns with stock-ledger movements.
 - Added outstanding supplier-balance reporting.
+
+### Sprint 12
+
+- Removed all rejected accounting artifacts from the failed Sprint 12 attempt.
+- Added the admin operations dashboard and attention-first metrics.
+- Added in-app low-stock notifications.
+- Added configurable alert recipients and business settings.
+- Added idempotent end-of-day digest compilation and email delivery.
+- Added staff-performance ranking and operational reporting.
+- Added a secret-path HTTP cron endpoint for shared-hosting deployment.

@@ -322,3 +322,15 @@ returns, and outstanding supplier balances.
 See:
 
     docs/features/supplier-finance.md
+
+## Alerts and operations dashboard
+
+Sprint 12 implements Phase 4 of the standalone master specification: admin
+dashboard, low-stock notifications, alert recipients, end-of-day digest,
+business settings, active sessions, and staff-performance reporting.
+
+Express Cloud is not an accounting system.
+
+See:
+
+    docs/features/alerts-dashboard-and-digests.md
