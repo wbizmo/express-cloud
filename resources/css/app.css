@@ -7,16 +7,162 @@
 
 :root {
     color-scheme: light;
-    --zivora-navy: #0b1f3a;
-    --zivora-blue: #2563eb;
-    --zivora-red: #dc2626;
-    --surface: #f5f7fb;
-    --panel: #ffffff;
-    --text: #0f172a;
-    --muted: #64748b;
+
+    --ec-navy-950: #07182d;
+    --ec-navy-900: #0b1f3a;
+    --ec-navy-800: #123052;
+    --ec-blue-700: #1d4ed8;
+    --ec-blue-600: #2563eb;
+    --ec-blue-50: #eff6ff;
+    --ec-teal-600: #0d9488;
+    --ec-red-600: #dc2626;
+    --ec-amber-500: #f59e0b;
+    --ec-green-600: #16a34a;
+
+    --ec-background: #f8fafc;
+    --ec-background-muted: #f1f5f9;
+    --ec-surface: #ffffff;
+    --ec-text: #111827;
+    --ec-text-secondary: #475569;
+    --ec-text-muted: #64748b;
+    --ec-border: #e5e7eb;
+    --ec-border-strong: #cbd5e1;
+
+    --ec-sidebar-expanded: 280px;
+    --ec-sidebar-collapsed: 72px;
+    --ec-topbar-height: 64px;
+
+    --ec-radius-button: 8px;
+    --ec-radius-input: 8px;
+    --ec-radius-card: 12px;
+    --ec-radius-dialog: 16px;
+    --ec-radius-toast: 10px;
+
+    --ec-shadow-elevated:
+        0 1px 2px rgb(15 23 42 / 0.04),
+        0 8px 24px rgb(15 23 42 / 0.06);
+}
+
+[x-cloak] {
+    display: none !important;
 }
 
 html {
-    background: var(--surface);
-    color: var(--text);
+    min-height: 100%;
+    background: var(--ec-background);
+    color: var(--ec-text);
+    font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--ec-background);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+    outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--ec-blue-600);
+}
+
+.ec-scrollbar {
+    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-width: thin;
+}
+
+.ec-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.ec-scrollbar::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: #cbd5e1;
+    background-clip: padding-box;
+}
+
+.ec-spinner {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 999px;
+    animation: ec-spin 700ms linear infinite;
+}
+
+.ec-page-progress {
+    transform-origin: left center;
+    animation: ec-progress 1.15s ease-in-out infinite;
+}
+
+.ec-skeleton {
+    position: relative;
+    overflow: hidden;
+    background: #e2e8f0;
+}
+
+.ec-skeleton::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    transform: translateX(-100%);
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgb(255 255 255 / 0.65),
+            transparent
+        );
+    animation: ec-shimmer 1.5s infinite;
+}
+
+@keyframes ec-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes ec-progress {
+    0% {
+        transform: scaleX(0.08);
+    }
+
+    50% {
+        transform: scaleX(0.72);
+    }
+
+    100% {
+        transform: scaleX(1);
+    }
+}
+
+@keyframes ec-shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+    }
 }
