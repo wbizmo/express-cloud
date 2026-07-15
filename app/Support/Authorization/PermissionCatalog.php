@@ -88,6 +88,10 @@ final class PermissionCatalog
                 'reports.export' => 'Export reports',
                 'documents.sales.print' => 'Print and download sale documents',
                 'documents.products.labels' => 'Print product labels',
+                'activity.view' => 'View system activity log',
+                'activity.products.view' => 'View product activity',
+                'security.sessions.view' => 'View live sessions',
+                'security.sessions.terminate' => 'Terminate live sessions',
             ],
             'security' => [
                 'security-events.view' => 'View security events',

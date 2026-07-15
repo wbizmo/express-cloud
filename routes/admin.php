@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\Activity\ProductActivityController;
+use App\Http\Controllers\Admin\Activity\SystemActivityController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\Catalog\ClassificationController;
 use App\Http\Controllers\Admin\Catalog\ProductController;
@@ -24,6 +26,7 @@ use App\Http\Controllers\Admin\Reports\ReportExportController;
 use App\Http\Controllers\Admin\Reports\ReportsHubController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\Sales\SaleController;
+use App\Http\Controllers\Admin\Security\LiveSessionController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\SupplierFinance\SupplierBalanceReportController;
@@ -386,5 +389,21 @@ Route::middleware([
             ->middleware('permission:documents.products.labels')
             ->name('products.label');
     });
+
+    Route::get('/activity', SystemActivityController::class)
+        ->middleware('permission:activity.view')
+        ->name('activity.index');
+
+    Route::get('/products/{product}/activity', ProductActivityController::class)
+        ->middleware('permission:activity.products.view')
+        ->name('products.activity');
+
+    Route::get('/security/sessions', [LiveSessionController::class, 'index'])
+        ->middleware('permission:security.sessions.view')
+        ->name('security.sessions.index');
+
+    Route::delete('/security/sessions/{session}', [LiveSessionController::class, 'destroy'])
+        ->middleware('permission:security.sessions.terminate')
+        ->name('security.sessions.destroy');
 
 });
