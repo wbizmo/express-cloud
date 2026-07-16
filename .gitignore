@@ -22,13 +22,6 @@
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
-/release/*.zip
-/release/FIRST_LOGIN.txt
-/release/PRODUCTION.env
-/release/SHA256SUMS.txt
-/release/express-cloud-install.sql
-/release/express-cloud-release.zip
-/release/stage/
 /storage/*.key
 /storage/pail
 /vendor
