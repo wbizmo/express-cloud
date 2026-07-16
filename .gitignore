@@ -32,3 +32,5 @@ cleanup-sprint-*.sh
 express-cloud-sprints-*.sh
 storage/app/backups/*
 !storage/app/backups/.gitignore
+storage/app/backups/
+storage/app/backup-working/

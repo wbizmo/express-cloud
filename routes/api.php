@@ -3,11 +3,15 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\OpenApiController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SaleController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/health', HealthController::class)
+    ->name('api.health');
 
 Route::get('/openapi.json', OpenApiController::class)
     ->name('api.openapi');

@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\Inventory\InventoryController;
 use App\Http\Controllers\Admin\Operations\AdminDashboardController;
 use App\Http\Controllers\Admin\Operations\AdminNotificationController;
 use App\Http\Controllers\Admin\Operations\AlertRecipientController;
+use App\Http\Controllers\Admin\Operations\BackupController;
 use App\Http\Controllers\Admin\Operations\BusinessSettingsController;
 use App\Http\Controllers\Admin\Operations\StaffPerformanceController;
 use App\Http\Controllers\Admin\Payments\PaymentMethodController;
@@ -447,5 +448,19 @@ Route::middleware([
             ->middleware('permission:api.tokens.manage')
             ->name('tokens.destroy');
     });
+
+    Route::prefix('operations/backups')
+        ->name('operations.backups.')
+        ->group(function (): void {
+            Route::get('/', [BackupController::class, 'index'])
+                ->middleware('permission:backups.view')
+                ->name('index');
+            Route::post('/', [BackupController::class, 'store'])
+                ->middleware('permission:backups.create')
+                ->name('store');
+            Route::post('/{backupRun}/verify', [BackupController::class, 'verify'])
+                ->middleware('permission:backups.verify')
+                ->name('verify');
+        });
 
 });

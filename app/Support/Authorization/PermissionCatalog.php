@@ -113,6 +113,12 @@ final class PermissionCatalog
 
                 'quotes.convert' => 'Convert quotes',
             ],
+
+            'Backup and Recovery' => [
+                'backups.view' => 'View backups',
+                'backups.create' => 'Create backups',
+                'backups.verify' => 'Verify backups',
+            ],
         ];
     }
 
