@@ -149,3 +149,13 @@
 - Added backup administration and audit logging.
 - Added the production health endpoint.
 - Added production-readiness and recovery runbooks.
+
+### Sprint 18
+
+- Added standalone payment receipts without invoices or sales.
+- Added purchase returns linked to received purchase lines.
+- Added fixed-asset register and straight-line depreciation preview.
+- Added editable company document branding and optional logo upload.
+- Added PDF and spreadsheet exports for receipts, purchases, returns,
+  stock operations, transfers, and assets.
+- Added SHA-256 generation logs for downloaded operation documents.

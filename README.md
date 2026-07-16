@@ -384,3 +384,13 @@ See:
     docs/features/backups-and-recovery.md
     docs/deployment/production-readiness.md
     docs/deployment/recovery-runbook.md
+
+## Operational accounting and documents
+
+Sprint 18 adds standalone receipts, purchase returns, the fixed-asset
+register, optional company-logo branding, and downloadable operational PDF
+and spreadsheet reports.
+
+See:
+
+    docs/features/operational-accounting-and-documents.md
