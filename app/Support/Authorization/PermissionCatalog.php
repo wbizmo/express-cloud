@@ -128,6 +128,16 @@ final class PermissionCatalog
                 'assets.view' => 'View fixed assets',
                 'assets.manage' => 'Manage fixed assets',
                 'operation_documents.download' => 'Download operation documents',
+
+                'accounting.accounts.view' => 'View chart of accounts',
+                'accounting.accounts.manage' => 'Manage chart of accounts',
+                'accounting.journals.view' => 'View journals',
+                'accounting.journals.create' => 'Create manual journals',
+                'accounting.journals.reverse' => 'Reverse journals',
+                'accounting.periods.manage' => 'Manage accounting periods',
+                'accounting.reports.view' => 'View financial reports',
+                'accounting.sync' => 'Synchronize operational accounting',
+                'accounting.depreciation.post' => 'Post fixed-asset depreciation',
             ],
         ];
     }

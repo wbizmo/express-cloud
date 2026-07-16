@@ -150,6 +150,7 @@ final readonly class CreateSale
                     'track_inventory_snapshot' => $product->track_inventory,
                     'quantity_milliunits' => $quantityMilliunits,
                     'unit_price_kobo' => $unitPriceKobo,
+                    'unit_cost_kobo_snapshot' => $product->default_cost_price_kobo,
                     'discount_amount_kobo' => $discountKobo,
                     'tax_amount_kobo' => $taxKobo,
                     'line_total_kobo' => $lineTotal,

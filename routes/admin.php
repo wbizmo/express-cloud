@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\Accounting\AccountingReportController;
 use App\Http\Controllers\Admin\AccountingOperations\DocumentBrandingController;
 use App\Http\Controllers\Admin\AccountingOperations\FixedAssetController;
 use App\Http\Controllers\Admin\AccountingOperations\OperationDocumentController;
@@ -528,5 +529,12 @@ Route::middleware([
                 ->middleware('permission:operation_documents.download')
                 ->name('documents.spreadsheet');
         });
+
+    Route::get(
+        '/accounting/reports',
+        [AccountingReportController::class, 'index'],
+    )
+        ->middleware('permission:accounting.reports.view')
+        ->name('accounting.reports.index');
 
 });
