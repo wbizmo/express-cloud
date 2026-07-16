@@ -108,6 +108,10 @@ final class PermissionCatalog
                 'vouchers.apply' => 'Apply discount vouchers',
                 'customers.receivables.view' => 'View customer receivables',
                 'purchases.record' => 'Record direct purchases',
+
+                'api.tokens.manage' => 'Manage API tokens',
+
+                'quotes.convert' => 'Convert quotes',
             ],
         ];
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\Activity\ProductActivityController;
 use App\Http\Controllers\Admin\Activity\SystemActivityController;
+use App\Http\Controllers\Admin\Api\ApiTokenController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\Catalog\ClassificationController;
 use App\Http\Controllers\Admin\Catalog\ProductController;
@@ -433,6 +434,18 @@ Route::middleware([
         Route::post('/purchases', [PurchaseReceiptController::class, 'store'])
             ->middleware('permission:purchases.record')
             ->name('purchases.store');
+    });
+
+    Route::prefix('api')->name('api.')->group(function (): void {
+        Route::get('/tokens', [ApiTokenController::class, 'index'])
+            ->middleware('permission:api.tokens.manage')
+            ->name('tokens.index');
+        Route::post('/tokens', [ApiTokenController::class, 'store'])
+            ->middleware('permission:api.tokens.manage')
+            ->name('tokens.store');
+        Route::delete('/tokens/{token}', [ApiTokenController::class, 'destroy'])
+            ->middleware('permission:api.tokens.manage')
+            ->name('tokens.destroy');
     });
 
 });

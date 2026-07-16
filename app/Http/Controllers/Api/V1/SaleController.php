@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Models\Sale;
+use App\Support\Api\ApiResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+final class SaleController
+{
+    public function index(Request $request): JsonResponse
+    {
+        $sales = Sale::query()
+            ->with([
+                'branch:id,name',
+                'customer:id,name',
+                'soldBy:id,first_name,last_name',
+            ])
+            ->when(
+                $request->filled('type'),
+                static fn ($query) => $query->where(
+                    'sale_type',
+                    $request->string('type')->toString(),
+                ),
+            )
+            ->when(
+                $request->filled('branch'),
+                static fn ($query) => $query->where(
+                    'branch_id',
+                    $request->string('branch')->toString(),
+                ),
+            )
+            ->orderByDesc('sale_date')
+            ->orderByDesc('created_at')
+            ->cursorPaginate(50);
+
+        return ApiResponse::success(
+            $sales->items(),
+            meta: [
+                'next_cursor' => $sales->nextCursor()?->encode(),
+            ],
+        );
+    }
+
+    public function show(Sale $sale): JsonResponse
+    {
+        return ApiResponse::success(
+            $sale->load([
+                'branch',
+                'customer',
+                'soldBy',
+                'items',
+                'payments.paymentMethod',
+            ]),
+        );
+    }
+}
