@@ -394,3 +394,19 @@ and spreadsheet reports.
 See:
 
     docs/features/operational-accounting-and-documents.md
+
+## Sprint 19: accounting and final release
+
+The final sprint adds the chart of accounts, periods, journals, operational
+posting, trial balance, general ledger, historical COGS, depreciation,
+production bootstrap seeding, SQL generation, and the no-shell release package.
+
+Release build:
+
+    bash release/build-release.sh
+
+Generated files:
+
+    release/express-cloud-install.sql
+    release/FIRST_LOGIN.txt
+    release/express-cloud-release.zip

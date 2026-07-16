@@ -159,3 +159,12 @@
 - Added PDF and spreadsheet exports for receipts, purchases, returns,
   stock operations, transfers, and assets.
 - Added SHA-256 generation logs for downloaded operation documents.
+
+### Sprint 19
+
+- Added full double-entry accounting foundations and financial reports.
+- Added historical sale cost snapshots and COGS posting.
+- Added operational accounting synchronization and depreciation posting.
+- Replaced the broken default seeder with production bootstrap seeding.
+- Added reproducible MySQL SQL generation and vendor-inclusive release packaging.
+- Added shared-hosting installation and release documentation.
