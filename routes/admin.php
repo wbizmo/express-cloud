@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\Customers\CustomerController;
 use App\Http\Controllers\Admin\Documents\ProductBarcodeController;
 use App\Http\Controllers\Admin\Documents\SaleDocumentController;
 use App\Http\Controllers\Admin\Imports\ProductImportController;
+use App\Http\Controllers\Admin\Insights\LisaInsightController;
 use App\Http\Controllers\Admin\Inventory\InventoryController;
 use App\Http\Controllers\Admin\Operations\AdminDashboardController;
 use App\Http\Controllers\Admin\Operations\AdminNotificationController;
@@ -536,5 +537,15 @@ Route::middleware([
     )
         ->middleware('permission:accounting.reports.view')
         ->name('accounting.reports.index');
+
+    Route::get('/insights', [LisaInsightController::class, 'index'])
+        ->middleware('permission:insights.view')
+        ->name('insights.index');
+    Route::post('/insights/generate', [LisaInsightController::class, 'generate'])
+        ->middleware('permission:insights.generate')
+        ->name('insights.generate');
+    Route::patch('/insights/{insight}/dismiss', [LisaInsightController::class, 'dismiss'])
+        ->middleware('permission:insights.dismiss')
+        ->name('insights.dismiss');
 
 });

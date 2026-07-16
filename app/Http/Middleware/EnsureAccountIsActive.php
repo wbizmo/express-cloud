@@ -15,9 +15,6 @@ final class EnsureAccountIsActive
     public function handle(Request $request, Closure $next): Response
     {
         /** @var Account|null $account */
-        /** @var Account|null $account */
-        /** @var Account|null $account */
-        /** @var Account|null $account */
         $account = $request->user();
 
         if (

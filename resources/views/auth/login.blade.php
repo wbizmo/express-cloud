@@ -179,13 +179,13 @@
                             inputmode="text"
                             autocomplete="one-time-code"
                             maxlength="9"
-                            placeholder="K7M4-P9XR"
+                            placeholder="ECBV-YKQW"
                             value="{{ old('access_key') }}"
                             x-data
                             x-on:input="
                                 let raw = $el.value
                                     .toUpperCase()
-                                    .replace(/[^A-HJ-KM-NP-Z2-9]/g, '')
+                                    .replace(/[^A-HJ-KM-NP-Z]/g, '')
                                     .slice(0, 8);
 
                                 $el.value = raw.length > 4

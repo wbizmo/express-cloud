@@ -1,5 +1,5 @@
 <x-layout.app title="Fixed assets | Express Cloud">
-<x-layout.app-shell page-title="Fixed assets" page-description="Operational asset register. Ledger postings and depreciation journals arrive in Sprint 19.">
+<x-layout.app-shell page-title="Fixed assets" page-description="Operational fixed-asset register with depreciation and accounting controls.">
 <div data-page-header class="mb-5"></div>
 <div class="grid gap-6 xl:grid-cols-[430px_1fr]">
 <x-ui.card title="Add asset">

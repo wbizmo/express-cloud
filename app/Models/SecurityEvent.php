@@ -12,7 +12,7 @@ final class SecurityEvent extends Model
 {
     use HasUlids;
 
-    public const string UPDATED_AT = '';
+    public const UPDATED_AT = null;
 
     protected $table = 'security_events';
 

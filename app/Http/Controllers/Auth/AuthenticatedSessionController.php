@@ -10,6 +10,7 @@ use App\Models\Account;
 use App\Services\Authentication\AccessKeyAuthenticator;
 use App\Services\Authentication\AccountSessionManager;
 use App\Services\Authentication\SecurityEventRecorder;
+use App\Services\Organisation\AuthorizationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -60,7 +61,12 @@ final readonly class AuthenticatedSessionController
             subject: $account,
         );
 
-        return redirect()->intended(route('staff.dashboard'));
+        $destination = app(AuthorizationService::class)
+            ->hasPermission($account, 'dashboard.view')
+                ? route('admin.dashboard')
+                : route('staff.dashboard');
+
+        return redirect()->intended($destination);
     }
 
     public function destroy(
@@ -68,9 +74,6 @@ final readonly class AuthenticatedSessionController
         AccountSessionManager $sessionManager,
         SecurityEventRecorder $securityEvents,
     ): RedirectResponse {
-        /** @var Account|null $account */
-        /** @var Account|null $account */
-        /** @var Account|null $account */
         /** @var Account|null $account */
         $account = $request->user();
 

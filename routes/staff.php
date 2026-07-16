@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Staff\Commercial\SaleReturnController;
 use App\Http\Controllers\Staff\Commercial\SaleSettlementController;
+use App\Http\Controllers\Staff\StaffDashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([
@@ -12,7 +13,7 @@ Route::middleware([
     'account.active',
     'session.inactivity',
 ])->prefix('staff')->name('staff.')->group(function (): void {
-    Route::view('/dashboard', 'staff.dashboard')
+    Route::get('/dashboard', StaffDashboardController::class)
         ->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'show'])

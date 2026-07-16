@@ -27,7 +27,7 @@ final readonly class RequirePermission
         abort_unless(
             $account !== null
             && $this->authorization->hasPermission($account, $permission),
-            403,
+            404,
         );
 
         return $next($request);

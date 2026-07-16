@@ -8,7 +8,12 @@ use InvalidArgumentException;
 
 final class LoginKeyGenerator
 {
-    public const string ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    /**
+     * Alphabet-only access keys.
+     *
+     * Ambiguous letters I, L and O are excluded.
+     */
+    public const string ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ';
 
     public const int RAW_LENGTH = 8;
 
@@ -27,7 +32,7 @@ final class LoginKeyGenerator
 
     public static function normalize(string $value): string
     {
-        $normalized = strtoupper(trim($value));
+        $normalized = mb_strtoupper(trim($value));
         $normalized = str_replace(['-', ' '], '', $normalized);
 
         if (
@@ -35,7 +40,7 @@ final class LoginKeyGenerator
             || strspn($normalized, self::ALPHABET) !== self::RAW_LENGTH
         ) {
             throw new InvalidArgumentException(
-                'Access key must contain exactly eight approved characters.',
+                'Access key must contain exactly eight approved letters.',
             );
         }
 
@@ -46,6 +51,8 @@ final class LoginKeyGenerator
     {
         $normalized = self::normalize($value);
 
-        return substr($normalized, 0, 4).'-'.substr($normalized, 4, 4);
+        return substr($normalized, 0, 4)
+            .'-'
+            .substr($normalized, 4, 4);
     }
 }

@@ -7,27 +7,59 @@ return [
         [
             'label' => 'Workspace',
             'items' => [
-                ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => null],
-                ['label' => 'Create Sale', 'icon' => 'shopping-cart', 'route' => null],
-                ['label' => 'Sales', 'icon' => 'receipt-text', 'route' => null],
-                ['label' => 'Quotes', 'icon' => 'file-text', 'route' => null],
-                ['label' => 'Customers', 'icon' => 'users', 'route' => null],
+                ['label' => 'Admin Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.dashboard', 'permission' => 'dashboard.view'],
+                ['label' => 'My Dashboard', 'icon' => 'gauge', 'route' => 'staff.dashboard', 'permission' => null],
+                ['label' => 'Create Sale', 'icon' => 'shopping-cart', 'route' => 'admin.sales.create', 'permission' => 'sales.create'],
+                ['label' => 'Sales & Quotes', 'icon' => 'receipt-text', 'route' => 'admin.sales.index', 'permission_any' => ['sales.view', 'sales.view.own', 'sales.view.all']],
+                ['label' => 'Customers & Credit', 'icon' => 'users', 'route' => 'admin.customers.index', 'permission' => 'customers.view'],
+                ['label' => 'Receivables', 'icon' => 'hand-coins', 'route' => 'admin.commercial.receivables.index', 'permission' => 'customers.receivables.view'],
             ],
         ],
         [
-            'label' => 'Operations',
+            'label' => 'Catalogue & Stock',
             'items' => [
-                ['label' => 'Products', 'icon' => 'package', 'route' => null],
-                ['label' => 'Inventory', 'icon' => 'warehouse', 'route' => null],
-                ['label' => 'Purchasing', 'icon' => 'truck', 'route' => null],
-                ['label' => 'Reports', 'icon' => 'chart-no-axes-combined', 'route' => null],
-                ['label' => 'Lisa AI', 'icon' => 'bot-message-square', 'route' => null],
+                ['label' => 'Products', 'icon' => 'package', 'route' => 'admin.catalog.products.index', 'permission' => 'products.view'],
+                ['label' => 'Product Import', 'icon' => 'file-up', 'route' => 'admin.imports.products.index', 'permission_any' => ['products.import', 'products.import-history']],
+                ['label' => 'Inventory', 'icon' => 'warehouse', 'route' => 'admin.inventory.index', 'permission' => 'inventory.view'],
+                ['label' => 'Stock Movements', 'icon' => 'arrow-left-right', 'route' => 'admin.inventory.movements', 'permission' => 'inventory.movements.view'],
+                ['label' => 'Low Stock', 'icon' => 'triangle-alert', 'route' => 'admin.reports.low-stock', 'permission' => 'reports.low-stock'],
+            ],
+        ],
+        [
+            'label' => 'Purchasing',
+            'items' => [
+                ['label' => 'Suppliers', 'icon' => 'contact-round', 'route' => 'admin.catalog.suppliers.index', 'permission' => 'suppliers.view'],
+                ['label' => 'Purchase Orders', 'icon' => 'truck', 'route' => 'admin.procurement.orders.index', 'permission' => 'procurement.view'],
+                ['label' => 'Direct Purchases', 'icon' => 'package-plus', 'route' => 'admin.commercial.purchases.index', 'permission' => 'purchases.view'],
+                ['label' => 'Supplier Bills', 'icon' => 'file-text', 'route' => 'admin.supplier-finance.bills.index', 'permission' => 'supplier-bills.view'],
+                ['label' => 'Supplier Returns', 'icon' => 'undo-2', 'route' => 'admin.supplier-finance.returns.index', 'permission' => 'supplier-returns.view'],
+            ],
+        ],
+        [
+            'label' => 'Finance & Intelligence',
+            'items' => [
+                ['label' => 'Accounting', 'icon' => 'landmark', 'route' => 'admin.accounting.reports.index', 'permission' => 'accounting.reports.view'],
+                ['label' => 'Fixed Assets', 'icon' => 'building-2', 'route' => 'admin.accounting-operations.assets.index', 'permission' => 'assets.view'],
+                ['label' => 'Reports', 'icon' => 'chart-no-axes-combined', 'route' => 'admin.reports.hub', 'permission' => 'reports.hub.view'],
+                ['label' => 'Lisa AI', 'icon' => 'bot-message-square', 'route' => 'admin.insights.index', 'permission' => 'insights.view'],
+            ],
+        ],
+        [
+            'label' => 'Administration',
+            'items' => [
+                ['label' => 'Branches', 'icon' => 'map-pin-house', 'route' => 'admin.branches.index', 'permission' => 'branches.view'],
+                ['label' => 'Staff', 'icon' => 'user-cog', 'route' => 'admin.staff.index', 'permission' => 'staff.view'],
+                ['label' => 'Roles & Permissions', 'icon' => 'shield-check', 'route' => 'admin.roles.index', 'permission' => 'roles.view'],
+                ['label' => 'Payment Methods', 'icon' => 'credit-card', 'route' => 'admin.payment-methods.index', 'permission' => 'payment-methods.view'],
+                ['label' => 'Business Settings', 'icon' => 'settings', 'route' => 'admin.operations.settings.edit', 'permission' => 'settings.business.manage'],
+                ['label' => 'Activity Log', 'icon' => 'history', 'route' => 'admin.activity.index', 'permission' => 'activity.view'],
+                ['label' => 'Live Sessions', 'icon' => 'monitor-smartphone', 'route' => 'admin.security.sessions.index', 'permission' => 'security.sessions.view'],
+                ['label' => 'API Tokens', 'icon' => 'key-round', 'route' => 'admin.api.tokens.index', 'permission' => 'api.tokens.manage'],
+                ['label' => 'Backups', 'icon' => 'database-backup', 'route' => 'admin.operations.backups.index', 'permission' => 'backups.view'],
             ],
         ],
     ],
-
     'secondary' => [
-        ['label' => 'Settings', 'icon' => 'settings', 'route' => null],
-        ['label' => 'Help', 'icon' => 'circle-help', 'route' => null],
+        ['label' => 'Profile', 'icon' => 'circle-user-round', 'route' => 'staff.profile.show', 'permission' => null],
     ],
 ];

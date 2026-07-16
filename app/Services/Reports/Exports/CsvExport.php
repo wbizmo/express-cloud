@@ -27,10 +27,10 @@ final class CsvExport
                     );
                 }
 
-                fputcsv($handle, $headings);
+                fputcsv($handle, $headings, ', ', '"', '', '"', '', '');
 
                 foreach ($rows as $row) {
-                    fputcsv($handle, $row);
+                    fputcsv($handle, $row, ', ', '"', '', '"', '', '');
                 }
 
                 fclose($handle);

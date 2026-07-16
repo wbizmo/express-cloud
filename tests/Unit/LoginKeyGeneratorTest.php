@@ -15,38 +15,72 @@ final class LoginKeyGeneratorTest extends TestCase
         $key = (new LoginKeyGenerator)->generate();
 
         self::assertMatchesRegularExpression(
-            '/^[A-HJ-KM-NP-Z2-9]{4}-[A-HJ-KM-NP-Z2-9]{4}$/',
+            '/^[A-HJ-KM-NP-Z]{4}-[A-HJ-KM-NP-Z]{4}$/',
             $key,
         );
     }
 
-    public function test_keys_use_no_ambiguous_characters(): void
+    public function test_keys_use_only_approved_letters(): void
     {
         $generator = new LoginKeyGenerator;
 
         for ($attempt = 0; $attempt < 100; $attempt++) {
             $key = $generator->generate();
+            $normalized = LoginKeyGenerator::normalize($key);
 
-            self::assertStringNotContainsString('0', $key);
-            self::assertStringNotContainsString('O', $key);
-            self::assertStringNotContainsString('1', $key);
+            self::assertSame(
+                LoginKeyGenerator::RAW_LENGTH,
+                strlen($normalized),
+            );
+
+            self::assertSame(
+                LoginKeyGenerator::RAW_LENGTH,
+                strspn(
+                    $normalized,
+                    LoginKeyGenerator::ALPHABET,
+                ),
+            );
+
             self::assertStringNotContainsString('I', $key);
             self::assertStringNotContainsString('L', $key);
+            self::assertStringNotContainsString('O', $key);
         }
     }
 
     public function test_normalization_accepts_grouped_keys(): void
+{
+    self::assertSame(
+        'KMNPQRST',
+        LoginKeyGenerator::normalize('kmnp-qrst'),
+    );
+}
+
+    public function test_normalization_accepts_spaces_and_lowercase(): void
     {
         self::assertSame(
-            'K7M4P9XR',
-            LoginKeyGenerator::normalize('k7m4-p9xr'),
+            'ABCDEFGH',
+            LoginKeyGenerator::normalize('abcd efgh'),
         );
     }
 
-    public function test_invalid_keys_are_rejected(): void
+    public function test_numbers_are_rejected(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        LoginKeyGenerator::normalize('12345678');
+        LoginKeyGenerator::normalize('K7M4-P9XR');
+    }
+
+    public function test_ambiguous_letters_are_rejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        LoginKeyGenerator::normalize('ABCI-EFGL');
+    }
+
+    public function test_invalid_length_is_rejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        LoginKeyGenerator::normalize('ABCD-EFG');
     }
 }

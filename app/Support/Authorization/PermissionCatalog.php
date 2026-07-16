@@ -138,6 +138,9 @@ final class PermissionCatalog
                 'accounting.reports.view' => 'View financial reports',
                 'accounting.sync' => 'Synchronize operational accounting',
                 'accounting.depreciation.post' => 'Post fixed-asset depreciation',
+                'insights.view' => 'View Lisa AI business insights',
+                'insights.generate' => 'Generate Lisa AI business insights',
+                'insights.dismiss' => 'Dismiss Lisa AI business insights',
             ],
         ];
     }
