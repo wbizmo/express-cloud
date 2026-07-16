@@ -362,3 +362,13 @@ and system-wide enterprise form controls.
 See:
 
     docs/features/commercial-controls.md
+
+## API and quote conversion
+
+Sprint 16 adds quote conversion, hashed bearer tokens, the versioned API, and
+OpenAPI documentation.
+
+See:
+
+    docs/api/openapi.md
+    docs/features/api-and-quote-conversion.md

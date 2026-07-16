@@ -134,3 +134,10 @@
 - Added reusable discount vouchers and redemption logs.
 - Added direct purchase recording for catalogue products.
 - Added global sortable selects, animated toggles, choice cards, and back-button enhancement.
+
+### Sprint 16
+
+- Added quote-to-invoice and quote-to-POS conversion.
+- Added hashed, scoped, expirable, and revocable API tokens.
+- Added the versioned `/api/v1` operational API.
+- Added public OpenAPI 3.1 documentation.
