@@ -34,3 +34,5 @@ storage/app/backups/*
 !storage/app/backups/.gitignore
 storage/app/backups/
 storage/app/backup-working/
+storage/app/private/generated-reports/
+storage/app/public/company-branding/

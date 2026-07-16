@@ -119,6 +119,16 @@ final class PermissionCatalog
                 'backups.create' => 'Create backups',
                 'backups.verify' => 'Verify backups',
             ],
+            'Accounting Operations' => [
+                'documents.branding.manage' => 'Manage document branding',
+                'receipts.view' => 'View standalone receipts',
+                'receipts.create' => 'Create standalone receipts',
+                'purchase_returns.view' => 'View purchase returns',
+                'purchase_returns.create' => 'Create purchase returns',
+                'assets.view' => 'View fixed assets',
+                'assets.manage' => 'Manage fixed assets',
+                'operation_documents.download' => 'Download operation documents',
+            ],
         ];
     }
 

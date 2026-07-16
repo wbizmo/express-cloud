@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\AccountingOperations\DocumentBrandingController;
+use App\Http\Controllers\Admin\AccountingOperations\FixedAssetController;
+use App\Http\Controllers\Admin\AccountingOperations\OperationDocumentController;
+use App\Http\Controllers\Admin\AccountingOperations\PurchaseReturnController;
+use App\Http\Controllers\Admin\AccountingOperations\StandaloneReceiptController;
 use App\Http\Controllers\Admin\Activity\ProductActivityController;
 use App\Http\Controllers\Admin\Activity\SystemActivityController;
 use App\Http\Controllers\Admin\Api\ApiTokenController;
@@ -461,6 +466,67 @@ Route::middleware([
             Route::post('/{backupRun}/verify', [BackupController::class, 'verify'])
                 ->middleware('permission:backups.verify')
                 ->name('verify');
+        });
+
+    Route::prefix('accounting-operations')
+        ->name('accounting-operations.')
+        ->group(function (): void {
+            Route::get('/branding', [DocumentBrandingController::class, 'edit'])
+                ->middleware('permission:documents.branding.manage')
+                ->name('branding.edit');
+            Route::patch('/branding', [DocumentBrandingController::class, 'update'])
+                ->middleware('permission:documents.branding.manage')
+                ->name('branding.update');
+
+            Route::get('/receipts', [StandaloneReceiptController::class, 'index'])
+                ->middleware('permission:receipts.view')
+                ->name('receipts.index');
+            Route::get('/receipts/create', [StandaloneReceiptController::class, 'create'])
+                ->middleware('permission:receipts.create')
+                ->name('receipts.create');
+            Route::post('/receipts', [StandaloneReceiptController::class, 'store'])
+                ->middleware('permission:receipts.create')
+                ->name('receipts.store');
+
+            Route::get('/purchase-returns', [PurchaseReturnController::class, 'index'])
+                ->middleware('permission:purchase_returns.view')
+                ->name('purchase-returns.index');
+            Route::get('/purchase-returns/create', [PurchaseReturnController::class, 'create'])
+                ->middleware('permission:purchase_returns.create')
+                ->name('purchase-returns.create');
+            Route::post('/purchase-returns', [PurchaseReturnController::class, 'store'])
+                ->middleware('permission:purchase_returns.create')
+                ->name('purchase-returns.store');
+
+            Route::get('/assets', [FixedAssetController::class, 'index'])
+                ->middleware('permission:assets.view')
+                ->name('assets.index');
+            Route::post('/assets', [FixedAssetController::class, 'store'])
+                ->middleware('permission:assets.manage')
+                ->name('assets.store');
+
+            Route::get('/documents/{type}/{id}/pdf', [OperationDocumentController::class, 'pdf'])
+                ->whereIn('type', [
+                    'standalone_receipt',
+                    'purchase_receipt',
+                    'purchase_return',
+                    'sale_return',
+                    'stock_operation',
+                    'fixed_asset',
+                ])
+                ->middleware('permission:operation_documents.download')
+                ->name('documents.pdf');
+            Route::get('/documents/{type}/{id}/spreadsheet', [OperationDocumentController::class, 'spreadsheet'])
+                ->whereIn('type', [
+                    'standalone_receipt',
+                    'purchase_receipt',
+                    'purchase_return',
+                    'sale_return',
+                    'stock_operation',
+                    'fixed_asset',
+                ])
+                ->middleware('permission:operation_documents.download')
+                ->name('documents.spreadsheet');
         });
 
 });
