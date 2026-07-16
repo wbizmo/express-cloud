@@ -2,6 +2,68 @@
 set -Eeuo pipefail
 IFS=$'\n\t'
 
+SCRIPT_PATH="$(readlink -f "$0")"
+LOG_FILE="/tmp/express-cloud-release-finalize-$(date -u +%Y%m%dT%H%M%SZ).log"
+SKIP_PUSH="${SKIP_PUSH:-0}"
+
+exec > >(tee -a "${LOG_FILE}") 2>&1
+
+fail() {
+    local exit_code=$?
+    local line_no="${1:-unknown}"
+
+    echo
+    echo "============================================================"
+    echo "EXPRESS CLOUD RELEASE FINALIZATION FAILED"
+    echo "Line: ${line_no}"
+    echo "Exit code: ${exit_code}"
+    echo "Log retained at: ${LOG_FILE}"
+    echo "============================================================"
+    exit "${exit_code}"
+}
+trap 'fail "$LINENO"' ERR
+
+section() {
+    echo
+    echo "============================================================"
+    echo "$1"
+    echo "============================================================"
+}
+
+section "Release finalization preflight"
+
+if [[ ! -d .git || ! -f artisan || ! -f release/build-release.sh ]]; then
+    echo "Run this script from the Express Cloud repository root."
+    exit 1
+fi
+
+for command in git php composer npm mysql mysqldump zip rsync; do
+    command -v "${command}" >/dev/null 2>&1 || {
+        echo "Required command missing: ${command}"
+        exit 1
+    }
+done
+
+git log --oneline --all \
+    --grep='feat(sprint-19): implement double-entry accounting and release packaging' |
+    grep -q . || {
+        echo "Sprint 19 implementation commit is missing."
+        exit 1
+    }
+
+if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+    echo "Tracked files contain uncommitted changes."
+    git status --short
+    exit 1
+fi
+
+section "Installing canonical release builder"
+
+cat > release/build-release.sh <<'BASH'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+IFS=$'\n\t'
+
 for command in php composer npm mysql mysqldump zip rsync; do
     command -v "${command}" >/dev/null 2>&1 || {
         echo "Required release command missing: ${command}"
@@ -84,20 +146,17 @@ trap cleanup EXIT
 rm -rf "${STAGE}"
 mkdir -p "${PACKAGE_ROOT}"
 
-echo "Using existing production dependencies..."
+echo "Installing production PHP dependencies..."
+composer install \
+    --no-dev \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-interaction
 
-test -f vendor/autoload.php || {
-    echo "vendor/autoload.php is missing."
-    echo "Restore the existing vendor directory before packaging."
-    exit 1
-}
-echo "Using existing compiled frontend assets..."
+echo "Building production frontend assets..."
+npm ci --ignore-scripts
+npm run build
 
-test -f public/build/manifest.json || {
-    echo "public/build/manifest.json is missing."
-    echo "Run npm run build once before packaging."
-    exit 1
-}
 echo "Creating temporary release database..."
 MYSQL_PWD="${RELEASE_DB_PASSWORD}" mysql \
     -h "${RELEASE_DB_HOST}" \
@@ -323,3 +382,126 @@ echo "  ${OUT}/PRODUCTION.env"
 echo
 echo "The ZIP contains artisan, vendor/, built assets, .env,"
 echo ".env.example, SQL, documentation, and first-login details."
+BASH
+
+chmod +x release/build-release.sh
+
+section "Updating release documentation"
+
+python3 - <<'PY'
+from pathlib import Path
+
+path = Path("docs/installation/INSTALLATION.md")
+text = path.read_text()
+
+addition = """
+## Packaged environment
+
+The release ZIP contains a generated production `.env`. Its application,
+data-encryption, blind-index, backup-encryption, and cron secrets are the same
+ones used while producing the seeded SQL database.
+
+Before opening the application on the target server, update only the target
+database connection, application URL, mail configuration, and hosting-specific
+values. Do not replace the generated encryption keys after importing the SQL,
+because encrypted seeded values depend on them.
+"""
+
+if "## Packaged environment" not in text:
+    text = text.rstrip() + "\n\n" + addition.strip() + "\n"
+
+path.write_text(text)
+
+path = Path("docs/installation/RELEASE_BUILD.md")
+text = path.read_text()
+
+addition = """
+## Generated secrets
+
+The release builder generates `APP_KEY`, `DATA_ENCRYPTION_KEY`,
+`BLIND_INDEX_KEY`, `BACKUP_ENCRYPTION_KEY`, and `CRON_PATH_SECRET` when they
+are not supplied. It uses those values while seeding and packages the same
+values in the production `.env`.
+
+Release database credentials are separate from the target database values and
+are never written into the customer package.
+"""
+
+if "## Generated secrets" not in text:
+    text = text.rstrip() + "\n\n" + addition.strip() + "\n"
+
+path.write_text(text)
+PY
+
+touch .gitignore
+
+for ignored in \
+    '/release/express-cloud-release.zip' \
+    '/release/express-cloud-install.sql' \
+    '/release/FIRST_LOGIN.txt' \
+    '/release/PRODUCTION.env' \
+    '/release/stage/'
+do
+    grep -qxF "${ignored}" .gitignore || echo "${ignored}" >> .gitignore
+done
+
+section "Validating corrected release builder"
+
+bash -n release/build-release.sh
+git diff --check
+
+section "Building final release"
+
+bash release/build-release.sh
+
+section "Committing final release tooling"
+
+git add \
+    .gitignore \
+    release/build-release.sh \
+    docs/installation/INSTALLATION.md \
+    docs/installation/RELEASE_BUILD.md
+
+if ! git diff --cached --quiet; then
+    git commit -m \
+        "fix(release): generate production environment and finalize package builder"
+
+    if [[ "${SKIP_PUSH}" != "1" ]]; then
+        git push -u origin "$(git branch --show-current)"
+    else
+        echo "SKIP_PUSH=1; push skipped."
+    fi
+else
+    echo "Release tooling already matches the canonical version."
+fi
+
+section "Final verification"
+
+test -s release/express-cloud-release.zip
+test -s release/express-cloud-install.sql
+test -s release/FIRST_LOGIN.txt
+test -s release/PRODUCTION.env
+
+if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+    echo "Tracked repository state is not clean."
+    git status --short
+    exit 1
+fi
+
+rm -f -- "${SCRIPT_PATH}"
+
+echo
+echo "============================================================"
+echo "EXPRESS CLOUD RELEASE FINALIZED"
+echo "============================================================"
+echo
+echo "Log: ${LOG_FILE}"
+echo
+echo "Artifacts:"
+echo "  release/express-cloud-release.zip"
+echo "  release/express-cloud-install.sql"
+echo "  release/FIRST_LOGIN.txt"
+echo "  release/PRODUCTION.env"
+echo
+echo "Final commits:"
+git log --oneline -5

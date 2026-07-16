@@ -35,3 +35,14 @@ XML, GD, ZIP, Phar, and Intl.
 Do not upload `.env` from development. Do not leave `FIRST_LOGIN.txt` inside
 the public web root. Delete it after the first successful login and secure
 handover.
+
+## Packaged environment
+
+The release ZIP contains a generated production `.env`. Its application,
+data-encryption, blind-index, backup-encryption, and cron secrets are the same
+ones used while producing the seeded SQL database.
+
+Before opening the application on the target server, update only the target
+database connection, application URL, mail configuration, and hosting-specific
+values. Do not replace the generated encryption keys after importing the SQL,
+because encrypted seeded values depend on them.

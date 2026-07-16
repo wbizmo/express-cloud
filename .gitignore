@@ -36,3 +36,8 @@ storage/app/backups/
 storage/app/backup-working/
 storage/app/private/generated-reports/
 storage/app/public/company-branding/
+/release/express-cloud-release.zip
+/release/express-cloud-install.sql
+/release/FIRST_LOGIN.txt
+/release/PRODUCTION.env
+/release/stage/
