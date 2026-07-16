@@ -372,3 +372,15 @@ See:
 
     docs/api/openapi.md
     docs/features/api-and-quote-conversion.md
+
+## Backups and recovery
+
+Sprint 17 adds checksummed database backups, configurable off-server storage,
+verification tooling, retention pruning, health checks, and recovery
+documentation.
+
+See:
+
+    docs/features/backups-and-recovery.md
+    docs/deployment/production-readiness.md
+    docs/deployment/recovery-runbook.md

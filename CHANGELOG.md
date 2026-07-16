@@ -141,3 +141,11 @@
 - Added hashed, scoped, expirable, and revocable API tokens.
 - Added the versioned `/api/v1` operational API.
 - Added public OpenAPI 3.1 documentation.
+
+### Sprint 17
+
+- Added native database backup creation and archive manifests.
+- Added SHA-256 backup verification and retention pruning.
+- Added backup administration and audit logging.
+- Added the production health endpoint.
+- Added production-readiness and recovery runbooks.
