@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Admin\Procurement;
+
+use App\Models\LowStockAlert;
+use App\Services\Inventory\Quantity;
+use Illuminate\Contracts\View\View;
+
+final readonly class LowStockReportController
+{
+    public function __construct(private Quantity $quantity) {}
+
+    public function __invoke(): View
+    {
+        return view('admin.reports.low-stock', [
+            'alerts' => LowStockAlert::query()
+                ->with(['product:id,name,sku', 'branch:id,name'])
+                ->whereNull('resolved_at')
+                ->orderByDesc('last_seen_at')
+                ->cursorPaginate(75),
+            'quantity' => $this->quantity,
+        ]);
+    }
+}

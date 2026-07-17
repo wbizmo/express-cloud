@@ -1,0 +1,1968 @@
+-- Express Cloud production bootstrap database
+-- Generated directly from repository migrations and production seed requirements.
+-- No demo products, customers, suppliers, sales, stock or transactions are included.
+--
+-- Administrator login
+-- Account/Public ID: 4932de79-670c-40fe-9a44-37bb01ad738b
+-- Access Key: ECBV-YKQW
+--
+-- REQUIRED .env values for this SQL installation:
+-- DATA_ENCRYPTION_KEY=base64:Iy2A/sOLpitjLulyF2dqCnXREs2COVGUy+q+TT6ldcc=
+-- BLIND_INDEX_KEY=cbpAEA6y7fsWqCXlALAzzp4LkTOYp1Ain9Ddr6-H0RI
+-- DATA_ENCRYPTION_VERSION=1
+--
+-- Import into an empty MySQL 8.0+ / MariaDB 10.6+ database.
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS=0;
+SET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';
+
+DROP TABLE IF EXISTS `asset_depreciation_postings`;
+DROP TABLE IF EXISTS `journal_lines`;
+DROP TABLE IF EXISTS `journal_entries`;
+DROP TABLE IF EXISTS `accounting_periods`;
+DROP TABLE IF EXISTS `ledger_accounts`;
+DROP TABLE IF EXISTS `business_insights`;
+DROP TABLE IF EXISTS `operation_document_logs`;
+DROP TABLE IF EXISTS `fixed_assets`;
+DROP TABLE IF EXISTS `purchase_return_lines`;
+DROP TABLE IF EXISTS `purchase_returns`;
+DROP TABLE IF EXISTS `standalone_receipts`;
+DROP TABLE IF EXISTS `document_brandings`;
+DROP TABLE IF EXISTS `backup_runs`;
+DROP TABLE IF EXISTS `quote_conversions`;
+DROP TABLE IF EXISTS `api_tokens`;
+DROP TABLE IF EXISTS `purchase_receipt_lines`;
+DROP TABLE IF EXISTS `purchase_receipts`;
+DROP TABLE IF EXISTS `sale_return_items`;
+DROP TABLE IF EXISTS `sale_returns`;
+DROP TABLE IF EXISTS `voucher_redemptions`;
+DROP TABLE IF EXISTS `discount_vouchers`;
+DROP TABLE IF EXISTS `admin_notifications`;
+DROP TABLE IF EXISTS `end_of_day_digests`;
+DROP TABLE IF EXISTS `business_settings`;
+DROP TABLE IF EXISTS `alert_recipients`;
+DROP TABLE IF EXISTS `supplier_documents`;
+DROP TABLE IF EXISTS `supplier_return_lines`;
+DROP TABLE IF EXISTS `supplier_returns`;
+DROP TABLE IF EXISTS `supplier_bill_payments`;
+DROP TABLE IF EXISTS `supplier_bill_lines`;
+DROP TABLE IF EXISTS `supplier_bills`;
+DROP TABLE IF EXISTS `payments`;
+DROP TABLE IF EXISTS `sale_items`;
+DROP TABLE IF EXISTS `sales`;
+DROP TABLE IF EXISTS `payment_methods`;
+DROP TABLE IF EXISTS `customers`;
+DROP TABLE IF EXISTS `low_stock_alerts`;
+DROP TABLE IF EXISTS `purchase_order_lines`;
+DROP TABLE IF EXISTS `purchase_orders`;
+DROP TABLE IF EXISTS `stock_movements`;
+DROP TABLE IF EXISTS `product_branch_stock`;
+DROP TABLE IF EXISTS `product_import_rows`;
+DROP TABLE IF EXISTS `product_imports`;
+DROP TABLE IF EXISTS `product_branch_prices`;
+DROP TABLE IF EXISTS `products`;
+DROP TABLE IF EXISTS `suppliers`;
+DROP TABLE IF EXISTS `tax_rates`;
+DROP TABLE IF EXISTS `brands`;
+DROP TABLE IF EXISTS `product_categories`;
+DROP TABLE IF EXISTS `audit_logs`;
+DROP TABLE IF EXISTS `account_branch`;
+DROP TABLE IF EXISTS `account_role`;
+DROP TABLE IF EXISTS `permission_role`;
+DROP TABLE IF EXISTS `permissions`;
+DROP TABLE IF EXISTS `roles`;
+DROP TABLE IF EXISTS `branches`;
+DROP TABLE IF EXISTS `companies`;
+DROP TABLE IF EXISTS `security_events`;
+DROP TABLE IF EXISTS `account_sessions`;
+DROP TABLE IF EXISTS `accounts`;
+DROP TABLE IF EXISTS `failed_jobs`;
+DROP TABLE IF EXISTS `job_batches`;
+DROP TABLE IF EXISTS `jobs`;
+DROP TABLE IF EXISTS `cache_locks`;
+DROP TABLE IF EXISTS `cache`;
+
+CREATE TABLE `cache` (
+  `key` VARCHAR(255) NOT NULL,
+  `value` MEDIUMTEXT NOT NULL,
+  `expiration` BIGINT NOT NULL,
+  PRIMARY KEY (`key`),
+  KEY `idx_cache_expiration` (`expiration`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `cache_locks` (
+  `key` VARCHAR(255) NOT NULL,
+  `owner` VARCHAR(255) NOT NULL,
+  `expiration` BIGINT NOT NULL,
+  PRIMARY KEY (`key`),
+  KEY `idx_cache_locks_expiration` (`expiration`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `jobs` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `queue` VARCHAR(255) NOT NULL,
+  `payload` LONGTEXT NOT NULL,
+  `attempts` SMALLINT UNSIGNED NOT NULL,
+  `reserved_at` INT UNSIGNED NULL DEFAULT NULL,
+  `available_at` INT UNSIGNED NOT NULL,
+  `created_at` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_jobs_queue` (`queue`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `job_batches` (
+  `id` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `total_jobs` INT NOT NULL,
+  `pending_jobs` INT NOT NULL,
+  `failed_jobs` INT NOT NULL,
+  `failed_job_ids` LONGTEXT NOT NULL,
+  `options` MEDIUMTEXT NULL DEFAULT NULL,
+  `cancelled_at` INT NULL DEFAULT NULL,
+  `created_at` INT NOT NULL,
+  `finished_at` INT NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `failed_jobs` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uuid` VARCHAR(255) NOT NULL,
+  `connection` VARCHAR(255) NOT NULL,
+  `queue` VARCHAR(255) NOT NULL,
+  `payload` LONGTEXT NOT NULL,
+  `exception` LONGTEXT NOT NULL,
+  `failed_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_failed_jobs_uuid` (`uuid`),
+  KEY `idx_failed_jobs_connection_queue_failed_at` (`connection`,`queue`,`failed_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `accounts` (
+  `id` CHAR(26) NOT NULL,
+  `public_id` CHAR(36) NOT NULL,
+  `first_name` VARCHAR(100) NOT NULL,
+  `last_name` VARCHAR(100) NOT NULL,
+  `email_encrypted` TEXT NULL DEFAULT NULL,
+  `login_key_encrypted` TEXT NOT NULL,
+  `login_key_blind_index` CHAR(64) NOT NULL,
+  `login_key_version` SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  `profile_picture_path` VARCHAR(500) NULL DEFAULT NULL,
+  `status` VARCHAR(32) NOT NULL DEFAULT 'active',
+  `last_authenticated_at` TIMESTAMP NULL DEFAULT NULL,
+  `remember_token` VARCHAR(100) NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  `is_allowed_all_branches` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_accounts_public_id` (`public_id`),
+  UNIQUE KEY `uniq_accounts_login_key_blind_index` (`login_key_blind_index`),
+  KEY `idx_accounts_status` (`status`),
+  KEY `idx_accounts_last_authenticated_at` (`last_authenticated_at`),
+  KEY `idx_accounts_last_name_first_name` (`last_name`,`first_name`),
+  KEY `idx_accounts_status_last_name_first_name` (`status`,`last_name`,`first_name`),
+  KEY `idx_accounts_is_allowed_all_branches` (`is_allowed_all_branches`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `account_sessions` (
+  `id` CHAR(26) NOT NULL,
+  `account_id` CHAR(26) NOT NULL,
+  `session_identifier` VARCHAR(255) NOT NULL,
+  `ip_address` VARCHAR(45) NULL DEFAULT NULL,
+  `user_agent` TEXT NULL DEFAULT NULL,
+  `last_activity_at` TIMESTAMP NOT NULL,
+  `revoked_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_account_sessions_session_identifier` (`session_identifier`),
+  KEY `idx_account_sessions_last_activity_at` (`last_activity_at`),
+  KEY `idx_account_sessions_revoked_at` (`revoked_at`),
+  KEY `account_sessions_activity_index` (`account_id`,`revoked_at`,`last_activity_at`),
+  CONSTRAINT `fk_account_sessions_account_id` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `security_events` (
+  `id` CHAR(26) NOT NULL,
+  `event_type` VARCHAR(64) NOT NULL,
+  `actor_account_id` CHAR(26) NULL DEFAULT NULL,
+  `subject_account_id` CHAR(26) NULL DEFAULT NULL,
+  `session_identifier` VARCHAR(255) NULL DEFAULT NULL,
+  `ip_address` VARCHAR(45) NULL DEFAULT NULL,
+  `user_agent` TEXT NULL DEFAULT NULL,
+  `context` JSON NULL DEFAULT NULL,
+  `occurred_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_security_events_event_type` (`event_type`),
+  KEY `idx_security_events_session_identifier` (`session_identifier`),
+  KEY `idx_security_events_ip_address` (`ip_address`),
+  KEY `idx_security_events_occurred_at` (`occurred_at`),
+  KEY `security_events_type_time_index` (`event_type`,`occurred_at`),
+  KEY `security_events_subject_time_index` (`subject_account_id`,`occurred_at`),
+  KEY `security_events_actor_time_index` (`actor_account_id`,`occurred_at`),
+  CONSTRAINT `fk_security_events_actor_account_id` FOREIGN KEY (`actor_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_security_events_subject_account_id` FOREIGN KEY (`subject_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `companies` (
+  `id` CHAR(26) NOT NULL,
+  `legal_name` VARCHAR(180) NOT NULL,
+  `trading_name` VARCHAR(180) NULL DEFAULT NULL,
+  `head_office_address` TEXT NOT NULL,
+  `phone` VARCHAR(40) NULL DEFAULT NULL,
+  `email_encrypted` TEXT NULL DEFAULT NULL,
+  `logo_path` VARCHAR(500) NULL DEFAULT NULL,
+  `timezone` VARCHAR(64) NOT NULL DEFAULT 'Africa/Lagos',
+  `is_configured` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_companies_is_configured` (`is_configured`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `branches` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(160) NOT NULL,
+  `code` VARCHAR(40) NOT NULL,
+  `address` TEXT NOT NULL,
+  `phone` VARCHAR(40) NULL DEFAULT NULL,
+  `status` VARCHAR(32) NOT NULL DEFAULT 'active',
+  `is_head_office` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_branches_code` (`code`),
+  KEY `idx_branches_status` (`status`),
+  KEY `idx_branches_is_head_office` (`is_head_office`),
+  KEY `idx_branches_status_name` (`status`,`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `roles` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(100) NOT NULL,
+  `slug` VARCHAR(120) NOT NULL,
+  `description` TEXT NULL DEFAULT NULL,
+  `is_system` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_roles_slug` (`slug`),
+  KEY `idx_roles_is_system` (`is_system`),
+  KEY `idx_roles_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `permissions` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(160) NOT NULL,
+  `slug` VARCHAR(180) NOT NULL,
+  `group` VARCHAR(80) NOT NULL,
+  `description` TEXT NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_permissions_slug` (`slug`),
+  KEY `idx_permissions_group` (`group`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `permission_role` (
+  `permission_id` CHAR(26) NOT NULL,
+  `role_id` CHAR(26) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`permission_id`,`role_id`),
+  CONSTRAINT `fk_permission_role_permission_id` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_permission_role_role_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `account_role` (
+  `account_id` CHAR(26) NOT NULL,
+  `role_id` CHAR(26) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`account_id`,`role_id`),
+  CONSTRAINT `fk_account_role_account_id` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_account_role_role_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `account_branch` (
+  `account_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`account_id`,`branch_id`),
+  CONSTRAINT `fk_account_branch_account_id` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_account_branch_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `audit_logs` (
+  `id` CHAR(26) NOT NULL,
+  `actor_account_id` CHAR(26) NULL DEFAULT NULL,
+  `actor_name` VARCHAR(220) NULL DEFAULT NULL,
+  `actor_role_snapshot` VARCHAR(220) NULL DEFAULT NULL,
+  `action` VARCHAR(180) NOT NULL,
+  `entity_type` VARCHAR(100) NOT NULL,
+  `entity_id` VARCHAR(64) NULL DEFAULT NULL,
+  `branch_id` CHAR(26) NULL DEFAULT NULL,
+  `before_data` JSON NULL DEFAULT NULL,
+  `after_data` JSON NULL DEFAULT NULL,
+  `context` JSON NULL DEFAULT NULL,
+  `ip_address` VARCHAR(45) NULL DEFAULT NULL,
+  `user_agent` TEXT NULL DEFAULT NULL,
+  `occurred_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_audit_logs_action` (`action`),
+  KEY `idx_audit_logs_entity_type` (`entity_type`),
+  KEY `idx_audit_logs_entity_id` (`entity_id`),
+  KEY `idx_audit_logs_ip_address` (`ip_address`),
+  KEY `idx_audit_logs_occurred_at` (`occurred_at`),
+  KEY `audit_logs_entity_time_index` (`entity_type`,`entity_id`,`occurred_at`),
+  KEY `audit_logs_branch_time_index` (`branch_id`,`occurred_at`),
+  KEY `audit_logs_actor_time_index` (`actor_account_id`,`occurred_at`),
+  CONSTRAINT `fk_audit_logs_actor_account_id` FOREIGN KEY (`actor_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_audit_logs_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `product_categories` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(140) NOT NULL,
+  `slug` VARCHAR(160) NOT NULL,
+  `description` TEXT NULL DEFAULT NULL,
+  `status` VARCHAR(32) NOT NULL DEFAULT 'active',
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_product_categories_slug` (`slug`),
+  KEY `idx_product_categories_status` (`status`),
+  KEY `idx_product_categories_status_name` (`status`,`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `brands` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(140) NOT NULL,
+  `slug` VARCHAR(160) NOT NULL,
+  `description` TEXT NULL DEFAULT NULL,
+  `status` VARCHAR(32) NOT NULL DEFAULT 'active',
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_brands_slug` (`slug`),
+  KEY `idx_brands_status` (`status`),
+  KEY `idx_brands_status_name` (`status`,`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `tax_rates` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(120) NOT NULL,
+  `rate_basis_points` INT UNSIGNED NOT NULL DEFAULT 0,
+  `status` VARCHAR(32) NOT NULL DEFAULT 'active',
+  `is_default` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_tax_rates_status` (`status`),
+  KEY `idx_tax_rates_is_default` (`is_default`),
+  KEY `idx_tax_rates_status_name` (`status`,`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `suppliers` (
+  `id` CHAR(26) NOT NULL,
+  `supplier_code` VARCHAR(60) NOT NULL,
+  `company_name` VARCHAR(180) NOT NULL,
+  `contact_person` VARCHAR(160) NULL DEFAULT NULL,
+  `category` VARCHAR(120) NULL DEFAULT NULL,
+  `email_encrypted` TEXT NULL DEFAULT NULL,
+  `phone` VARCHAR(40) NULL DEFAULT NULL,
+  `address` TEXT NULL DEFAULT NULL,
+  `tax_number_encrypted` TEXT NULL DEFAULT NULL,
+  `payment_terms_days` INT UNSIGNED NOT NULL DEFAULT 0,
+  `credit_limit_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `lead_time_days` INT UNSIGNED NOT NULL DEFAULT 0,
+  `delivery_terms` TEXT NULL DEFAULT NULL,
+  `return_policy` TEXT NULL DEFAULT NULL,
+  `is_preferred` TINYINT(1) NOT NULL DEFAULT 0,
+  `status` VARCHAR(32) NOT NULL DEFAULT 'active',
+  `notes` TEXT NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_suppliers_supplier_code` (`supplier_code`),
+  KEY `idx_suppliers_category` (`category`),
+  KEY `idx_suppliers_is_preferred` (`is_preferred`),
+  KEY `idx_suppliers_status` (`status`),
+  KEY `idx_suppliers_status_company_name` (`status`,`company_name`),
+  KEY `idx_suppliers_is_preferred_status` (`is_preferred`,`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `products` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(200) NOT NULL,
+  `sku` VARCHAR(100) NOT NULL,
+  `barcode` VARCHAR(160) NULL DEFAULT NULL,
+  `category_id` CHAR(26) NOT NULL,
+  `brand_id` CHAR(26) NULL DEFAULT NULL,
+  `tax_rate_id` CHAR(26) NULL DEFAULT NULL,
+  `description` TEXT NULL DEFAULT NULL,
+  `image_path` VARCHAR(500) NULL DEFAULT NULL,
+  `track_inventory` TINYINT(1) NOT NULL DEFAULT 1,
+  `default_price_kobo` BIGINT UNSIGNED NOT NULL,
+  `default_cost_price_kobo` BIGINT UNSIGNED NULL DEFAULT NULL,
+  `status` VARCHAR(32) NOT NULL DEFAULT 'active',
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_products_sku` (`sku`),
+  UNIQUE KEY `uniq_products_barcode` (`barcode`),
+  KEY `idx_products_track_inventory` (`track_inventory`),
+  KEY `idx_products_status` (`status`),
+  KEY `idx_products_status_name` (`status`,`name`),
+  KEY `idx_products_category_id_status` (`category_id`,`status`),
+  KEY `idx_products_brand_id_status` (`brand_id`,`status`),
+  CONSTRAINT `fk_products_category_id` FOREIGN KEY (`category_id`) REFERENCES `product_categories` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_products_brand_id` FOREIGN KEY (`brand_id`) REFERENCES `brands` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_products_tax_rate_id` FOREIGN KEY (`tax_rate_id`) REFERENCES `tax_rates` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `product_branch_prices` (
+  `id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `price_kobo` BIGINT UNSIGNED NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_product_branch_prices_product_id_branch_id` (`product_id`,`branch_id`),
+  KEY `idx_product_branch_prices_branch_id_product_id` (`branch_id`,`product_id`),
+  CONSTRAINT `fk_product_branch_prices_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_product_branch_prices_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `product_imports` (
+  `id` CHAR(26) NOT NULL,
+  `account_id` CHAR(26) NULL DEFAULT NULL,
+  `original_filename` VARCHAR(255) NOT NULL,
+  `stored_path` VARCHAR(500) NOT NULL,
+  `error_report_path` VARCHAR(500) NULL DEFAULT NULL,
+  `status` VARCHAR(40) NOT NULL,
+  `total_rows` INT UNSIGNED NOT NULL DEFAULT 0,
+  `valid_rows` INT UNSIGNED NOT NULL DEFAULT 0,
+  `invalid_rows` INT UNSIGNED NOT NULL DEFAULT 0,
+  `created_products` INT UNSIGNED NOT NULL DEFAULT 0,
+  `updated_products` INT UNSIGNED NOT NULL DEFAULT 0,
+  `created_categories` INT UNSIGNED NOT NULL DEFAULT 0,
+  `created_brands` INT UNSIGNED NOT NULL DEFAULT 0,
+  `created_suppliers` INT UNSIGNED NOT NULL DEFAULT 0,
+  `summary` JSON NULL DEFAULT NULL,
+  `validated_at` TIMESTAMP NULL DEFAULT NULL,
+  `completed_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_product_imports_status` (`status`),
+  KEY `idx_product_imports_validated_at` (`validated_at`),
+  KEY `idx_product_imports_completed_at` (`completed_at`),
+  KEY `idx_product_imports_status_created_at` (`status`,`created_at`),
+  CONSTRAINT `fk_product_imports_account_id` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `product_import_rows` (
+  `id` CHAR(26) NOT NULL,
+  `product_import_id` CHAR(26) NOT NULL,
+  `row_number` INT UNSIGNED NOT NULL,
+  `payload` JSON NOT NULL,
+  `errors` JSON NULL DEFAULT NULL,
+  `is_valid` TINYINT(1) NOT NULL DEFAULT 0,
+  `processed_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_product_import_rows_is_valid` (`is_valid`),
+  KEY `idx_product_import_rows_processed_at` (`processed_at`),
+  UNIQUE KEY `uniq_product_import_rows_product_import_id_row_number` (`product_import_id`,`row_number`),
+  KEY `product_import_rows_lookup_index` (`product_import_id`,`is_valid`,`row_number`),
+  CONSTRAINT `fk_product_import_rows_product_import_id` FOREIGN KEY (`product_import_id`) REFERENCES `product_imports` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `product_branch_stock` (
+  `id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `quantity_milliunits` BIGINT NOT NULL DEFAULT 0,
+  `minimum_stock_milliunits` BIGINT NOT NULL DEFAULT 5000,
+  `last_movement_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_product_branch_stock_last_movement_at` (`last_movement_at`),
+  UNIQUE KEY `uniq_product_branch_stock_product_id_branch_id` (`product_id`,`branch_id`),
+  KEY `product_branch_stock_low_index` (`branch_id`,`quantity_milliunits`,`minimum_stock_milliunits`),
+  CONSTRAINT `fk_product_branch_stock_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_product_branch_stock_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `stock_movements` (
+  `id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `account_id` CHAR(26) NULL DEFAULT NULL,
+  `movement_type` VARCHAR(40) NOT NULL,
+  `quantity_delta_milliunits` BIGINT NOT NULL,
+  `balance_after_milliunits` BIGINT NOT NULL,
+  `unit_cost_kobo` BIGINT UNSIGNED NULL DEFAULT NULL,
+  `reference_type` VARCHAR(60) NULL DEFAULT NULL,
+  `reference_id` VARCHAR(64) NULL DEFAULT NULL,
+  `correlation_id` CHAR(26) NULL DEFAULT NULL,
+  `reason_code` VARCHAR(60) NULL DEFAULT NULL,
+  `note` TEXT NULL DEFAULT NULL,
+  `occurred_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_stock_movements_movement_type` (`movement_type`),
+  KEY `idx_stock_movements_reference_type` (`reference_type`),
+  KEY `idx_stock_movements_reference_id` (`reference_id`),
+  KEY `idx_stock_movements_correlation_id` (`correlation_id`),
+  KEY `idx_stock_movements_reason_code` (`reason_code`),
+  KEY `idx_stock_movements_occurred_at` (`occurred_at`),
+  KEY `stock_movements_product_branch_time_index` (`product_id`,`branch_id`,`occurred_at`),
+  KEY `stock_movements_reference_index` (`reference_type`,`reference_id`),
+  CONSTRAINT `fk_stock_movements_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_stock_movements_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_stock_movements_account_id` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `purchase_orders` (
+  `id` CHAR(26) NOT NULL,
+  `order_number` VARCHAR(80) NOT NULL,
+  `supplier_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `created_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `approved_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `status` VARCHAR(40) NOT NULL,
+  `expected_at` DATE NULL DEFAULT NULL,
+  `subtotal_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `tax_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `total_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `reference_note` TEXT NOT NULL,
+  `approved_at` TIMESTAMP NULL DEFAULT NULL,
+  `received_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_purchase_orders_order_number` (`order_number`),
+  KEY `idx_purchase_orders_status` (`status`),
+  KEY `idx_purchase_orders_expected_at` (`expected_at`),
+  KEY `idx_purchase_orders_approved_at` (`approved_at`),
+  KEY `idx_purchase_orders_received_at` (`received_at`),
+  KEY `idx_purchase_orders_supplier_id_status` (`supplier_id`,`status`),
+  KEY `idx_purchase_orders_branch_id_status` (`branch_id`,`status`),
+  CONSTRAINT `fk_purchase_orders_supplier_id` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_purchase_orders_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_purchase_orders_created_by_account_id` FOREIGN KEY (`created_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_purchase_orders_approved_by_account_id` FOREIGN KEY (`approved_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `purchase_order_lines` (
+  `id` CHAR(26) NOT NULL,
+  `purchase_order_id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `ordered_quantity_milliunits` BIGINT NOT NULL,
+  `received_quantity_milliunits` BIGINT NOT NULL DEFAULT 0,
+  `unit_cost_kobo` BIGINT UNSIGNED NOT NULL,
+  `tax_rate_basis_points` INT UNSIGNED NOT NULL DEFAULT 0,
+  `line_total_kobo` BIGINT UNSIGNED NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_purchase_order_lines_purchase_order_id_product_id` (`purchase_order_id`,`product_id`),
+  CONSTRAINT `fk_purchase_order_lines_purchase_order_id` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_orders` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_purchase_order_lines_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `low_stock_alerts` (
+  `id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `quantity_milliunits` BIGINT NOT NULL,
+  `minimum_stock_milliunits` BIGINT NOT NULL,
+  `opened_at` TIMESTAMP NOT NULL,
+  `last_seen_at` TIMESTAMP NOT NULL,
+  `resolved_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_low_stock_alerts_opened_at` (`opened_at`),
+  KEY `idx_low_stock_alerts_last_seen_at` (`last_seen_at`),
+  KEY `idx_low_stock_alerts_resolved_at` (`resolved_at`),
+  KEY `low_stock_alerts_branch_open_index` (`branch_id`,`resolved_at`,`opened_at`),
+  UNIQUE KEY `low_stock_alerts_resolution_unique` (`product_id`,`branch_id`,`resolved_at`),
+  CONSTRAINT `fk_low_stock_alerts_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_low_stock_alerts_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `customers` (
+  `id` CHAR(26) NOT NULL,
+  `customer_code` VARCHAR(60) NOT NULL,
+  `name` VARCHAR(150) NOT NULL,
+  `phone` VARCHAR(30) NOT NULL,
+  `email_encrypted` TEXT NULL DEFAULT NULL,
+  `address` TEXT NULL DEFAULT NULL,
+  `credit_limit_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `balance_kobo` BIGINT NOT NULL DEFAULT 0,
+  `is_wholesale` TINYINT(1) NOT NULL DEFAULT 0,
+  `status` VARCHAR(30) NOT NULL DEFAULT 'active',
+  `created_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_customers_customer_code` (`customer_code`),
+  KEY `idx_customers_phone` (`phone`),
+  KEY `idx_customers_is_wholesale` (`is_wholesale`),
+  KEY `idx_customers_status` (`status`),
+  KEY `idx_customers_status_name` (`status`,`name`),
+  KEY `idx_customers_phone_status` (`phone`,`status`),
+  CONSTRAINT `fk_customers_created_by_account_id` FOREIGN KEY (`created_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `payment_methods` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(80) NOT NULL,
+  `account_number_encrypted` TEXT NULL DEFAULT NULL,
+  `bank_name` VARCHAR(120) NULL DEFAULT NULL,
+  `description` TEXT NULL DEFAULT NULL,
+  `is_system_default` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_default_for_pos` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_payment_methods_is_system_default` (`is_system_default`),
+  KEY `idx_payment_methods_is_default_for_pos` (`is_default_for_pos`),
+  KEY `idx_payment_methods_is_active` (`is_active`),
+  UNIQUE KEY `uniq_payment_methods_name` (`name`),
+  KEY `idx_payment_methods_is_active_name` (`is_active`,`name`),
+  CONSTRAINT `fk_payment_methods_created_by_account_id` FOREIGN KEY (`created_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `sales` (
+  `id` CHAR(26) NOT NULL,
+  `sale_code` VARCHAR(40) NOT NULL,
+  `sale_type` VARCHAR(30) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `customer_id` CHAR(26) NULL DEFAULT NULL,
+  `sold_by_account_id` CHAR(26) NOT NULL,
+  `converted_from_sale_id` CHAR(26) NULL DEFAULT NULL,
+  `sale_date` DATE NOT NULL,
+  `subtotal_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `discount_amount_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `tax_amount_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `grand_total_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `paid_amount_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `status` VARCHAR(30) NOT NULL,
+  `idempotency_key` VARCHAR(80) NOT NULL,
+  `notes` TEXT NULL DEFAULT NULL,
+  `confirmed_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  `discount_voucher_id` CHAR(26) NULL DEFAULT NULL,
+  `credit_note` VARCHAR(255) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_sales_sale_code` (`sale_code`),
+  KEY `idx_sales_sale_type` (`sale_type`),
+  KEY `idx_sales_sale_date` (`sale_date`),
+  KEY `idx_sales_status` (`status`),
+  UNIQUE KEY `uniq_sales_idempotency_key` (`idempotency_key`),
+  KEY `idx_sales_confirmed_at` (`confirmed_at`),
+  KEY `idx_sales_branch_id_sale_date` (`branch_id`,`sale_date`),
+  KEY `idx_sales_sold_by_account_id_sale_date` (`sold_by_account_id`,`sale_date`),
+  KEY `idx_sales_sale_type_status_sale_date` (`sale_type`,`status`,`sale_date`),
+  CONSTRAINT `fk_sales_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_sales_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_sales_sold_by_account_id` FOREIGN KEY (`sold_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_sales_converted_from_sale_id` FOREIGN KEY (`converted_from_sale_id`) REFERENCES `sales` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_sales_discount_voucher_id` FOREIGN KEY (`discount_voucher_id`) REFERENCES `discount_vouchers` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `sale_items` (
+  `id` CHAR(26) NOT NULL,
+  `sale_id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `product_name_snapshot` VARCHAR(200) NOT NULL,
+  `sku_snapshot` VARCHAR(100) NOT NULL,
+  `track_inventory_snapshot` TINYINT(1) NOT NULL,
+  `quantity_milliunits` BIGINT NOT NULL,
+  `unit_price_kobo` BIGINT UNSIGNED NOT NULL,
+  `discount_amount_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `tax_amount_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `line_total_kobo` BIGINT UNSIGNED NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  `unit_cost_kobo_snapshot` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_sale_items_sale_id_product_id` (`sale_id`,`product_id`),
+  CONSTRAINT `fk_sale_items_sale_id` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sale_items_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `payments` (
+  `id` CHAR(26) NOT NULL,
+  `sale_id` CHAR(26) NOT NULL,
+  `payment_method_id` CHAR(26) NOT NULL,
+  `amount_kobo` BIGINT UNSIGNED NOT NULL,
+  `recorded_by_account_id` CHAR(26) NOT NULL,
+  `reference` VARCHAR(160) NULL DEFAULT NULL,
+  `paid_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_payments_paid_at` (`paid_at`),
+  KEY `idx_payments_sale_id_paid_at` (`sale_id`,`paid_at`),
+  CONSTRAINT `fk_payments_sale_id` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_payments_payment_method_id` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_payments_recorded_by_account_id` FOREIGN KEY (`recorded_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `supplier_bills` (
+  `id` CHAR(26) NOT NULL,
+  `bill_number` VARCHAR(80) NOT NULL,
+  `supplier_reference` VARCHAR(160) NULL DEFAULT NULL,
+  `supplier_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `purchase_order_id` CHAR(26) NULL DEFAULT NULL,
+  `created_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `bill_date` DATE NOT NULL,
+  `due_date` DATE NULL DEFAULT NULL,
+  `subtotal_kobo` BIGINT UNSIGNED NOT NULL,
+  `tax_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `total_kobo` BIGINT UNSIGNED NOT NULL,
+  `paid_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `status` VARCHAR(40) NOT NULL,
+  `reference_note` TEXT NOT NULL,
+  `posted_at` TIMESTAMP NULL DEFAULT NULL,
+  `cancelled_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_supplier_bills_bill_number` (`bill_number`),
+  KEY `idx_supplier_bills_supplier_reference` (`supplier_reference`),
+  KEY `idx_supplier_bills_bill_date` (`bill_date`),
+  KEY `idx_supplier_bills_due_date` (`due_date`),
+  KEY `idx_supplier_bills_status` (`status`),
+  KEY `idx_supplier_bills_posted_at` (`posted_at`),
+  KEY `idx_supplier_bills_cancelled_at` (`cancelled_at`),
+  KEY `idx_supplier_bills_supplier_id_status_due_date` (`supplier_id`,`status`,`due_date`),
+  KEY `idx_supplier_bills_branch_id_bill_date` (`branch_id`,`bill_date`),
+  CONSTRAINT `fk_supplier_bills_supplier_id` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_supplier_bills_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_supplier_bills_purchase_order_id` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_orders` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_supplier_bills_created_by_account_id` FOREIGN KEY (`created_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `supplier_bill_lines` (
+  `id` CHAR(26) NOT NULL,
+  `supplier_bill_id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NULL DEFAULT NULL,
+  `description` VARCHAR(255) NOT NULL,
+  `quantity_milliunits` BIGINT NOT NULL,
+  `unit_cost_kobo` BIGINT UNSIGNED NOT NULL,
+  `tax_rate_basis_points` INT UNSIGNED NOT NULL DEFAULT 0,
+  `line_subtotal_kobo` BIGINT UNSIGNED NOT NULL,
+  `tax_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `line_total_kobo` BIGINT UNSIGNED NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_supplier_bill_lines_supplier_bill_id_product_id` (`supplier_bill_id`,`product_id`),
+  CONSTRAINT `fk_supplier_bill_lines_supplier_bill_id` FOREIGN KEY (`supplier_bill_id`) REFERENCES `supplier_bills` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_supplier_bill_lines_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `supplier_bill_payments` (
+  `id` CHAR(26) NOT NULL,
+  `supplier_bill_id` CHAR(26) NOT NULL,
+  `payment_method_id` CHAR(26) NOT NULL,
+  `recorded_by_account_id` CHAR(26) NOT NULL,
+  `amount_kobo` BIGINT UNSIGNED NOT NULL,
+  `reference` VARCHAR(160) NULL DEFAULT NULL,
+  `paid_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_supplier_bill_payments_paid_at` (`paid_at`),
+  KEY `idx_supplier_bill_payments_supplier_bill_id_paid_at` (`supplier_bill_id`,`paid_at`),
+  CONSTRAINT `fk_supplier_bill_payments_supplier_bill_id` FOREIGN KEY (`supplier_bill_id`) REFERENCES `supplier_bills` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_supplier_bill_payments_payment_method_id` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_supplier_bill_payments_recorded_by_account_id` FOREIGN KEY (`recorded_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `supplier_returns` (
+  `id` CHAR(26) NOT NULL,
+  `return_number` VARCHAR(80) NOT NULL,
+  `supplier_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `supplier_bill_id` CHAR(26) NULL DEFAULT NULL,
+  `created_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `status` VARCHAR(40) NOT NULL,
+  `return_date` DATE NOT NULL,
+  `total_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `reason` VARCHAR(120) NOT NULL,
+  `reference_note` TEXT NOT NULL,
+  `confirmed_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_supplier_returns_return_number` (`return_number`),
+  KEY `idx_supplier_returns_status` (`status`),
+  KEY `idx_supplier_returns_return_date` (`return_date`),
+  KEY `idx_supplier_returns_confirmed_at` (`confirmed_at`),
+  KEY `idx_supplier_returns_supplier_id_return_date` (`supplier_id`,`return_date`),
+  KEY `idx_supplier_returns_branch_id_status` (`branch_id`,`status`),
+  CONSTRAINT `fk_supplier_returns_supplier_id` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_supplier_returns_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_supplier_returns_supplier_bill_id` FOREIGN KEY (`supplier_bill_id`) REFERENCES `supplier_bills` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_supplier_returns_created_by_account_id` FOREIGN KEY (`created_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `supplier_return_lines` (
+  `id` CHAR(26) NOT NULL,
+  `supplier_return_id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `quantity_milliunits` BIGINT NOT NULL,
+  `unit_cost_kobo` BIGINT UNSIGNED NOT NULL,
+  `line_total_kobo` BIGINT UNSIGNED NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_supplier_return_lines_supplier_return_id_product_id` (`supplier_return_id`,`product_id`),
+  CONSTRAINT `fk_supplier_return_lines_supplier_return_id` FOREIGN KEY (`supplier_return_id`) REFERENCES `supplier_returns` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_supplier_return_lines_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `supplier_documents` (
+  `id` CHAR(26) NOT NULL,
+  `supplier_id` CHAR(26) NOT NULL,
+  `supplier_bill_id` CHAR(26) NULL DEFAULT NULL,
+  `uploaded_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `original_filename` VARCHAR(255) NOT NULL,
+  `stored_path` VARCHAR(500) NOT NULL,
+  `mime_type` VARCHAR(160) NOT NULL,
+  `size_bytes` BIGINT UNSIGNED NOT NULL,
+  `description` VARCHAR(500) NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_supplier_documents_supplier_id_created_at` (`supplier_id`,`created_at`),
+  KEY `idx_supplier_documents_supplier_bill_id_created_at` (`supplier_bill_id`,`created_at`),
+  CONSTRAINT `fk_supplier_documents_supplier_id` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_supplier_documents_supplier_bill_id` FOREIGN KEY (`supplier_bill_id`) REFERENCES `supplier_bills` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_supplier_documents_uploaded_by_account_id` FOREIGN KEY (`uploaded_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `alert_recipients` (
+  `id` CHAR(26) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
+  `label` VARCHAR(80) NULL DEFAULT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `added_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_alert_recipients_email` (`email`),
+  KEY `idx_alert_recipients_is_active` (`is_active`),
+  KEY `idx_alert_recipients_is_active_email` (`is_active`,`email`),
+  CONSTRAINT `fk_alert_recipients_added_by_account_id` FOREIGN KEY (`added_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `business_settings` (
+  `singleton_key` VARCHAR(20) NOT NULL,
+  `business_name` VARCHAR(150) NOT NULL,
+  `business_logo_path` VARCHAR(500) NULL DEFAULT NULL,
+  `head_office_address` TEXT NOT NULL,
+  `end_of_day_digest_time` TIME NOT NULL DEFAULT '21:00:00',
+  `session_inactivity_minutes` SMALLINT UNSIGNED NOT NULL DEFAULT 20,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`singleton_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `end_of_day_digests` (
+  `id` CHAR(26) NOT NULL,
+  `business_date` DATE NOT NULL,
+  `status` VARCHAR(30) NOT NULL,
+  `recipient_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `summary` JSON NULL DEFAULT NULL,
+  `started_at` TIMESTAMP NULL DEFAULT NULL,
+  `sent_at` TIMESTAMP NULL DEFAULT NULL,
+  `failure_message` TEXT NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_end_of_day_digests_business_date` (`business_date`),
+  KEY `idx_end_of_day_digests_status` (`status`),
+  KEY `idx_end_of_day_digests_started_at` (`started_at`),
+  KEY `idx_end_of_day_digests_sent_at` (`sent_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `admin_notifications` (
+  `id` CHAR(26) NOT NULL,
+  `notification_type` VARCHAR(40) NOT NULL,
+  `title` VARCHAR(180) NOT NULL,
+  `message` TEXT NOT NULL,
+  `entity_type` VARCHAR(80) NULL DEFAULT NULL,
+  `entity_id` VARCHAR(64) NULL DEFAULT NULL,
+  `branch_id` CHAR(26) NULL DEFAULT NULL,
+  `occurred_at` TIMESTAMP NOT NULL,
+  `read_at` TIMESTAMP NULL DEFAULT NULL,
+  `resolved_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_admin_notifications_notification_type` (`notification_type`),
+  KEY `idx_admin_notifications_entity_type` (`entity_type`),
+  KEY `idx_admin_notifications_entity_id` (`entity_id`),
+  KEY `idx_admin_notifications_occurred_at` (`occurred_at`),
+  KEY `idx_admin_notifications_read_at` (`read_at`),
+  KEY `idx_admin_notifications_resolved_at` (`resolved_at`),
+  KEY `admin_notifications_open_index` (`notification_type`,`resolved_at`,`occurred_at`),
+  UNIQUE KEY `admin_notifications_open_entity_unique` (`notification_type`,`entity_type`,`entity_id`,`branch_id`,`resolved_at`),
+  CONSTRAINT `fk_admin_notifications_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `discount_vouchers` (
+  `id` CHAR(26) NOT NULL,
+  `code` VARCHAR(80) NOT NULL,
+  `name` VARCHAR(160) NOT NULL,
+  `value_type` VARCHAR(30) NOT NULL,
+  `value` BIGINT UNSIGNED NOT NULL,
+  `minimum_sale_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `maximum_discount_kobo` BIGINT UNSIGNED NULL DEFAULT NULL,
+  `usage_limit` INT UNSIGNED NULL DEFAULT NULL,
+  `usage_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `starts_at` TIMESTAMP NULL DEFAULT NULL,
+  `ends_at` TIMESTAMP NULL DEFAULT NULL,
+  `status` VARCHAR(30) NOT NULL DEFAULT 'active',
+  `created_by_account_id` CHAR(26) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_discount_vouchers_code` (`code`),
+  KEY `idx_discount_vouchers_starts_at` (`starts_at`),
+  KEY `idx_discount_vouchers_ends_at` (`ends_at`),
+  KEY `idx_discount_vouchers_status` (`status`),
+  CONSTRAINT `fk_discount_vouchers_created_by_account_id` FOREIGN KEY (`created_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `voucher_redemptions` (
+  `id` CHAR(26) NOT NULL,
+  `discount_voucher_id` CHAR(26) NOT NULL,
+  `sale_id` CHAR(26) NOT NULL,
+  `customer_id` CHAR(26) NULL DEFAULT NULL,
+  `redeemed_by_account_id` CHAR(26) NOT NULL,
+  `discount_amount_kobo` BIGINT UNSIGNED NOT NULL,
+  `redeemed_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_voucher_redemptions_redeemed_at` (`redeemed_at`),
+  UNIQUE KEY `uniq_voucher_redemptions_discount_voucher_id_sale_id` (`discount_voucher_id`,`sale_id`),
+  KEY `idx_voucher_redemptions_customer_id_redeemed_at` (`customer_id`,`redeemed_at`),
+  CONSTRAINT `fk_voucher_redemptions_discount_voucher_id` FOREIGN KEY (`discount_voucher_id`) REFERENCES `discount_vouchers` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_voucher_redemptions_sale_id` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_voucher_redemptions_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_voucher_redemptions_redeemed_by_account_id` FOREIGN KEY (`redeemed_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `sale_returns` (
+  `id` CHAR(26) NOT NULL,
+  `return_code` VARCHAR(40) NOT NULL,
+  `sale_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `customer_id` CHAR(26) NULL DEFAULT NULL,
+  `processed_by_account_id` CHAR(26) NOT NULL,
+  `total_refund_kobo` BIGINT UNSIGNED NOT NULL,
+  `refund_method` VARCHAR(80) NULL DEFAULT NULL,
+  `status` VARCHAR(30) NOT NULL DEFAULT 'completed',
+  `reason` TEXT NOT NULL,
+  `returned_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_sale_returns_return_code` (`return_code`),
+  KEY `idx_sale_returns_status` (`status`),
+  KEY `idx_sale_returns_returned_at` (`returned_at`),
+  KEY `idx_sale_returns_sale_id_returned_at` (`sale_id`,`returned_at`),
+  CONSTRAINT `fk_sale_returns_sale_id` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_sale_returns_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_sale_returns_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_sale_returns_processed_by_account_id` FOREIGN KEY (`processed_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `sale_return_items` (
+  `id` CHAR(26) NOT NULL,
+  `sale_return_id` CHAR(26) NOT NULL,
+  `sale_item_id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `quantity_milliunits` BIGINT NOT NULL,
+  `refund_amount_kobo` BIGINT UNSIGNED NOT NULL,
+  `restock` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_sale_return_items_sale_return_id_product_id` (`sale_return_id`,`product_id`),
+  CONSTRAINT `fk_sale_return_items_sale_return_id` FOREIGN KEY (`sale_return_id`) REFERENCES `sale_returns` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sale_return_items_sale_item_id` FOREIGN KEY (`sale_item_id`) REFERENCES `sale_items` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_sale_return_items_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `purchase_receipts` (
+  `id` CHAR(26) NOT NULL,
+  `receipt_number` VARCHAR(40) NOT NULL,
+  `supplier_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `recorded_by_account_id` CHAR(26) NOT NULL,
+  `purchase_order_id` CHAR(26) NULL DEFAULT NULL,
+  `purchased_at` DATE NOT NULL,
+  `supplier_reference` VARCHAR(160) NULL DEFAULT NULL,
+  `subtotal_kobo` BIGINT UNSIGNED NOT NULL,
+  `discount_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `tax_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `total_kobo` BIGINT UNSIGNED NOT NULL,
+  `status` VARCHAR(30) NOT NULL DEFAULT 'recorded',
+  `notes` TEXT NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_purchase_receipts_receipt_number` (`receipt_number`),
+  KEY `idx_purchase_receipts_purchased_at` (`purchased_at`),
+  KEY `idx_purchase_receipts_status` (`status`),
+  KEY `idx_purchase_receipts_supplier_id_purchased_at` (`supplier_id`,`purchased_at`),
+  KEY `idx_purchase_receipts_branch_id_purchased_at` (`branch_id`,`purchased_at`),
+  CONSTRAINT `fk_purchase_receipts_supplier_id` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_purchase_receipts_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_purchase_receipts_recorded_by_account_id` FOREIGN KEY (`recorded_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_purchase_receipts_purchase_order_id` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_orders` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `purchase_receipt_lines` (
+  `id` CHAR(26) NOT NULL,
+  `purchase_receipt_id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `quantity_milliunits` BIGINT NOT NULL,
+  `unit_cost_kobo` BIGINT UNSIGNED NOT NULL,
+  `discount_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `tax_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `line_total_kobo` BIGINT UNSIGNED NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_purchase_receipt_lines_purchase_receipt_id_product_id` (`purchase_receipt_id`,`product_id`),
+  CONSTRAINT `fk_purchase_receipt_lines_purchase_receipt_id` FOREIGN KEY (`purchase_receipt_id`) REFERENCES `purchase_receipts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_purchase_receipt_lines_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `api_tokens` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(120) NOT NULL,
+  `token_prefix` VARCHAR(16) NOT NULL,
+  `token_hash` VARCHAR(64) NOT NULL,
+  `abilities` JSON NOT NULL,
+  `created_by_account_id` CHAR(26) NOT NULL,
+  `last_used_at` TIMESTAMP NULL DEFAULT NULL,
+  `expires_at` TIMESTAMP NULL DEFAULT NULL,
+  `revoked_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_api_tokens_token_prefix` (`token_prefix`),
+  UNIQUE KEY `uniq_api_tokens_token_hash` (`token_hash`),
+  KEY `idx_api_tokens_last_used_at` (`last_used_at`),
+  KEY `idx_api_tokens_expires_at` (`expires_at`),
+  KEY `idx_api_tokens_revoked_at` (`revoked_at`),
+  KEY `api_tokens_validity_index` (`revoked_at`,`expires_at`),
+  CONSTRAINT `fk_api_tokens_created_by_account_id` FOREIGN KEY (`created_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `quote_conversions` (
+  `id` CHAR(26) NOT NULL,
+  `source_quote_id` CHAR(26) NOT NULL,
+  `converted_sale_id` CHAR(26) NOT NULL,
+  `converted_by_account_id` CHAR(26) NOT NULL,
+  `target_type` VARCHAR(20) NOT NULL,
+  `converted_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_quote_conversions_converted_at` (`converted_at`),
+  UNIQUE KEY `quote_conversion_pair_unique` (`source_quote_id`,`converted_sale_id`),
+  CONSTRAINT `fk_quote_conversions_source_quote_id` FOREIGN KEY (`source_quote_id`) REFERENCES `sales` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_quote_conversions_converted_sale_id` FOREIGN KEY (`converted_sale_id`) REFERENCES `sales` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_quote_conversions_converted_by_account_id` FOREIGN KEY (`converted_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `backup_runs` (
+  `id` CHAR(26) NOT NULL,
+  `backup_type` VARCHAR(30) NOT NULL,
+  `status` VARCHAR(30) NOT NULL,
+  `disk` VARCHAR(60) NOT NULL,
+  `path` VARCHAR(500) NULL DEFAULT NULL,
+  `checksum_sha256` VARCHAR(64) NULL DEFAULT NULL,
+  `size_bytes` BIGINT UNSIGNED NULL DEFAULT NULL,
+  `manifest` JSON NULL DEFAULT NULL,
+  `failure_message` TEXT NULL DEFAULT NULL,
+  `requested_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `started_at` TIMESTAMP NOT NULL,
+  `completed_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_backup_runs_status` (`status`),
+  KEY `idx_backup_runs_started_at` (`started_at`),
+  KEY `idx_backup_runs_completed_at` (`completed_at`),
+  CONSTRAINT `fk_backup_runs_requested_by_account_id` FOREIGN KEY (`requested_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `document_brandings` (
+  `id` CHAR(26) NOT NULL,
+  `business_name` VARCHAR(180) NOT NULL,
+  `logo_path` VARCHAR(500) NULL DEFAULT NULL,
+  `address` VARCHAR(500) NULL DEFAULT NULL,
+  `phone` VARCHAR(80) NULL DEFAULT NULL,
+  `email` VARCHAR(180) NULL DEFAULT NULL,
+  `receipt_footer` TEXT NULL DEFAULT NULL,
+  `document_terms` TEXT NULL DEFAULT NULL,
+  `updated_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_document_brandings_updated_by_account_id` FOREIGN KEY (`updated_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `standalone_receipts` (
+  `id` CHAR(26) NOT NULL,
+  `receipt_number` VARCHAR(40) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `customer_id` CHAR(26) NULL DEFAULT NULL,
+  `payment_method_id` CHAR(26) NOT NULL,
+  `received_by_account_id` CHAR(26) NOT NULL,
+  `payer_name` VARCHAR(180) NOT NULL,
+  `payer_phone` VARCHAR(80) NULL DEFAULT NULL,
+  `amount_kobo` BIGINT UNSIGNED NOT NULL,
+  `reference` VARCHAR(180) NULL DEFAULT NULL,
+  `purpose` VARCHAR(255) NOT NULL,
+  `notes` TEXT NULL DEFAULT NULL,
+  `status` VARCHAR(30) NOT NULL DEFAULT 'received',
+  `received_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_standalone_receipts_receipt_number` (`receipt_number`),
+  KEY `idx_standalone_receipts_status` (`status`),
+  KEY `idx_standalone_receipts_received_at` (`received_at`),
+  KEY `idx_standalone_receipts_customer_id_received_at` (`customer_id`,`received_at`),
+  KEY `idx_standalone_receipts_branch_id_received_at` (`branch_id`,`received_at`),
+  CONSTRAINT `fk_standalone_receipts_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_standalone_receipts_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_standalone_receipts_payment_method_id` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_standalone_receipts_received_by_account_id` FOREIGN KEY (`received_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `purchase_returns` (
+  `id` CHAR(26) NOT NULL,
+  `return_number` VARCHAR(40) NOT NULL,
+  `purchase_receipt_id` CHAR(26) NOT NULL,
+  `supplier_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NOT NULL,
+  `processed_by_account_id` CHAR(26) NOT NULL,
+  `total_kobo` BIGINT UNSIGNED NOT NULL,
+  `supplier_credit_reference` VARCHAR(180) NULL DEFAULT NULL,
+  `status` VARCHAR(30) NOT NULL DEFAULT 'completed',
+  `reason` TEXT NOT NULL,
+  `returned_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_purchase_returns_return_number` (`return_number`),
+  KEY `idx_purchase_returns_status` (`status`),
+  KEY `idx_purchase_returns_returned_at` (`returned_at`),
+  KEY `idx_purchase_returns_supplier_id_returned_at` (`supplier_id`,`returned_at`),
+  KEY `idx_purchase_returns_purchase_receipt_id_returned_at` (`purchase_receipt_id`,`returned_at`),
+  CONSTRAINT `fk_purchase_returns_purchase_receipt_id` FOREIGN KEY (`purchase_receipt_id`) REFERENCES `purchase_receipts` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_purchase_returns_supplier_id` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_purchase_returns_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_purchase_returns_processed_by_account_id` FOREIGN KEY (`processed_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `purchase_return_lines` (
+  `id` CHAR(26) NOT NULL,
+  `purchase_return_id` CHAR(26) NOT NULL,
+  `purchase_receipt_line_id` CHAR(26) NOT NULL,
+  `product_id` CHAR(26) NOT NULL,
+  `quantity_milliunits` BIGINT NOT NULL,
+  `unit_cost_kobo` BIGINT UNSIGNED NOT NULL,
+  `line_total_kobo` BIGINT UNSIGNED NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_purchase_return_lines_purchase_return_id_product_id` (`purchase_return_id`,`product_id`),
+  CONSTRAINT `fk_purchase_return_lines_purchase_return_id` FOREIGN KEY (`purchase_return_id`) REFERENCES `purchase_returns` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_purchase_return_lines_purchase_receipt_line_id` FOREIGN KEY (`purchase_receipt_line_id`) REFERENCES `purchase_receipt_lines` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_purchase_return_lines_product_id` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `fixed_assets` (
+  `id` CHAR(26) NOT NULL,
+  `asset_code` VARCHAR(40) NOT NULL,
+  `name` VARCHAR(180) NOT NULL,
+  `category` VARCHAR(120) NOT NULL,
+  `branch_id` CHAR(26) NULL DEFAULT NULL,
+  `custodian_account_id` CHAR(26) NULL DEFAULT NULL,
+  `acquired_at` DATE NOT NULL,
+  `cost_kobo` BIGINT UNSIGNED NOT NULL,
+  `salvage_value_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `useful_life_months` INT UNSIGNED NOT NULL,
+  `serial_number` VARCHAR(160) NULL DEFAULT NULL,
+  `location` VARCHAR(255) NULL DEFAULT NULL,
+  `status` VARCHAR(30) NOT NULL DEFAULT 'active',
+  `notes` TEXT NULL DEFAULT NULL,
+  `created_by_account_id` CHAR(26) NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_fixed_assets_asset_code` (`asset_code`),
+  KEY `idx_fixed_assets_acquired_at` (`acquired_at`),
+  KEY `idx_fixed_assets_status` (`status`),
+  KEY `idx_fixed_assets_category_status` (`category`,`status`),
+  CONSTRAINT `fk_fixed_assets_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_fixed_assets_custodian_account_id` FOREIGN KEY (`custodian_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_fixed_assets_created_by_account_id` FOREIGN KEY (`created_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `operation_document_logs` (
+  `id` CHAR(26) NOT NULL,
+  `operation_type` VARCHAR(80) NOT NULL,
+  `operation_id` VARCHAR(40) NOT NULL,
+  `format` VARCHAR(20) NOT NULL,
+  `document_hash` VARCHAR(64) NOT NULL,
+  `generated_by_account_id` CHAR(26) NOT NULL,
+  `generated_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_operation_document_logs_operation_type` (`operation_type`),
+  KEY `idx_operation_document_logs_operation_id` (`operation_id`),
+  KEY `idx_operation_document_logs_generated_at` (`generated_at`),
+  KEY `operation_document_lookup` (`operation_type`,`operation_id`,`generated_at`),
+  CONSTRAINT `fk_operation_document_logs_generated_by_account_id` FOREIGN KEY (`generated_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `business_insights` (
+  `id` CHAR(26) NOT NULL,
+  `category` VARCHAR(40) NOT NULL,
+  `severity` VARCHAR(20) NOT NULL DEFAULT 'info',
+  `title` VARCHAR(160) NOT NULL,
+  `summary` TEXT NOT NULL,
+  `recommendation` TEXT NULL DEFAULT NULL,
+  `evidence` JSON NULL DEFAULT NULL,
+  `period_start` DATE NOT NULL,
+  `period_end` DATE NOT NULL,
+  `branch_id` CHAR(26) NULL DEFAULT NULL,
+  `generated_at` TIMESTAMP NOT NULL,
+  `dismissed_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_business_insights_category` (`category`),
+  KEY `idx_business_insights_severity` (`severity`),
+  KEY `idx_business_insights_generated_at` (`generated_at`),
+  UNIQUE KEY `business_insights_scope_unique` (`category`,`branch_id`,`period_start`,`period_end`,`title`),
+  CONSTRAINT `fk_business_insights_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `ledger_accounts` (
+  `id` CHAR(26) NOT NULL,
+  `code` VARCHAR(20) NOT NULL,
+  `name` VARCHAR(180) NOT NULL,
+  `type` VARCHAR(30) NOT NULL,
+  `parent_id` CHAR(26) NULL DEFAULT NULL,
+  `is_control_account` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_system` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `allow_manual_posting` TINYINT(1) NOT NULL DEFAULT 1,
+  `description` TEXT NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_ledger_accounts_code` (`code`),
+  KEY `idx_ledger_accounts_type` (`type`),
+  KEY `idx_ledger_accounts_is_control_account` (`is_control_account`),
+  KEY `idx_ledger_accounts_is_system` (`is_system`),
+  KEY `idx_ledger_accounts_is_active` (`is_active`),
+  KEY `idx_ledger_accounts_type_is_active_code` (`type`,`is_active`,`code`),
+  CONSTRAINT `fk_ledger_accounts_parent_id` FOREIGN KEY (`parent_id`) REFERENCES `ledger_accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `accounting_periods` (
+  `id` CHAR(26) NOT NULL,
+  `name` VARCHAR(120) NOT NULL,
+  `starts_on` DATE NOT NULL,
+  `ends_on` DATE NOT NULL,
+  `status` VARCHAR(30) NOT NULL DEFAULT 'open',
+  `closed_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `closed_at` TIMESTAMP NULL DEFAULT NULL,
+  `locked_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `locked_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_accounting_periods_starts_on` (`starts_on`),
+  KEY `idx_accounting_periods_ends_on` (`ends_on`),
+  KEY `idx_accounting_periods_status` (`status`),
+  UNIQUE KEY `uniq_accounting_periods_starts_on_ends_on` (`starts_on`,`ends_on`),
+  CONSTRAINT `fk_accounting_periods_closed_by_account_id` FOREIGN KEY (`closed_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_accounting_periods_locked_by_account_id` FOREIGN KEY (`locked_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `journal_entries` (
+  `id` CHAR(26) NOT NULL,
+  `journal_number` VARCHAR(50) NOT NULL,
+  `entry_date` DATE NOT NULL,
+  `accounting_period_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NULL DEFAULT NULL,
+  `source_type` VARCHAR(120) NULL DEFAULT NULL,
+  `source_id` VARCHAR(40) NULL DEFAULT NULL,
+  `source_event` VARCHAR(80) NULL DEFAULT NULL,
+  `status` VARCHAR(30) NOT NULL DEFAULT 'posted',
+  `memo` VARCHAR(500) NOT NULL,
+  `created_by_account_id` CHAR(26) NULL DEFAULT NULL,
+  `reversal_of_entry_id` CHAR(26) NULL DEFAULT NULL,
+  `posted_at` TIMESTAMP NULL DEFAULT NULL,
+  `reversed_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_journal_entries_journal_number` (`journal_number`),
+  KEY `idx_journal_entries_entry_date` (`entry_date`),
+  KEY `idx_journal_entries_source_type` (`source_type`),
+  KEY `idx_journal_entries_source_id` (`source_id`),
+  KEY `idx_journal_entries_status` (`status`),
+  KEY `idx_journal_entries_posted_at` (`posted_at`),
+  KEY `idx_journal_entries_reversed_at` (`reversed_at`),
+  UNIQUE KEY `journal_source_event_unique` (`source_type`,`source_id`,`source_event`),
+  KEY `idx_journal_entries_entry_date_status` (`entry_date`,`status`),
+  CONSTRAINT `fk_journal_entries_accounting_period_id` FOREIGN KEY (`accounting_period_id`) REFERENCES `accounting_periods` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_journal_entries_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_journal_entries_created_by_account_id` FOREIGN KEY (`created_by_account_id`) REFERENCES `accounts` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_journal_entries_reversal_of_entry_id` FOREIGN KEY (`reversal_of_entry_id`) REFERENCES `journal_entries` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `journal_lines` (
+  `id` CHAR(26) NOT NULL,
+  `journal_entry_id` CHAR(26) NOT NULL,
+  `ledger_account_id` CHAR(26) NOT NULL,
+  `branch_id` CHAR(26) NULL DEFAULT NULL,
+  `customer_id` CHAR(26) NULL DEFAULT NULL,
+  `supplier_id` CHAR(26) NULL DEFAULT NULL,
+  `debit_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `credit_kobo` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `description` VARCHAR(500) NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_journal_lines_ledger_account_id_journal_entry_id` (`ledger_account_id`,`journal_entry_id`),
+  KEY `idx_journal_lines_customer_id_ledger_account_id` (`customer_id`,`ledger_account_id`),
+  KEY `idx_journal_lines_supplier_id_ledger_account_id` (`supplier_id`,`ledger_account_id`),
+  CONSTRAINT `fk_journal_lines_journal_entry_id` FOREIGN KEY (`journal_entry_id`) REFERENCES `journal_entries` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_journal_lines_ledger_account_id` FOREIGN KEY (`ledger_account_id`) REFERENCES `ledger_accounts` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_journal_lines_branch_id` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_journal_lines_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_journal_lines_supplier_id` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `asset_depreciation_postings` (
+  `id` CHAR(26) NOT NULL,
+  `fixed_asset_id` CHAR(26) NOT NULL,
+  `journal_entry_id` CHAR(26) NOT NULL,
+  `period_end` DATE NOT NULL,
+  `amount_kobo` BIGINT UNSIGNED NOT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_asset_depreciation_postings_period_end` (`period_end`),
+  UNIQUE KEY `uniq_asset_depreciation_postings_fixed_asset_id_period_end` (`fixed_asset_id`,`period_end`),
+  CONSTRAINT `fk_asset_depreciation_postings_fixed_asset_id` FOREIGN KEY (`fixed_asset_id`) REFERENCES `fixed_assets` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_asset_depreciation_postings_journal_entry_id` FOREIGN KEY (`journal_entry_id`) REFERENCES `journal_entries` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `migrations` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `migration` VARCHAR(255) NOT NULL,
+  `batch` INT NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `companies` (`id`, `legal_name`, `trading_name`, `head_office_address`, `phone`, `email_encrypted`, `logo_path`, `timezone`, `is_configured`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J60080C37BBS74B5V1GC', 'Express Cloud Company', 'Express Cloud Company', 'To be updated after installation', NULL, NULL, NULL, 'Africa/Lagos', 1, '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `branches` (`id`, `name`, `code`, `address`, `phone`, `status`, `is_head_office`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J60087WJDZ6QRTG9PMTX', 'Head Office', 'HQ', 'To be updated after installation', NULL, 'active', 1, '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `roles` (`id`, `name`, `slug`, `description`, `is_system`, `is_active`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J600ZRCJT9JM5F71N0V5', 'System Owner', 'system-owner', 'Full installation owner access.', 1, 1, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009DJAYM1NZBY9FARF', 'Administrator', 'administrator', 'Administrative access across configured business modules.', 1, 1, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600R373WDVBY1AG1Y44', 'Branch Manager', 'branch-manager', 'Branch-scoped operational management.', 1, 1, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QCQ2409DB59QWQCX', 'Sales Staff', 'sales-staff', 'Sales, customers, payments and own-record operations.', 1, 1, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SK7C6MY0H24VMV2R', 'Inventory Manager', 'inventory-manager', 'Products, stock, transfers and procurement operations.', 1, 1, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ERVF9ADSMQMSKTQ4', 'Accountant', 'accountant', 'Accounting, receivables, supplier finance and financial reports.', 1, 1, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DC4CQH1N4JP054J3', 'Auditor', 'auditor', 'Read-only audit, security, reports and accounting review.', 1, 1, '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `permissions` (`id`, `name`, `slug`, `group`, `description`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J600NQEEJX4T1ZN40BG2', 'View company details', 'company.view', 'organisation', 'View company details', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VXE022GTTCEVNE4T', 'Update company details', 'company.update', 'organisation', 'Update company details', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6003AEQK9WWPF9EWSVM', 'View branches', 'branches.view', 'organisation', 'View branches', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZFE48PEHWJQS7805', 'Create branches', 'branches.create', 'organisation', 'Create branches', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RMD4A585JP6CWC2W', 'Update branches', 'branches.update', 'organisation', 'Update branches', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001BYF6PKHTA7EM8YZ', 'Deactivate branches', 'branches.deactivate', 'organisation', 'Deactivate branches', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001FBFFRZZVDSAVP5N', 'View staff accounts', 'staff.view', 'staff', 'View staff accounts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600Z2ZFH7K7N5AK9KVT', 'Create staff accounts', 'staff.create', 'staff', 'Create staff accounts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6003VTW8075FFN0H85E', 'Update staff accounts', 'staff.update', 'staff', 'Update staff accounts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60047BM6YRMK5A45RNF', 'Suspend staff accounts', 'staff.suspend', 'staff', 'Suspend staff accounts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600KZCZ1WM77YFDQ199', 'Reactivate staff accounts', 'staff.reactivate', 'staff', 'Reactivate staff accounts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600H56RKZGCMEC3ZJVS', 'Revoke staff accounts', 'staff.revoke', 'staff', 'Revoke staff accounts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DPKFV4WXGCAK4TY9', 'Reveal staff access keys', 'staff.access-key.reveal', 'staff', 'Reveal staff access keys', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006545WY682TVTW76A', 'Regenerate staff access keys', 'staff.access-key.regenerate', 'staff', 'Regenerate staff access keys', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A1KP99ERCC5CCVZS', 'View active staff sessions', 'staff.sessions.view', 'staff', 'View active staff sessions', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600CY4A9H0JKSK1PWT4', 'Revoke staff sessions', 'staff.sessions.revoke', 'staff', 'Revoke staff sessions', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A4261K9SFPX7QMZ5', 'View roles', 'roles.view', 'authorization', 'View roles', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DP1MD6TKYKEP1D49', 'Create roles', 'roles.create', 'authorization', 'Create roles', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60014Y0K4D3SF388PR8', 'Update roles', 'roles.update', 'authorization', 'Update roles', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60062TJZTTNB76RQBMA', 'Delete custom roles', 'roles.delete', 'authorization', 'Delete custom roles', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600PCEQK5FR3MF2T94W', 'Assign permissions', 'permissions.assign', 'authorization', 'Assign permissions', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MF1ZYAJS7PB7HQV2', 'View products', 'products.view', 'catalog', 'View products', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M1D7P2WY2G7AK26T', 'Create products', 'products.create', 'catalog', 'Create products', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A15WEFC0AFEEK3KN', 'Update products', 'products.update', 'catalog', 'Update products', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600F5ZPDZ9CWZ91CPFA', 'Deactivate products', 'products.deactivate', 'catalog', 'Deactivate products', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RNGAAGBQ0TJTBRMD', 'Manage product categories', 'categories.manage', 'catalog', 'Manage product categories', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6008MD8ANZK5SSKR52J', 'Manage brands', 'brands.manage', 'catalog', 'Manage brands', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FPAGSWMC20J9VTCC', 'Manage tax rates', 'tax-rates.manage', 'catalog', 'Manage tax rates', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YX0XV38996SG6WE1', 'View suppliers', 'suppliers.view', 'catalog', 'View suppliers', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FJR5342A6NHAGAGT', 'Create suppliers', 'suppliers.create', 'catalog', 'Create suppliers', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006XP8983RJEDSZG49', 'Update suppliers', 'suppliers.update', 'catalog', 'Update suppliers', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MSJP5PSC2KHB96JF', 'Archive suppliers', 'suppliers.archive', 'catalog', 'Archive suppliers', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005RF0HGYJQSHEK5BG', 'Import products from Excel', 'products.import', 'catalog', 'Import products from Excel', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GSZDAR3NCWDXRX9Z', 'View product import history', 'products.import-history', 'catalog', 'View product import history', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XTFRZMQJS398WAAY', 'View branch inventory', 'inventory.view', 'catalog', 'View branch inventory', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M47P1SYDMTPX6VZF', 'View stock movement ledger', 'inventory.movements.view', 'catalog', 'View stock movement ledger', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600K5A7Q4X6X9EZR6AR', 'Record stock intake', 'inventory.intake', 'catalog', 'Record stock intake', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600G392ZEQMRXVD769F', 'Transfer stock between branches', 'inventory.transfer', 'catalog', 'Transfer stock between branches', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NAVR1T6E6AF1RFEA', 'Adjust stock with a reason', 'inventory.adjust', 'catalog', 'Adjust stock with a reason', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006MNY2HABM5DHZ03Q', 'View purchase orders', 'procurement.view', 'catalog', 'View purchase orders', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VXBT6CNXEBPZ5FN7', 'Create purchase orders', 'procurement.create', 'catalog', 'Create purchase orders', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XPMG0N8C85ME248D', 'Approve purchase orders', 'procurement.approve', 'catalog', 'Approve purchase orders', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009X1JWY41XSHYV2VP', 'Receive goods against purchase orders', 'procurement.receive', 'catalog', 'Receive goods against purchase orders', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NG8JZDHEBSZB7AVR', 'View low-stock report', 'reports.low-stock', 'catalog', 'View low-stock report', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006HVYHE5797HK8T1D', 'View customers', 'customers.view', 'catalog', 'View customers', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600E1K4AD8T5V1QNX03', 'Create customers', 'customers.create', 'catalog', 'Create customers', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2FBM7DKQ7H5APB4', 'Update customers', 'customers.update', 'catalog', 'Update customers', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60085NKHRX7NTCSMVWQ', 'View payment methods', 'payment-methods.view', 'catalog', 'View payment methods', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004YETRVTJ8Q7MRM5J', 'Manage payment methods', 'payment-methods.manage', 'catalog', 'Manage payment methods', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XBJMZC1DF9XK018E', 'View sales', 'sales.view', 'catalog', 'View sales', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YBDGVEWTHWJSGR4K', 'Create invoices, quotes, and POS sales', 'sales.create', 'catalog', 'Create invoices, quotes, and POS sales', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005KM3F1RR9A3SCS95', 'Record sale payments', 'sales.payments', 'catalog', 'Record sale payments', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DPMS6274DDA33TZ5', 'Convert quotes', 'sales.convert-quotes', 'catalog', 'Convert quotes', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6000JM7P8PBMYDM6T41', 'View supplier bills', 'supplier-bills.view', 'catalog', 'View supplier bills', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004D8PP1HNNC0FSK83', 'Create supplier bills', 'supplier-bills.create', 'catalog', 'Create supplier bills', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001YPQKE9PMRPX2V7N', 'Record supplier bill payments', 'supplier-bills.pay', 'catalog', 'Record supplier bill payments', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QB12ZSNQXPWEGDZE', 'Download supplier documents', 'supplier-documents.download', 'catalog', 'Download supplier documents', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600KAM05NBP5JY6S6K6', 'View supplier returns', 'supplier-returns.view', 'catalog', 'View supplier returns', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BST89DRWQ512K19F', 'Create supplier returns', 'supplier-returns.create', 'catalog', 'Create supplier returns', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RXD2MQCH2DTP9576', 'View supplier balances', 'reports.supplier-balances', 'catalog', 'View supplier balances', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BWYKH9ZH3X4F4HZF', 'View admin dashboard', 'dashboard.view', 'catalog', 'View admin dashboard', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600N52074S0GVB2QK14', 'View operational alerts', 'alerts.view', 'catalog', 'View operational alerts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BSZ9RNN183R0XMV7', 'Manage alert recipients', 'alerts.manage-recipients', 'catalog', 'Manage alert recipients', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600V4XR21K1V7Q662PN', 'Manage business settings', 'settings.business.manage', 'catalog', 'Manage business settings', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DSFFNTVVSNF2A78V', 'View staff performance', 'reports.staff-performance', 'catalog', 'View staff performance', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NSHKV5228WH2JJRG', 'View reports hub', 'reports.hub.view', 'catalog', 'View reports hub', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SYR8QMKD4D68TS9X', 'Export reports', 'reports.export', 'catalog', 'Export reports', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MDRN6YMA925XV74Q', 'Print and download sale documents', 'documents.sales.print', 'catalog', 'Print and download sale documents', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VQJGP3ZBR343SREX', 'Print product labels', 'documents.products.labels', 'catalog', 'Print product labels', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600WY71CXD72B4N9Y50', 'View system activity log', 'activity.view', 'catalog', 'View system activity log', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HJNC87STWYF3508W', 'View product activity', 'activity.products.view', 'catalog', 'View product activity', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ESGV20BJ9JSQV3EM', 'View live sessions', 'security.sessions.view', 'catalog', 'View live sessions', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600D83G2Z6RCHEAM9RW', 'Terminate live sessions', 'security.sessions.terminate', 'catalog', 'Terminate live sessions', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600N8YFVPX910NG17V6', 'View security events', 'security-events.view', 'security', 'View security events', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60043JQZA8M0T2F5NMK', 'View audit logs', 'audit-log.view', 'security', 'View audit logs', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600EYV099TJZ4C9C87A', 'Export audit logs', 'audit-log.export', 'security', 'Export audit logs', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WEXHKKWRCWJQ77', 'View own sales', 'sales.view.own', 'Commercial', 'View own sales', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HY0K1NTKTGDV4B7Q', 'View all sales', 'sales.view.all', 'Commercial', 'View all sales', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2ETJPW6FW0ZS9TB', 'Record sale payments', 'sales.payments.record', 'Commercial', 'Record sale payments', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SQ4TMQQKCZES490R', 'Create sale returns', 'sales.returns.create', 'Commercial', 'Create sale returns', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZN40EX34RQEEWDEZ', 'Manage discount vouchers', 'vouchers.manage', 'Commercial', 'Manage discount vouchers', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002T6Y8JY13WH5H2KX', 'Apply discount vouchers', 'vouchers.apply', 'Commercial', 'Apply discount vouchers', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MC6YER0HJCYQ6ZR9', 'View customer receivables', 'customers.receivables.view', 'Commercial', 'View customer receivables', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004MG8V37775GP0MP0', 'Record direct purchases', 'purchases.record', 'Commercial', 'Record direct purchases', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600Q6JHEB9ME7J1VZTT', 'Manage API tokens', 'api.tokens.manage', 'Commercial', 'Manage API tokens', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600CFK3JV5P3MMM353Y', 'Convert quotes', 'quotes.convert', 'Commercial', 'Convert quotes', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600X8MET42W3MSAZRKT', 'View backups', 'backups.view', 'Backup and Recovery', 'View backups', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009M25F6JHTG0JEN9G', 'Create backups', 'backups.create', 'Backup and Recovery', 'Create backups', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60063X9Y2PGYBXWZ8FV', 'Verify backups', 'backups.verify', 'Backup and Recovery', 'Verify backups', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002GWM3NNPM872AE8R', 'Manage document branding', 'documents.branding.manage', 'Accounting Operations', 'Manage document branding', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WMP7Y605XW7YME', 'View standalone receipts', 'receipts.view', 'Accounting Operations', 'View standalone receipts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600B86PDKWVRA0GFSBM', 'Create standalone receipts', 'receipts.create', 'Accounting Operations', 'Create standalone receipts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6000PEJJX50F2W98KKJ', 'View purchase returns', 'purchase_returns.view', 'Accounting Operations', 'View purchase returns', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60092BBD3QK9WYHZ3EJ', 'Create purchase returns', 'purchase_returns.create', 'Accounting Operations', 'Create purchase returns', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60005C8J2096EPP7C4G', 'View fixed assets', 'assets.view', 'Accounting Operations', 'View fixed assets', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009YY60EAW956N4MJ7', 'Manage fixed assets', 'assets.manage', 'Accounting Operations', 'Manage fixed assets', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NHEVA96TSS6J17ZG', 'Download operation documents', 'operation_documents.download', 'Accounting Operations', 'Download operation documents', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VYD45ZC64DTREK7G', 'View chart of accounts', 'accounting.accounts.view', 'Accounting Operations', 'View chart of accounts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600C769EX8SRYZFG9V2', 'Manage chart of accounts', 'accounting.accounts.manage', 'Accounting Operations', 'Manage chart of accounts', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GAQ3819WYP2Q9SBT', 'View journals', 'accounting.journals.view', 'Accounting Operations', 'View journals', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6008SJKP479Y93Q97AF', 'Create manual journals', 'accounting.journals.create', 'Accounting Operations', 'Create manual journals', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DQMDY5VD6M3V1NTR', 'Reverse journals', 'accounting.journals.reverse', 'Accounting Operations', 'Reverse journals', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001WBGKA9PRTJ9G49X', 'Manage accounting periods', 'accounting.periods.manage', 'Accounting Operations', 'Manage accounting periods', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002JMCHFRXA7ECDJFD', 'View financial reports', 'accounting.reports.view', 'Accounting Operations', 'View financial reports', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P8AJWJ7F92DX2SM1', 'Synchronize operational accounting', 'accounting.sync', 'Accounting Operations', 'Synchronize operational accounting', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QQ2ZM8F5F3BF26CA', 'Post fixed-asset depreciation', 'accounting.depreciation.post', 'Accounting Operations', 'Post fixed-asset depreciation', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600CAN83YJ8V3M7SK7N', 'View Lisa AI business insights', 'insights.view', 'Accounting Operations', 'View Lisa AI business insights', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600EP38V3XPE866BQJJ', 'Generate Lisa AI business insights', 'insights.generate', 'Accounting Operations', 'Generate Lisa AI business insights', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6007ZDRHGZ2V6SPK570', 'Dismiss Lisa AI business insights', 'insights.dismiss', 'Accounting Operations', 'Dismiss Lisa AI business insights', '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `permission_role` (`permission_id`, `role_id`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J600C769EX8SRYZFG9V2', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VYD45ZC64DTREK7G', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QQ2ZM8F5F3BF26CA', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6008SJKP479Y93Q97AF', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DQMDY5VD6M3V1NTR', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GAQ3819WYP2Q9SBT', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001WBGKA9PRTJ9G49X', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002JMCHFRXA7ECDJFD', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P8AJWJ7F92DX2SM1', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HJNC87STWYF3508W', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600WY71CXD72B4N9Y50', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BSZ9RNN183R0XMV7', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600N52074S0GVB2QK14', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600Q6JHEB9ME7J1VZTT', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009YY60EAW956N4MJ7', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60005C8J2096EPP7C4G', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600EYV099TJZ4C9C87A', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60043JQZA8M0T2F5NMK', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009M25F6JHTG0JEN9G', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60063X9Y2PGYBXWZ8FV', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600X8MET42W3MSAZRKT', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZFE48PEHWJQS7805', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001BYF6PKHTA7EM8YZ', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RMD4A585JP6CWC2W', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6003AEQK9WWPF9EWSVM', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6008MD8ANZK5SSKR52J', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RNGAAGBQ0TJTBRMD', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VXE022GTTCEVNE4T', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NQEEJX4T1ZN40BG2', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600E1K4AD8T5V1QNX03', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MC6YER0HJCYQ6ZR9', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2FBM7DKQ7H5APB4', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006HVYHE5797HK8T1D', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BWYKH9ZH3X4F4HZF', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002GWM3NNPM872AE8R', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VQJGP3ZBR343SREX', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MDRN6YMA925XV74Q', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6007ZDRHGZ2V6SPK570', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600EP38V3XPE866BQJJ', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600CAN83YJ8V3M7SK7N', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NAVR1T6E6AF1RFEA', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600K5A7Q4X6X9EZR6AR', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M47P1SYDMTPX6VZF', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600G392ZEQMRXVD769F', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XTFRZMQJS398WAAY', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NHEVA96TSS6J17ZG', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004YETRVTJ8Q7MRM5J', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60085NKHRX7NTCSMVWQ', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600PCEQK5FR3MF2T94W', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XPMG0N8C85ME248D', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VXBT6CNXEBPZ5FN7', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009X1JWY41XSHYV2VP', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006MNY2HABM5DHZ03Q', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M1D7P2WY2G7AK26T', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600F5ZPDZ9CWZ91CPFA', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005RF0HGYJQSHEK5BG', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GSZDAR3NCWDXRX9Z', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A15WEFC0AFEEK3KN', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MF1ZYAJS7PB7HQV2', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60092BBD3QK9WYHZ3EJ', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6000PEJJX50F2W98KKJ', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004MG8V37775GP0MP0', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600CFK3JV5P3MMM353Y', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600B86PDKWVRA0GFSBM', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WMP7Y605XW7YME', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SYR8QMKD4D68TS9X', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NSHKV5228WH2JJRG', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NG8JZDHEBSZB7AVR', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DSFFNTVVSNF2A78V', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RXD2MQCH2DTP9576', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DP1MD6TKYKEP1D49', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60062TJZTTNB76RQBMA', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60014Y0K4D3SF388PR8', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A4261K9SFPX7QMZ5', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DPMS6274DDA33TZ5', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YBDGVEWTHWJSGR4K', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005KM3F1RR9A3SCS95', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2ETJPW6FW0ZS9TB', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SQ4TMQQKCZES490R', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XBJMZC1DF9XK018E', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HY0K1NTKTGDV4B7Q', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WEXHKKWRCWJQ77', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600N8YFVPX910NG17V6', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600D83G2Z6RCHEAM9RW', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ESGV20BJ9JSQV3EM', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600V4XR21K1V7Q662PN', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006545WY682TVTW76A', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DPKFV4WXGCAK4TY9', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600Z2ZFH7K7N5AK9KVT', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600KZCZ1WM77YFDQ199', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600H56RKZGCMEC3ZJVS', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600CY4A9H0JKSK1PWT4', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A1KP99ERCC5CCVZS', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60047BM6YRMK5A45RNF', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6003VTW8075FFN0H85E', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001FBFFRZZVDSAVP5N', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004D8PP1HNNC0FSK83', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001YPQKE9PMRPX2V7N', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6000JM7P8PBMYDM6T41', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QB12ZSNQXPWEGDZE', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BST89DRWQ512K19F', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600KAM05NBP5JY6S6K6', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MSJP5PSC2KHB96JF', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FJR5342A6NHAGAGT', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006XP8983RJEDSZG49', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YX0XV38996SG6WE1', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FPAGSWMC20J9VTCC', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002T6Y8JY13WH5H2KX', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZN40EX34RQEEWDEZ', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600C769EX8SRYZFG9V2', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VYD45ZC64DTREK7G', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QQ2ZM8F5F3BF26CA', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6008SJKP479Y93Q97AF', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DQMDY5VD6M3V1NTR', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GAQ3819WYP2Q9SBT', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001WBGKA9PRTJ9G49X', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002JMCHFRXA7ECDJFD', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P8AJWJ7F92DX2SM1', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HJNC87STWYF3508W', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600WY71CXD72B4N9Y50', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BSZ9RNN183R0XMV7', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600N52074S0GVB2QK14', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600Q6JHEB9ME7J1VZTT', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009YY60EAW956N4MJ7', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60005C8J2096EPP7C4G', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600EYV099TJZ4C9C87A', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60043JQZA8M0T2F5NMK', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009M25F6JHTG0JEN9G', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60063X9Y2PGYBXWZ8FV', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600X8MET42W3MSAZRKT', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZFE48PEHWJQS7805', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001BYF6PKHTA7EM8YZ', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RMD4A585JP6CWC2W', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6003AEQK9WWPF9EWSVM', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6008MD8ANZK5SSKR52J', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RNGAAGBQ0TJTBRMD', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VXE022GTTCEVNE4T', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NQEEJX4T1ZN40BG2', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600E1K4AD8T5V1QNX03', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MC6YER0HJCYQ6ZR9', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2FBM7DKQ7H5APB4', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006HVYHE5797HK8T1D', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BWYKH9ZH3X4F4HZF', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002GWM3NNPM872AE8R', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VQJGP3ZBR343SREX', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MDRN6YMA925XV74Q', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6007ZDRHGZ2V6SPK570', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600EP38V3XPE866BQJJ', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600CAN83YJ8V3M7SK7N', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NAVR1T6E6AF1RFEA', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600K5A7Q4X6X9EZR6AR', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M47P1SYDMTPX6VZF', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600G392ZEQMRXVD769F', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XTFRZMQJS398WAAY', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NHEVA96TSS6J17ZG', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004YETRVTJ8Q7MRM5J', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60085NKHRX7NTCSMVWQ', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600PCEQK5FR3MF2T94W', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XPMG0N8C85ME248D', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VXBT6CNXEBPZ5FN7', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009X1JWY41XSHYV2VP', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006MNY2HABM5DHZ03Q', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M1D7P2WY2G7AK26T', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600F5ZPDZ9CWZ91CPFA', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005RF0HGYJQSHEK5BG', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GSZDAR3NCWDXRX9Z', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A15WEFC0AFEEK3KN', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MF1ZYAJS7PB7HQV2', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60092BBD3QK9WYHZ3EJ', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6000PEJJX50F2W98KKJ', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004MG8V37775GP0MP0', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600CFK3JV5P3MMM353Y', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600B86PDKWVRA0GFSBM', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WMP7Y605XW7YME', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SYR8QMKD4D68TS9X', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NSHKV5228WH2JJRG', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NG8JZDHEBSZB7AVR', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DSFFNTVVSNF2A78V', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RXD2MQCH2DTP9576', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DP1MD6TKYKEP1D49', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60062TJZTTNB76RQBMA', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60014Y0K4D3SF388PR8', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A4261K9SFPX7QMZ5', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DPMS6274DDA33TZ5', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YBDGVEWTHWJSGR4K', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005KM3F1RR9A3SCS95', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2ETJPW6FW0ZS9TB', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SQ4TMQQKCZES490R', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XBJMZC1DF9XK018E', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HY0K1NTKTGDV4B7Q', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WEXHKKWRCWJQ77', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600N8YFVPX910NG17V6', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600D83G2Z6RCHEAM9RW', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ESGV20BJ9JSQV3EM', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600V4XR21K1V7Q662PN', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006545WY682TVTW76A', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DPKFV4WXGCAK4TY9', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600Z2ZFH7K7N5AK9KVT', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600KZCZ1WM77YFDQ199', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600H56RKZGCMEC3ZJVS', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600CY4A9H0JKSK1PWT4', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A1KP99ERCC5CCVZS', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60047BM6YRMK5A45RNF', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6003VTW8075FFN0H85E', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001FBFFRZZVDSAVP5N', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004D8PP1HNNC0FSK83', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001YPQKE9PMRPX2V7N', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6000JM7P8PBMYDM6T41', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QB12ZSNQXPWEGDZE', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BST89DRWQ512K19F', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600KAM05NBP5JY6S6K6', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MSJP5PSC2KHB96JF', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FJR5342A6NHAGAGT', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006XP8983RJEDSZG49', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YX0XV38996SG6WE1', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FPAGSWMC20J9VTCC', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002T6Y8JY13WH5H2KX', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZN40EX34RQEEWDEZ', '01KXM3J6009DJAYM1NZBY9FARF', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HJNC87STWYF3508W', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600N52074S0GVB2QK14', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZFE48PEHWJQS7805', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001BYF6PKHTA7EM8YZ', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RMD4A585JP6CWC2W', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6003AEQK9WWPF9EWSVM', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6008MD8ANZK5SSKR52J', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RNGAAGBQ0TJTBRMD', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600E1K4AD8T5V1QNX03', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MC6YER0HJCYQ6ZR9', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2FBM7DKQ7H5APB4', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006HVYHE5797HK8T1D', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BWYKH9ZH3X4F4HZF', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MDRN6YMA925XV74Q', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NAVR1T6E6AF1RFEA', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600K5A7Q4X6X9EZR6AR', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M47P1SYDMTPX6VZF', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600G392ZEQMRXVD769F', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XTFRZMQJS398WAAY', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004YETRVTJ8Q7MRM5J', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60085NKHRX7NTCSMVWQ', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XPMG0N8C85ME248D', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VXBT6CNXEBPZ5FN7', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009X1JWY41XSHYV2VP', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006MNY2HABM5DHZ03Q', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M1D7P2WY2G7AK26T', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600F5ZPDZ9CWZ91CPFA', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005RF0HGYJQSHEK5BG', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GSZDAR3NCWDXRX9Z', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A15WEFC0AFEEK3KN', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MF1ZYAJS7PB7HQV2', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004MG8V37775GP0MP0', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SYR8QMKD4D68TS9X', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NSHKV5228WH2JJRG', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NG8JZDHEBSZB7AVR', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DSFFNTVVSNF2A78V', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RXD2MQCH2DTP9576', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DPMS6274DDA33TZ5', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YBDGVEWTHWJSGR4K', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005KM3F1RR9A3SCS95', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2ETJPW6FW0ZS9TB', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SQ4TMQQKCZES490R', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XBJMZC1DF9XK018E', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HY0K1NTKTGDV4B7Q', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WEXHKKWRCWJQ77', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600Z2ZFH7K7N5AK9KVT', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6003VTW8075FFN0H85E', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001FBFFRZZVDSAVP5N', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004D8PP1HNNC0FSK83', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001YPQKE9PMRPX2V7N', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6000JM7P8PBMYDM6T41', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BST89DRWQ512K19F', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600KAM05NBP5JY6S6K6', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MSJP5PSC2KHB96JF', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FJR5342A6NHAGAGT', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006XP8983RJEDSZG49', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YX0XV38996SG6WE1', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FPAGSWMC20J9VTCC', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002T6Y8JY13WH5H2KX', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZN40EX34RQEEWDEZ', '01KXM3J600R373WDVBY1AG1Y44', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600E1K4AD8T5V1QNX03', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MC6YER0HJCYQ6ZR9', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2FBM7DKQ7H5APB4', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006HVYHE5797HK8T1D', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MDRN6YMA925XV74Q', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XTFRZMQJS398WAAY', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60085NKHRX7NTCSMVWQ', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MF1ZYAJS7PB7HQV2', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DPMS6274DDA33TZ5', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YBDGVEWTHWJSGR4K', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005KM3F1RR9A3SCS95', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600S2ETJPW6FW0ZS9TB', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SQ4TMQQKCZES490R', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XBJMZC1DF9XK018E', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HY0K1NTKTGDV4B7Q', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WEXHKKWRCWJQ77', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002T6Y8JY13WH5H2KX', '01KXM3J600QCQ2409DB59QWQCX', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6008MD8ANZK5SSKR52J', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RNGAAGBQ0TJTBRMD', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NAVR1T6E6AF1RFEA', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600K5A7Q4X6X9EZR6AR', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M47P1SYDMTPX6VZF', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600G392ZEQMRXVD769F', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XTFRZMQJS398WAAY', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XPMG0N8C85ME248D', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VXBT6CNXEBPZ5FN7', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009X1JWY41XSHYV2VP', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006MNY2HABM5DHZ03Q', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600M1D7P2WY2G7AK26T', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600F5ZPDZ9CWZ91CPFA', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6005RF0HGYJQSHEK5BG', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GSZDAR3NCWDXRX9Z', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600A15WEFC0AFEEK3KN', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MF1ZYAJS7PB7HQV2', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004MG8V37775GP0MP0', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NG8JZDHEBSZB7AVR', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BST89DRWQ512K19F', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600KAM05NBP5JY6S6K6', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MSJP5PSC2KHB96JF', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FJR5342A6NHAGAGT', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6006XP8983RJEDSZG49', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600YX0XV38996SG6WE1', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600FPAGSWMC20J9VTCC', '01KXM3J600SK7C6MY0H24VMV2R', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600C769EX8SRYZFG9V2', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VYD45ZC64DTREK7G', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QQ2ZM8F5F3BF26CA', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6008SJKP479Y93Q97AF', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DQMDY5VD6M3V1NTR', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GAQ3819WYP2Q9SBT', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001WBGKA9PRTJ9G49X', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002JMCHFRXA7ECDJFD', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P8AJWJ7F92DX2SM1', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009YY60EAW956N4MJ7', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60005C8J2096EPP7C4G', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MC6YER0HJCYQ6ZR9', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002GWM3NNPM872AE8R', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NHEVA96TSS6J17ZG', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600B86PDKWVRA0GFSBM', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WMP7Y605XW7YME', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SYR8QMKD4D68TS9X', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NSHKV5228WH2JJRG', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NG8JZDHEBSZB7AVR', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DSFFNTVVSNF2A78V', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RXD2MQCH2DTP9576', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600XBJMZC1DF9XK018E', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HY0K1NTKTGDV4B7Q', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600P4WEXHKKWRCWJQ77', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6004D8PP1HNNC0FSK83', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6001YPQKE9PMRPX2V7N', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6000JM7P8PBMYDM6T41', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QB12ZSNQXPWEGDZE', '01KXM3J600ERVF9ADSMQMSKTQ4', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600VYD45ZC64DTREK7G', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600GAQ3819WYP2Q9SBT', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002JMCHFRXA7ECDJFD', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HJNC87STWYF3508W', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600WY71CXD72B4N9Y50', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600EYV099TJZ4C9C87A', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60043JQZA8M0T2F5NMK', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600SYR8QMKD4D68TS9X', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NSHKV5228WH2JJRG', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600NG8JZDHEBSZB7AVR', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DSFFNTVVSNF2A78V', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600RXD2MQCH2DTP9576', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600N8YFVPX910NG17V6', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ESGV20BJ9JSQV3EM', '01KXM3J600DC4CQH1N4JP054J3', '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `accounts` (`id`, `public_id`, `first_name`, `last_name`, `email_encrypted`, `login_key_encrypted`, `login_key_blind_index`, `login_key_version`, `profile_picture_path`, `status`, `is_allowed_all_branches`, `last_authenticated_at`, `remember_token`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J6007BWNQEDX4BZMV8C9', '4932de79-670c-40fe-9a44-37bb01ad738b', 'Administrator', 'Account', NULL, '{"v":1,"ciphertext":"eyJpdiI6IjdJSE94cE15RFYwdEFmK0cwSkFISEE9PSIsInZhbHVlIjoiYkU4aXFxbzdFb05uRGJ5Ky9VdU91Zz09IiwibWFjIjoiNDYyYjZhMDY3MjZkYzU4YmE4NTNlODAzN2RlYTg3Mjg0MzAzZGVmNTAzOTAzODY1NzEyNzZmMzU0YmRlMTZlMiIsInRhZyI6IiJ9"}', '71930e3690d7be294bc2352e6bd568938683fcdc193b8d66bab0fa96aabb6bb5', 1, NULL, 'active', 1, NULL, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `account_role` (`account_id`, `role_id`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J6007BWNQEDX4BZMV8C9', '01KXM3J600ZRCJT9JM5F71N0V5', '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `account_branch` (`account_id`, `branch_id`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J6007BWNQEDX4BZMV8C9', '01KXM3J60087WJDZ6QRTG9PMTX', '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `payment_methods` (`id`, `name`, `account_number_encrypted`, `bank_name`, `description`, `is_system_default`, `is_default_for_pos`, `is_active`, `created_by_account_id`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J600G2EGW59R46PADX11', 'Cash', NULL, NULL, 'Cash', 1, 1, 1, '01KXM3J6007BWNQEDX4BZMV8C9', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600JXJZQMNMRDKA689T', 'Bank Transfer', NULL, NULL, 'Bank Transfer', 1, 0, 1, '01KXM3J6007BWNQEDX4BZMV8C9', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZATAWXRRCCWWCH0G', 'Card / POS Terminal', NULL, NULL, 'Card / POS Terminal', 1, 0, 1, '01KXM3J6007BWNQEDX4BZMV8C9', '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600Z9NYMPB9VGRN92KE', 'Customer Credit', NULL, NULL, 'Customer Credit', 1, 0, 1, '01KXM3J6007BWNQEDX4BZMV8C9', '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `business_settings` (`singleton_key`, `business_name`, `business_logo_path`, `head_office_address`, `end_of_day_digest_time`, `session_inactivity_minutes`, `created_at`, `updated_at`) VALUES
+  ('primary', 'Express Cloud Company', NULL, 'To be updated after installation', '21:00:00', 20, '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `document_brandings` (`id`, `business_name`, `logo_path`, `address`, `phone`, `email`, `receipt_footer`, `document_terms`, `updated_by_account_id`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J600TG0T9KYQQBVDXGTD', 'Express Cloud Company', NULL, 'To be updated after installation', NULL, NULL, NULL, NULL, '01KXM3J6007BWNQEDX4BZMV8C9', '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `accounting_periods` (`id`, `name`, `starts_on`, `ends_on`, `status`, `closed_by_account_id`, `closed_at`, `locked_by_account_id`, `locked_at`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J600B86AV45SSD79NP63', '2026 Financial Year', '2026-01-01', '2026-12-31', 'open', NULL, NULL, NULL, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `ledger_accounts` (`id`, `code`, `name`, `type`, `parent_id`, `is_control_account`, `is_system`, `is_active`, `allow_manual_posting`, `description`, `created_at`, `updated_at`) VALUES
+  ('01KXM3J6007GK4507T5B13W6P5', '1000', 'Cash on Hand', 'asset', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600H8WG8C8CMFWC4G8M', '1010', 'Bank Accounts', 'asset', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002KV0CQ6AWCQMNK8H', '1020', 'Card and POS Clearing', 'asset', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600ZHDKSJS9NZA91GDT', '1100', 'Accounts Receivable', 'asset', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600MMPKEKG6DTVK0N4R', '1200', 'Inventory Asset', 'asset', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600BVCR77TJYX9NCAKS', '1300', 'Fixed Assets', 'asset', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600HJPSS9ASSYVT1950', '1390', 'Accumulated Depreciation', 'asset', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600DYHRV0431J92T7MW', '2000', 'Accounts Payable', 'liability', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J60050QAS1RJYV3AZ5YS', '2100', 'Output Tax Payable', 'liability', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600D6AD0RER7QFPJEY8', '2200', 'Customer Deposits', 'liability', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600PEG6F6E46EXTJP17', '2300', 'Fixed Asset Clearing', 'liability', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6003KF3XQ3A685D91A4', '3000', 'Owner Equity', 'equity', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QA1FS7S706CMEG85', '4000', 'Sales Revenue', 'revenue', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600QSKBTAQPDMBFMDZB', '4010', 'Sales Returns and Allowances', 'revenue', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600PBS8S61895JD9Y66', '5000', 'Cost of Goods Sold', 'expense', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6009TYDB2J5821NC74R', '5010', 'Purchase Returns', 'expense', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6002XBJ1HTXVZX9SX41', '6000', 'Depreciation Expense', 'expense', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J6007GYR4EWV36802FP9', '6100', 'General Operating Expense', 'expense', NULL, 0, 1, 1, 1, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00'),
+  ('01KXM3J600AVQHNJ1XZGX10DFX', '9990', 'Opening Balance Clearing', 'equity', NULL, 1, 1, 1, 0, NULL, '2026-07-16 12:00:00', '2026-07-16 12:00:00');
+
+INSERT INTO `migrations` (`migration`, `batch`) VALUES
+  ('0001_01_01_000001_create_cache_table', 1),
+  ('0001_01_01_000002_create_jobs_table', 1),
+  ('2026_07_15_000100_create_accounts_table', 1),
+  ('2026_07_15_000110_create_account_sessions_table', 1),
+  ('2026_07_15_000120_create_security_events_table', 1),
+  ('2026_07_15_000200_create_companies_table', 1),
+  ('2026_07_15_000210_create_branches_table', 1),
+  ('2026_07_15_000220_create_roles_and_permissions_tables', 1),
+  ('2026_07_15_000230_create_account_branch_table', 1),
+  ('2026_07_15_000240_create_audit_logs_table', 1),
+  ('2026_07_15_000300_create_catalog_classification_tables', 1),
+  ('2026_07_15_000310_create_suppliers_table', 1),
+  ('2026_07_15_000320_create_products_tables', 1),
+  ('2026_07_15_000400_create_product_imports_tables', 1),
+  ('2026_07_15_000500_create_inventory_tables', 1),
+  ('2026_07_15_000600_create_procurement_and_alert_tables', 1),
+  ('2026_07_15_000700_create_customers_and_payment_methods', 1),
+  ('2026_07_15_000800_create_sales_tables', 1),
+  ('2026_07_15_000900_create_supplier_finance_tables', 1),
+  ('2026_07_15_001000_create_operations_dashboard_tables', 1),
+  ('2026_07_15_001500_create_commercial_controls', 1),
+  ('2026_07_15_001600_create_api_tokens_and_quote_conversions', 1),
+  ('2026_07_15_001700_create_backup_runs', 1),
+  ('2026_07_16_001800_create_operational_accounting_records', 1),
+  ('2026_07_16_001900_create_business_insights_table', 1),
+  ('2026_07_16_001900_create_double_entry_accounting', 1);
+
+SET FOREIGN_KEY_CHECKS=1;
