@@ -5,7 +5,7 @@
     >
         <div class="grid gap-6 xl:grid-cols-[1fr_420px]">
             <x-ui.card title="Branch stock">
-                <div class="overflow-x-auto">
+                <div class="ec-responsive-table overflow-x-auto">
                     <table class="w-full min-w-[820px] text-left text-sm">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
@@ -48,12 +48,12 @@
                 <x-ui.card title="Stock intake">
                     <form method="POST" action="{{ route('admin.inventory.intake') }}" class="space-y-4">
                         @csrf
-                        <select name="product_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
-                            <option value="">Select product</option>
-                            @foreach ($products as $product)
-                                <option value="{{ $product->id }}">{{ $product->name }} — {{ $product->sku }}</option>
-                            @endforeach
-                        </select>
+                        <div data-product-finder class="relative">
+                            <input type="search" data-product-query autocomplete="off" placeholder="Scan barcode or type product name / SKU" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
+                            <input type="hidden" data-product-id name="product_id" required>
+                            <div data-product-results hidden class="ec-product-results"></div>
+                            <script type="application/json" data-products-json>@json($products)</script>
+                        </div>
                         <select name="branch_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
                             <option value="">Select branch</option>
                             @foreach ($branches as $branch)
@@ -73,12 +73,12 @@
                 <x-ui.card title="Stock adjustment">
                     <form method="POST" action="{{ route('admin.inventory.adjust') }}" class="space-y-4">
                         @csrf
-                        <select name="product_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
-                            <option value="">Select product</option>
-                            @foreach ($products as $product)
-                                <option value="{{ $product->id }}">{{ $product->name }}</option>
-                            @endforeach
-                        </select>
+                        <div data-product-finder class="relative">
+                            <input type="search" data-product-query autocomplete="off" placeholder="Scan barcode or type product name / SKU" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
+                            <input type="hidden" data-product-id name="product_id" required>
+                            <div data-product-results hidden class="ec-product-results"></div>
+                            <script type="application/json" data-products-json>@json($products)</script>
+                        </div>
                         <select name="branch_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
                             <option value="">Select branch</option>
                             @foreach ($branches as $branch)

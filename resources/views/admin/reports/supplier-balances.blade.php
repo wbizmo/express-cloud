@@ -13,7 +13,7 @@
         </x-ui.card>
 
         <x-ui.card title="Outstanding by supplier" class="mt-6">
-            <div class="overflow-x-auto">
+            <div class="ec-responsive-table overflow-x-auto">
                 <table class="w-full min-w-[700px] text-left text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">

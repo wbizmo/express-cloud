@@ -19,7 +19,7 @@
         </form>
 
         <x-ui.card title="Performance ranking">
-            <div class="overflow-x-auto">
+            <div class="ec-responsive-table overflow-x-auto">
                 <table class="w-full min-w-[860px] text-left text-sm">
                     <thead><tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500"><th class="px-3 py-3">Rank</th><th class="px-3 py-3">Staff</th><th class="px-3 py-3">Sales</th><th class="px-3 py-3">Revenue</th><th class="px-3 py-3">Units</th><th class="px-3 py-3">Customers</th></tr></thead>
                     <tbody class="divide-y divide-slate-100">

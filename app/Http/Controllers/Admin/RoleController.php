@@ -9,6 +9,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Services\Organisation\AuditLogger;
 use App\Support\Authorization\PermissionCatalog;
+use App\Support\Authorization\RolePermissionPolicy;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -29,25 +30,27 @@ final readonly class RoleController
         ]);
     }
 
-    public function store(
-        StoreRoleRequest $request,
-    ): RedirectResponse {
-        $role = DB::transaction(function () use ($request): Role {
+    public function store(StoreRoleRequest $request): RedirectResponse
+    {
+        $name = $request->string('name')->toString();
+        $slug = $request->string('slug')->toString();
+        $permissions = RolePermissionPolicy::constrain(
+            $name,
+            $slug,
+            $request->array('permissions'),
+        );
+
+        $role = DB::transaction(function () use ($request, $name, $slug, $permissions): Role {
             $role = Role::query()->create([
-                ...$request->safe()->only([
-                    'name',
-                    'slug',
-                    'description',
-                ]),
+                'name' => $name,
+                'slug' => $slug,
+                'description' => $request->string('description')->toString() ?: null,
                 'is_system' => false,
                 'is_active' => true,
             ]);
 
             $permissionIds = Permission::query()
-                ->whereIn(
-                    'slug',
-                    $request->array('permissions'),
-                )
+                ->whereIn('slug', $permissions)
                 ->pluck('id');
 
             $role->permissions()->sync($permissionIds);
@@ -63,7 +66,7 @@ final readonly class RoleController
             after: [
                 'name' => $role->name,
                 'slug' => $role->slug,
-                'permissions' => $request->array('permissions'),
+                'permissions' => $permissions,
             ],
         );
 

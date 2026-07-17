@@ -24,7 +24,7 @@
             </x-ui.button>
         </x-slot:actions>
 
-        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-4">
             @foreach ([
                 ['label' => 'Revenue today', 'value' => '₦0', 'change' => 'No sales recorded'],
                 ['label' => 'Transactions', 'value' => '0', 'change' => 'Current branch'],
@@ -50,7 +50,7 @@
                 title="Interface states"
                 description="Buttons, feedback, fields, and status treatments used throughout Express Cloud."
             >
-                <div class="grid gap-5 sm:grid-cols-2">
+                <div class="grid gap-5 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
                     <x-ui.input
                         name="example-search"
                         label="Product search"

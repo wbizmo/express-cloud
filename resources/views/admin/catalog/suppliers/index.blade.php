@@ -22,7 +22,7 @@
                                     {{ ucfirst($supplier->status->value) }}
                                 </x-ui.status-badge>
                             </div>
-                            <div class="mt-3 grid gap-1 text-sm text-slate-500 sm:grid-cols-2">
+                            <div class="mt-3 grid gap-1 text-sm text-slate-500 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
                                 <p>{{ $supplier->contact_person ?: 'No contact person' }}</p>
                                 <p>{{ $supplier->phone ?: 'No phone number' }}</p>
                             </div>
@@ -36,13 +36,13 @@
             <x-ui.card title="Create supplier">
                 <form method="POST" action="{{ route('admin.catalog.suppliers.store') }}" class="space-y-4">
                     @csrf
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
                         <x-ui.input name="supplier_code" label="Supplier code" required />
                         <x-ui.input name="company_name" label="Company name" required />
                     </div>
                     <x-ui.input name="contact_person" label="Contact person" />
                     <x-ui.input name="category" label="Supplier category" />
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
                         <x-ui.input name="email" type="email" label="Email" />
                         <x-ui.input name="phone" label="Phone" />
                     </div>
@@ -50,7 +50,7 @@
                         <span class="mb-2 block text-sm font-medium text-slate-700">Address</span>
                         <textarea name="address" class="min-h-24 w-full rounded-lg border border-slate-300 px-3.5 py-3 text-sm"></textarea>
                     </label>
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
                         <x-ui.input name="payment_terms_days" type="number" label="Payment terms (days)" />
                         <x-ui.input name="lead_time_days" type="number" label="Lead time (days)" />
                     </div>

@@ -3,6 +3,14 @@
         page-title="Staff accounts"
         page-description="Create accounts, assign roles and branches, and manage access without exposing credentials in general lists."
     >
+        @if (session('revealed_access_key'))
+            <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-5">
+                <p class="text-sm font-semibold text-amber-900">Access key for {{ session('revealed_access_key.name') }}</p>
+                <p class="mt-2 break-all font-mono text-xl font-bold tracking-[0.1em] text-amber-950">{{ session('revealed_access_key.key') }}</p>
+                <p class="mt-2 text-xs text-amber-800">This reveal was permission-checked and written to the audit log.</p>
+            </div>
+        @endif
+
         @if (session('generated_access_key'))
             <div class="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
                 <p class="text-sm font-semibold text-blue-900">New access key</p>
@@ -45,6 +53,12 @@
                                     <x-ui.status-badge :tone="$account->status->value === 'active' ? 'success' : 'warning'">
                                         {{ ucfirst($account->status->value) }}
                                     </x-ui.status-badge>
+                                    @if (auth()->user() && app(\App\Services\Organisation\AuthorizationService::class)->hasPermission(auth()->user(), 'staff.access-key.reveal'))
+                                        <form method="POST" action="{{ route('admin.staff.access-key.reveal', $account) }}">
+                                            @csrf
+                                            <x-ui.button type="submit" variant="ghost">Reveal key</x-ui.button>
+                                        </form>
+                                    @endif
                                     @if ($account->status->value === 'active')
                                         <form method="POST" action="{{ route('admin.staff.suspend', $account) }}">
                                             @csrf
@@ -64,7 +78,7 @@
             <x-ui.card title="Create staff account">
                 <form method="POST" action="{{ route('admin.staff.store') }}" class="space-y-4">
                     @csrf
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
                         <x-ui.input name="first_name" label="First name" required />
                         <x-ui.input name="last_name" label="Last name" required />
                     </div>

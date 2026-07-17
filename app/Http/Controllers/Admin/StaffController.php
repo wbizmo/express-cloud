@@ -120,6 +120,32 @@ final readonly class StaffController
             ->with('generated_access_key', $plainKey);
     }
 
+
+    public function revealAccessKey(
+        Request $request,
+        Account $account,
+    ): RedirectResponse {
+        abort_if($account->login_key_encrypted === null, 404);
+
+        $plainKey = $this->encryptedValue->decrypt(
+            (string) $account->login_key_encrypted,
+        );
+
+        $this->audit->record(
+            $request,
+            'staff.access-key.revealed',
+            'account',
+            $account,
+            after: ['account_public_id' => $account->public_id],
+        );
+
+        return back()->with('revealed_access_key', [
+            'account_id' => (string) $account->getKey(),
+            'name' => $account->displayName(),
+            'key' => $plainKey,
+        ]);
+    }
+
     public function suspend(
         Request $request,
         Account $account,

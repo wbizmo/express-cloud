@@ -37,8 +37,8 @@ final class LisaInsightEngine
             ]);
         }
 
-        $lowStock = DB::table('product_branch_stocks')
-            ->whereColumn('quantity_milliunits', '<=', 'reorder_level_milliunits')
+        $lowStock = DB::table('product_branch_stock')
+            ->whereColumn('quantity_milliunits', '<=', 'minimum_stock_milliunits')
             ->count();
 
         if ($lowStock > 0) {
@@ -55,9 +55,9 @@ final class LisaInsightEngine
         }
 
         $outstanding = (int) DB::table('sales')
-            ->where('balance_due_kobo', '>', 0)
             ->whereNotIn('status', ['cancelled'])
-            ->sum('balance_due_kobo');
+            ->selectRaw('COALESCE(SUM(GREATEST(grand_total_kobo - paid_amount_kobo, 0)), 0) AS outstanding_total')
+            ->value('outstanding_total');
 
         if ($outstanding > 0) {
             $generated += $this->store([

@@ -27,7 +27,7 @@
             @endif
         </x-slot:actions>
 
-        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-4">
             @foreach ([
                 ['label' => 'Total rows', 'value' => $import->total_rows],
                 ['label' => 'Valid rows', 'value' => $import->valid_rows],
@@ -46,7 +46,7 @@
             description="Up to the first 50 rows are shown. No product records change until the import is confirmed."
             class="mt-6"
         >
-            <div class="overflow-x-auto">
+            <div class="ec-responsive-table overflow-x-auto">
                 <table class="w-full min-w-[1100px] text-left text-xs">
                     <thead>
                         <tr class="border-b border-slate-200 uppercase tracking-wide text-slate-500">

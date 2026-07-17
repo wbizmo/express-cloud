@@ -71,7 +71,7 @@
                         @endforeach
                     </select>
 
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
                         <x-ui.input name="bill_date" type="date" label="Bill date" required />
                         <x-ui.input name="due_date" type="date" label="Due date" />
                     </div>

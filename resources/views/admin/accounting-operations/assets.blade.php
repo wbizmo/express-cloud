@@ -8,8 +8,8 @@
 <x-ui.input name="name" label="Asset name" required />
 <x-ui.input name="category" label="Category" required />
 <label><span class="mb-2 block text-sm font-medium">Branch</span><select name="branch_id"><option value="">No branch assigned</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></label>
-<div class="grid gap-4 sm:grid-cols-2"><x-ui.input name="acquired_at" type="date" label="Acquired date" required /><x-ui.input name="useful_life_months" type="number" label="Useful life (months)" required /></div>
-<div class="grid gap-4 sm:grid-cols-2"><x-ui.input name="cost" type="number" step="0.01" label="Cost" required /><x-ui.input name="salvage_value" type="number" step="0.01" label="Salvage value" /></div>
+<div class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]"><x-ui.input name="acquired_at" type="date" label="Acquired date" required /><x-ui.input name="useful_life_months" type="number" label="Useful life (months)" required /></div>
+<div class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]"><x-ui.input name="cost" type="number" step="0.01" label="Cost" required /><x-ui.input name="salvage_value" type="number" step="0.01" label="Salvage value" /></div>
 <x-ui.input name="serial_number" label="Serial number" />
 <x-ui.input name="location" label="Location" />
 <label class="block"><span class="mb-2 block text-sm font-medium">Notes</span><textarea name="notes" rows="3" class="w-full rounded-lg border border-slate-300 p-3"></textarea></label>

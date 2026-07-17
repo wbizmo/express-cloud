@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\Operations\CronDigestController;
 use App\Http\Controllers\Public\SaleVerificationController;
+use App\Http\Controllers\Catalog\ProductLookupController;
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
@@ -23,3 +24,7 @@ Route::get(
     '/verify/sales/{sale}/{token}',
     SaleVerificationController::class,
 )->name('public.sales.verify');
+
+Route::get('/catalog/products/lookup', ProductLookupController::class)
+    ->middleware(['auth', 'account.active', 'session.inactivity'])
+    ->name('catalog.products.lookup');

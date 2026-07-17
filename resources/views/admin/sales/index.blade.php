@@ -11,7 +11,7 @@
         </x-slot:actions>
 
         <x-ui.card title="Sales history">
-            <div class="overflow-x-auto">
+            <div class="ec-responsive-table overflow-x-auto">
                 <table class="w-full min-w-[1000px] text-left text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">

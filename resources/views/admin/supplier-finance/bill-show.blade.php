@@ -3,7 +3,7 @@
         :page-title="$bill->bill_number"
         :page-description="$bill->supplier?->company_name.' · '.ucfirst($bill->status->value)"
     >
-        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-4">
             @foreach ([
                 ['label' => 'Total', 'value' => '₦'.number_format($bill->total_kobo / 100, 2)],
                 ['label' => 'Paid', 'value' => '₦'.number_format($bill->paid_kobo / 100, 2)],
@@ -19,7 +19,7 @@
 
         <div class="mt-6 grid gap-6 xl:grid-cols-[1fr_380px]">
             <x-ui.card title="Bill lines">
-                <div class="overflow-x-auto">
+                <div class="ec-responsive-table overflow-x-auto">
                     <table class="w-full min-w-[780px] text-left text-sm">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">

@@ -5,19 +5,19 @@
 
 <div
     x-data
-    class="min-h-screen bg-[var(--ec-background)]"
+    class="ec-app-frame min-h-screen max-w-full overflow-x-clip bg-[var(--ec-background)]"
 >
     <x-feedback.page-progress />
     <x-navigation.sidebar />
     <x-navigation.mobile-drawer />
 
     <div
-        class="min-h-screen transition-[padding] duration-200"
+        class="ec-page-content min-h-screen max-w-full overflow-x-clip transition-[padding] duration-200"
         :class="$store.shell.sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[280px]'"
     >
         <x-navigation.topbar />
 
-        <main class="px-4 py-6 sm:px-6 lg:px-6">
+        <main class="ec-page-main w-full max-w-full overflow-x-clip px-4 py-6 sm:px-6 lg:px-6">
             <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <nav class="mb-2 text-xs font-medium text-slate-500" aria-label="Breadcrumb">

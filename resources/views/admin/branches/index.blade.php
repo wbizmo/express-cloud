@@ -5,7 +5,7 @@
     >
         <div class="grid gap-6 xl:grid-cols-[1fr_380px]">
             <x-ui.card title="Branch directory">
-                <div class="overflow-x-auto">
+                <div class="ec-responsive-table overflow-x-auto">
                     <table class="w-full min-w-[720px] text-left text-sm">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">

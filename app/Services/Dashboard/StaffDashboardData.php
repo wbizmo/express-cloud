@@ -26,29 +26,29 @@ final readonly class StaffDashboardData
             ->orderByDesc('sale_date')
             ->orderByDesc('created_at')
             ->limit(8)
-            ->get(['id', 'reference', 'sale_type', 'status', 'sale_date', 'grand_total_kobo', 'balance_due_kobo']);
+            ->get([
+                'id', 'sale_code', 'sale_type', 'status', 'sale_date',
+                'grand_total_kobo', 'paid_amount_kobo',
+            ])
+            ->map(function (object $sale): object {
+                $sale->balance_due_kobo = max(
+                    0,
+                    (int) $sale->grand_total_kobo - (int) $sale->paid_amount_kobo,
+                );
 
-        $branchIds = $account->is_allowed_all_branches
-            ? []
-            : $account->branches()->pluck('branches.id')->all();
+                return $sale;
+            });
 
-        $lowStockCount = 0;
-        if ($this->authorization->hasAnyPermission($account, ['inventory.view', 'reports.low-stock'])) {
-            $stock = DB::table('product_branch_stocks')
-                ->whereColumn('quantity_milliunits', '<=', 'reorder_level_milliunits');
-            if (! $account->is_allowed_all_branches) {
-                $stock->whereIn('branch_id', $branchIds);
-            }
-            $lowStockCount = $stock->count();
-        }
+        $outstandingKobo = (int) (clone $sales)
+            ->selectRaw('COALESCE(SUM(GREATEST(grand_total_kobo - paid_amount_kobo, 0)), 0) AS outstanding_total')
+            ->value('outstanding_total');
 
         return [
             'todaySalesCount' => (clone $sales)->whereDate('sale_date', $today)->count(),
             'todayRevenueKobo' => (int) (clone $sales)->whereDate('sale_date', $today)->sum('grand_total_kobo'),
             'monthRevenueKobo' => (int) (clone $sales)->whereBetween('sale_date', [$monthStart, $today])->sum('grand_total_kobo'),
-            'outstandingKobo' => (int) (clone $sales)->where('balance_due_kobo', '>', 0)->sum('balance_due_kobo'),
+            'outstandingKobo' => $outstandingKobo,
             'recentSales' => $recentSales,
-            'lowStockCount' => $lowStockCount,
             'permissions' => $this->authorization->permissionSlugs($account),
         ];
     }

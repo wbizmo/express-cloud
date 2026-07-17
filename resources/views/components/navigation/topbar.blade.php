@@ -1,5 +1,5 @@
 <header
-    class="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6"
+    class="ec-topbar sticky top-0 z-40 flex h-16 w-full max-w-full items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6"
 >
     <button
         type="button"

@@ -4,7 +4,7 @@
 <form method="POST" action="{{ route('admin.commercial.purchases.store') }}" class="space-y-6" data-commercial-lines>
 @csrf
 <x-ui.card title="Purchase details">
-<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+<div class="grid gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-4">
 <label><span class="mb-2 block text-sm font-medium">Supplier</span><select name="supplier_id" required><option value="">Select supplier</option>@foreach($suppliers as $supplier)<option value="{{ $supplier->id }}">{{ $supplier->name }} {{ $supplier->code ? '· '.$supplier->code : '' }}</option>@endforeach</select></label>
 <label><span class="mb-2 block text-sm font-medium">Receiving branch</span><select name="branch_id" required><option value="">Select branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></label>
 <x-ui.input name="purchased_at" type="date" label="Purchase date" :value="today()->toDateString()" required />

@@ -21,6 +21,7 @@ use App\Services\Catalog\MoneyInput;
 use App\Services\Inventory\Quantity;
 use App\Services\Procurement\LowStockAlertService;
 use App\Services\Sales\SaleCodeGenerator;
+use App\Services\Organisation\BranchAccess;
 use Illuminate\Support\Facades\DB;
 
 final readonly class CreateSale
@@ -62,6 +63,7 @@ final readonly class CreateSale
             $branch = Branch::query()->findOrFail(
                 $request->string('branch_id')->toString(),
             );
+            $this->branchAccess->enforce($actor, $branch);
 
             $sale = Sale::query()->create([
                 'sale_code' => $this->codes->generate($type),
@@ -118,7 +120,7 @@ final readonly class CreateSale
 
                 $unitPriceKobo = $this->money->toKobo(
                     $item['unit_price'] ?? null,
-                ) ?? $product->default_price_kobo;
+                ) ?? (int) ($product->branchPrices()->where('branch_id', $branch->getKey())->value('price_kobo') ?? $product->default_price_kobo);
 
                 $lineSubtotal = (int) round(
                     ($quantityMilliunits / 1000) * $unitPriceKobo,
@@ -157,6 +159,11 @@ final readonly class CreateSale
                 ]);
 
                 if ($type->movesStock() && $product->track_inventory) {
+                    $available = (int) ($product->branchStock()->where('branch_id', $branch->getKey())->value('quantity_milliunits') ?? 0);
+                    if (! (bool) $branch->allow_zero_stock_sales && $quantityMilliunits > $available) {
+                        throw new \DomainException('Insufficient branch stock for '.$product->name.'.');
+                    }
+
                     $this->deductStock(
                         $product,
                         $branch,

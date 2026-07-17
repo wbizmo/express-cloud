@@ -26,7 +26,7 @@ final readonly class EnsureSaleVisibility
             $sale instanceof Sale
             && $actor instanceof Account
             && $this->access->canView($actor, $sale),
-            403,
+            404,
         );
 
         return $next($request);

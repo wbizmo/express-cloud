@@ -4,7 +4,7 @@
         page-description="Immutable inventory history ordered by event time."
     >
         <x-ui.card title="Movement ledger">
-            <div class="overflow-x-auto">
+            <div class="ec-responsive-table overflow-x-auto">
                 <table class="w-full min-w-[1100px] text-left text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">

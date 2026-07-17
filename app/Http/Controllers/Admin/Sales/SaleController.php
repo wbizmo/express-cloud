@@ -30,8 +30,16 @@ final readonly class SaleController
     {
         $type = $request->string('type')->toString();
 
+        /** @var Account $actor */
+        $actor = $request->user();
+
+        /** @var Account $actor */
+        $actor = $request->user();
+
         return view('admin.sales.index', [
             'sales' => Sale::query()
+                ->when(! $actor->can('sales.view.all'), fn ($query) => $query->where('sold_by_account_id', $actor->getKey()))
+                ->when(! $actor->can('sales.view.all'), fn ($query) => $query->where('sold_by_account_id', $actor->getKey()))
                 ->with([
                     'branch:id,name',
                     'customer:id,name,phone',
@@ -50,24 +58,13 @@ final readonly class SaleController
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         return view('admin.sales.create', [
             'branches' => Branch::query()
                 ->where('status', 'active')
-                ->orderBy('name')
-                ->get(['id', 'name']),
-            'products' => Product::query()
-                ->where('status', 'active')
-                ->orderBy('name')
-                ->get([
-                    'id',
-                    'name',
-                    'sku',
-                    'barcode',
-                    'track_inventory',
-                    'default_price_kobo',
-                ]),
+                ->when(! $request->user()->is_allowed_all_branches, fn ($query) => $query->whereIn('id', $request->user()->branches()->select('branches.id')))
+                ->orderBy('name')->get(['id', 'name']),
             'paymentMethods' => PaymentMethod::query()
                 ->where('is_active', true)
                 ->orderByDesc('is_default_for_pos')

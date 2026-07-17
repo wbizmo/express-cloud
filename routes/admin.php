@@ -10,10 +10,10 @@ use App\Http\Controllers\Admin\AccountingOperations\PurchaseReturnController;
 use App\Http\Controllers\Admin\AccountingOperations\StandaloneReceiptController;
 use App\Http\Controllers\Admin\Activity\ProductActivityController;
 use App\Http\Controllers\Admin\Activity\SystemActivityController;
-use App\Http\Controllers\Admin\Api\ApiTokenController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\Catalog\ClassificationController;
 use App\Http\Controllers\Admin\Catalog\ProductController;
+use App\Http\Controllers\Admin\Catalog\ProductPriceAdjustmentController;
 use App\Http\Controllers\Admin\Catalog\SupplierController;
 use App\Http\Controllers\Admin\Catalog\TaxRateController;
 use App\Http\Controllers\Admin\Commercial\CustomerReceivableController;
@@ -74,6 +74,13 @@ Route::middleware([
         ->middleware('permission:staff.create')
         ->name('staff.store');
 
+    Route::post(
+        '/staff/{account}/access-key/reveal',
+        [StaffController::class, 'revealAccessKey'],
+    )
+        ->middleware('permission:staff.access-key.reveal')
+        ->name('staff.access-key.reveal');
+
     Route::patch(
         '/staff/{account}/suspend',
         [StaffController::class, 'suspend'],
@@ -104,6 +111,12 @@ Route::middleware([
         ->name('security.sessions.revoke');
 
     Route::prefix('catalog')->name('catalog.')->group(function (): void {
+
+        Route::get('/price-adjustments', [ProductPriceAdjustmentController::class, 'index'])
+            ->middleware('permission:products.prices.adjust')->name('price-adjustments.index');
+        Route::post('/price-adjustments', [ProductPriceAdjustmentController::class, 'store'])
+            ->middleware('permission:products.prices.adjust')->name('price-adjustments.store');
+
         Route::get('/products', [ProductController::class, 'index'])
             ->middleware('permission:products.view')
             ->name('products.index');
@@ -442,18 +455,6 @@ Route::middleware([
         Route::post('/purchases', [PurchaseReceiptController::class, 'store'])
             ->middleware('permission:purchases.record')
             ->name('purchases.store');
-    });
-
-    Route::prefix('api')->name('api.')->group(function (): void {
-        Route::get('/tokens', [ApiTokenController::class, 'index'])
-            ->middleware('permission:api.tokens.manage')
-            ->name('tokens.index');
-        Route::post('/tokens', [ApiTokenController::class, 'store'])
-            ->middleware('permission:api.tokens.manage')
-            ->name('tokens.store');
-        Route::delete('/tokens/{token}', [ApiTokenController::class, 'destroy'])
-            ->middleware('permission:api.tokens.manage')
-            ->name('tokens.destroy');
     });
 
     Route::prefix('operations/backups')

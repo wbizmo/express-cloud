@@ -4,7 +4,7 @@
 <x-ui.card title="Payment receipt">
 <form method="POST" action="{{ route('admin.accounting-operations.receipts.store') }}" class="space-y-5">
 @csrf
-<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+<div class="grid gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-3">
 <label><span class="mb-2 block text-sm font-medium">Branch</span><select name="branch_id" required><option value="">Select branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></label>
 <label><span class="mb-2 block text-sm font-medium">Customer (optional)</span><select name="customer_id"><option value="">No customer attached</option>@foreach($customers as $customer)<option value="{{ $customer->id }}">{{ $customer->name }}{{ $customer->phone ? ' · '.$customer->phone : '' }}</option>@endforeach</select></label>
 <label><span class="mb-2 block text-sm font-medium">Payment method</span><select name="payment_method_id" required><option value="">Select method</option>@foreach($paymentMethods as $method)<option value="{{ $method->id }}">{{ $method->name }}</option>@endforeach</select></label>

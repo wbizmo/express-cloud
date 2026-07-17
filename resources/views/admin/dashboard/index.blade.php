@@ -20,7 +20,7 @@
             </div>
         </form>
 
-        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-4">
             @foreach ([
                 ['label' => 'Sales', 'value' => '₦'.number_format($totalSalesKobo / 100, 2)],
                 ['label' => 'Transactions', 'value' => number_format($salesCount)],
@@ -34,7 +34,7 @@
             @endforeach
         </section>
 
-        <div class="mt-6 grid gap-6 xl:grid-cols-2">
+        <div class="mt-6 grid gap-6 xl:grid-cols-[repeat(2,minmax(0,1fr))]">
             <x-ui.card title="Sales by branch" description="Bar-chart data, ordered by revenue.">
                 <div class="space-y-4">
                     @php($maxBranch = max(1, (int) $salesByBranch->max('total_kobo')))
@@ -76,7 +76,7 @@
 
         <div class="mt-6 grid gap-6 xl:grid-cols-[1fr_420px]">
             <x-ui.card title="Sales trend" description="Daily trend data for the selected date range.">
-                <div class="overflow-x-auto">
+                <div class="ec-responsive-table overflow-x-auto">
                     <table class="w-full min-w-[560px] text-left text-sm">
                         <thead>
                             <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
@@ -118,7 +118,7 @@
         </div>
 
         <x-ui.card title="Staff performance ranking" class="mt-6">
-            <div class="overflow-x-auto">
+            <div class="ec-responsive-table overflow-x-auto">
                 <table class="w-full min-w-[840px] text-left text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">

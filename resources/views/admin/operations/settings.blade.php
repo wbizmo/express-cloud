@@ -4,7 +4,7 @@
         page-description="Non-secret operating settings. SMTP credentials remain in environment configuration."
     >
         <x-ui.card title="Operating settings">
-            <form method="POST" action="{{ route('admin.operations.settings.update') }}" enctype="multipart/form-data" class="grid gap-6 md:grid-cols-2">
+            <form method="POST" action="{{ route('admin.operations.settings.update') }}" enctype="multipart/form-data" class="grid gap-6 md:grid-cols-[repeat(2,minmax(0,1fr))]">
                 @csrf
                 @method('PATCH')
                 <x-ui.input name="business_name" label="Business name" :value="$settings->business_name" required />

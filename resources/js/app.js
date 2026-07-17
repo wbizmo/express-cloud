@@ -186,3 +186,295 @@ new MutationObserver((mutations) => {
     childList: true,
     subtree: true,
 });
+
+/* Post-live searchable product and barcode controls */
+const productFinder = (root) => {
+    const input = root.querySelector('[data-product-query]');
+    const hidden = root.querySelector('[data-product-id]');
+    const results = root.querySelector('[data-product-results]');
+    if (!input || !hidden || !results || root.dataset.productFinderReady) return;
+    root.dataset.productFinderReady = 'true';
+
+    const products = JSON.parse(root.querySelector('[data-products-json]').textContent || '[]');
+    const normalize = (value) => String(value || '').trim().toLowerCase();
+
+    const choose = (product) => {
+        hidden.value = product.id;
+        input.value = `${product.name} — ${product.sku}${product.barcode ? ` — ${product.barcode}` : ''}`;
+        results.replaceChildren();
+        results.hidden = true;
+        input.dispatchEvent(new CustomEvent('product-selected', { bubbles: true, detail: product }));
+    };
+
+    const render = () => {
+        const term = normalize(input.value);
+        hidden.value = '';
+        const matches = products.filter((product) => [product.name, product.sku, product.barcode]
+            .some((value) => normalize(value).includes(term))).slice(0, 12);
+        results.replaceChildren();
+        matches.forEach((product) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'ec-product-result';
+            button.textContent = `${product.name} — ${product.sku}${product.barcode ? ` — ${product.barcode}` : ''}`;
+            button.addEventListener('click', () => choose(product));
+            results.appendChild(button);
+        });
+        results.hidden = matches.length === 0;
+        const exact = matches.find((product) => [product.sku, product.barcode]
+            .some((value) => normalize(value) === term));
+        if (exact) choose(exact);
+    };
+
+    input.addEventListener('input', render);
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            render();
+            results.querySelector('button')?.click();
+        }
+    });
+};
+
+const enhanceProductFinders = (root = document) => {
+    root.querySelectorAll('[data-product-finder]').forEach(productFinder);
+};
+
+document.addEventListener('DOMContentLoaded', () => enhanceProductFinders());
+new MutationObserver((mutations) => mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
+    if (node instanceof HTMLElement) enhanceProductFinders(node);
+}))).observe(document.documentElement, { childList: true, subtree: true });
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('productScanner', ({ endpoint, context, branchField }) => ({
+        term: '', results: [], selected: null, selectedId: '', open: false, loading: false,
+        branchId() {
+            const field = document.querySelector(`[name="${branchField}"]`);
+            return field ? field.value : '';
+        },
+        async search() {
+            this.selected = null; this.selectedId = '';
+            if (!this.term.trim() || !this.branchId()) { this.results = []; this.open = false; return; }
+            this.loading = true;
+            try {
+                const url = new URL(endpoint, window.location.origin);
+                url.searchParams.set('q', this.term.trim());
+                url.searchParams.set('branch_id', this.branchId());
+                url.searchParams.set('context', context);
+                const response = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                if (!response.ok) { this.results = []; this.open = false; return; }
+                this.results = (await response.json()).data || [];
+                this.open = true;
+            } finally { this.loading = false; }
+        },
+        chooseExactOrFirst() {
+            const q = this.term.trim().toLowerCase();
+            const item = this.results.find(i => (i.barcode || '').toLowerCase() === q || (i.sku || '').toLowerCase() === q) || this.results[0];
+            if (item) this.select(item); else this.search();
+        },
+        select(item) {
+            this.selected = item; this.selectedId = item.id; this.term = item.name; this.open = false;
+            this.$dispatch('product-selected', { ...item });
+        },
+        close() { this.open = false; },
+    }));
+});
+
+/**
+ * Progressive quantity controls for every server-rendered product operation.
+ * Applies to sales, stock intake, transfers, adjustments, purchasing, returns,
+ * and any future product form using a conventional quantity/qty/units field.
+ */
+(function installProductQuantitySteppers() {
+    const quantityName = /(^|\[|_)(quantity|qty|units|milliunits)(\]|_|$)/i;
+
+    function precision(value) {
+        const text = String(value ?? '');
+        return text.includes('.') ? text.split('.')[1].length : 0;
+    }
+
+    function enhance(input) {
+        if (!(input instanceof HTMLInputElement)) return;
+        if (input.dataset.quantityStepperReady === '1') return;
+        if (!input.name || !quantityName.test(input.name)) return;
+        if (input.type === 'hidden' || input.disabled || input.readOnly) return;
+        if (!['number', 'text', 'search'].includes(input.type)) return;
+
+        input.dataset.quantityStepperReady = '1';
+        input.inputMode = input.inputMode || 'decimal';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ec-quantity-stepper';
+        wrapper.setAttribute('role', 'group');
+        wrapper.setAttribute('aria-label', 'Quantity controls');
+
+        const minus = document.createElement('button');
+        minus.type = 'button';
+        minus.className = 'ec-quantity-stepper__button';
+        minus.setAttribute('aria-label', 'Decrease quantity');
+        minus.textContent = '−';
+
+        const plus = document.createElement('button');
+        plus.type = 'button';
+        plus.className = 'ec-quantity-stepper__button';
+        plus.setAttribute('aria-label', 'Increase quantity');
+        plus.textContent = '+';
+
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.append(minus, input, plus);
+        input.classList.add('ec-quantity-stepper__input');
+
+        const update = (direction) => {
+            const configuredStep = Number(input.step);
+            const step = Number.isFinite(configuredStep) && configuredStep > 0
+                ? configuredStep
+                : /milliunits/i.test(input.name) ? 1000 : 1;
+            const minimum = input.min !== '' ? Number(input.min) : 0;
+            const maximum = input.max !== '' ? Number(input.max) : Number.POSITIVE_INFINITY;
+            const current = Number(input.value || 0);
+            const next = Math.min(maximum, Math.max(minimum, current + (direction * step)));
+            const places = Math.max(precision(step), precision(input.value));
+
+            input.value = places > 0 ? next.toFixed(places) : String(Math.round(next));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+
+        minus.addEventListener('click', () => update(-1));
+        plus.addEventListener('click', () => update(1));
+    }
+
+    function scan(root = document) {
+        root.querySelectorAll('input[name]').forEach(enhance);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => scan());
+    document.addEventListener('alpine:initialized', () => scan());
+
+    new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+                if (!(node instanceof Element)) continue;
+                if (node.matches?.('input[name]')) enhance(node);
+                scan(node);
+            }
+        }
+    }).observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('productScanner', ({ endpoint, context, branchField }) => ({
+        term: '', results: [], selected: null, selectedId: '', open: false, loading: false,
+        branchId() {
+            const field = document.querySelector(`[name="${branchField}"]`);
+            return field ? field.value : '';
+        },
+        async search() {
+            this.selected = null; this.selectedId = '';
+            if (!this.term.trim() || !this.branchId()) { this.results = []; this.open = false; return; }
+            this.loading = true;
+            try {
+                const url = new URL(endpoint, window.location.origin);
+                url.searchParams.set('q', this.term.trim());
+                url.searchParams.set('branch_id', this.branchId());
+                url.searchParams.set('context', context);
+                const response = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                if (!response.ok) { this.results = []; this.open = false; return; }
+                this.results = (await response.json()).data || [];
+                this.open = true;
+            } finally { this.loading = false; }
+        },
+        chooseExactOrFirst() {
+            const q = this.term.trim().toLowerCase();
+            const item = this.results.find(i => (i.barcode || '').toLowerCase() === q || (i.sku || '').toLowerCase() === q) || this.results[0];
+            if (item) this.select(item); else this.search();
+        },
+        select(item) {
+            this.selected = item; this.selectedId = item.id; this.term = item.name; this.open = false;
+            this.$dispatch('product-selected', { ...item });
+        },
+        close() { this.open = false; },
+    }));
+});
+
+/**
+ * Progressive quantity controls for every server-rendered product operation.
+ * Applies to sales, stock intake, transfers, adjustments, purchasing, returns,
+ * and any future product form using a conventional quantity/qty/units field.
+ */
+(function installProductQuantitySteppers() {
+    const quantityName = /(^|\[|_)(quantity|qty|units|milliunits)(\]|_|$)/i;
+
+    function precision(value) {
+        const text = String(value ?? '');
+        return text.includes('.') ? text.split('.')[1].length : 0;
+    }
+
+    function enhance(input) {
+        if (!(input instanceof HTMLInputElement)) return;
+        if (input.dataset.quantityStepperReady === '1') return;
+        if (!input.name || !quantityName.test(input.name)) return;
+        if (input.type === 'hidden' || input.disabled || input.readOnly) return;
+        if (!['number', 'text', 'search'].includes(input.type)) return;
+
+        input.dataset.quantityStepperReady = '1';
+        input.inputMode = input.inputMode || 'decimal';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ec-quantity-stepper';
+        wrapper.setAttribute('role', 'group');
+        wrapper.setAttribute('aria-label', 'Quantity controls');
+
+        const minus = document.createElement('button');
+        minus.type = 'button';
+        minus.className = 'ec-quantity-stepper__button';
+        minus.setAttribute('aria-label', 'Decrease quantity');
+        minus.textContent = '−';
+
+        const plus = document.createElement('button');
+        plus.type = 'button';
+        plus.className = 'ec-quantity-stepper__button';
+        plus.setAttribute('aria-label', 'Increase quantity');
+        plus.textContent = '+';
+
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.append(minus, input, plus);
+        input.classList.add('ec-quantity-stepper__input');
+
+        const update = (direction) => {
+            const configuredStep = Number(input.step);
+            const step = Number.isFinite(configuredStep) && configuredStep > 0
+                ? configuredStep
+                : /milliunits/i.test(input.name) ? 1000 : 1;
+            const minimum = input.min !== '' ? Number(input.min) : 0;
+            const maximum = input.max !== '' ? Number(input.max) : Number.POSITIVE_INFINITY;
+            const current = Number(input.value || 0);
+            const next = Math.min(maximum, Math.max(minimum, current + (direction * step)));
+            const places = Math.max(precision(step), precision(input.value));
+
+            input.value = places > 0 ? next.toFixed(places) : String(Math.round(next));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+
+        minus.addEventListener('click', () => update(-1));
+        plus.addEventListener('click', () => update(1));
+    }
+
+    function scan(root = document) {
+        root.querySelectorAll('input[name]').forEach(enhance);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => scan());
+    document.addEventListener('alpine:initialized', () => scan());
+
+    new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+                if (!(node instanceof Element)) continue;
+                if (node.matches?.('input[name]')) enhance(node);
+                scan(node);
+            }
+        }
+    }).observe(document.documentElement, { childList: true, subtree: true });
+})();

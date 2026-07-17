@@ -14,6 +14,7 @@ Route::middleware([
     'session.inactivity',
 ])->prefix('staff')->name('staff.')->group(function (): void {
     Route::get('/dashboard', StaffDashboardController::class)
+        ->middleware('permission:dashboard.staff.view')
         ->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'show'])

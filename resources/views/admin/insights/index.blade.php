@@ -8,7 +8,7 @@
             </form>
         </x-slot:actions>
 
-        <div class="grid gap-4 lg:grid-cols-2">
+        <div class="grid gap-4 lg:grid-cols-[repeat(2,minmax(0,1fr))]">
             @forelse($insights as $insight)
                 <x-ui.card>
                     <div class="flex items-start justify-between gap-3">

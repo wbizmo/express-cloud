@@ -7,7 +7,7 @@
 <div class="flex items-end"><x-ui.button type="submit">Run reports</x-ui.button></div>
 </form>
 <x-ui.card title="Trial balance">
-<div class="overflow-x-auto">
+<div class="ec-responsive-table overflow-x-auto">
 <table class="w-full min-w-[720px] text-left text-sm">
 <thead><tr><th class="px-3 py-3">Code</th><th class="px-3 py-3">Account</th><th class="px-3 py-3 text-right">Debit</th><th class="px-3 py-3 text-right">Credit</th></tr></thead>
 <tbody>

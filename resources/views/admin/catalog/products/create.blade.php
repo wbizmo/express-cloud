@@ -7,10 +7,10 @@
             @csrf
 
             <x-ui.card title="Identity">
-                <div class="grid gap-4 md:grid-cols-2">
+                <div class="grid gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))]">
                     <x-ui.input name="name" label="Product name" required />
                     <x-ui.input name="sku" label="SKU" required />
-                    <x-ui.input name="barcode" label="Barcode" help="A connected scanner may type directly into this field." />
+                    <x-ui.input name="barcode" inputmode="numeric" autocomplete="off" data-barcode-input inputmode="numeric" autocomplete="off" data-barcode-input label="Barcode" help="A connected scanner may type directly into this field." />
                     <label class="block">
                         <span class="mb-2 block text-sm font-medium text-slate-700">Category</span>
                         <select name="category_id" required class="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm">
@@ -75,7 +75,7 @@
                 title="Branch price overrides"
                 description="Leave a branch blank to use the default selling price."
             >
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div class="grid gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-3">
                     @foreach ($branches as $index => $branch)
                         <input type="hidden" name="branch_prices[{{ $index }}][branch_id]" value="{{ $branch->id }}">
                         <x-ui.input

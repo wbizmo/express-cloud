@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\AuthenticateApiToken;
 use App\Http\Middleware\EnforceSessionInactivity;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureSaleVisibility;
@@ -15,7 +14,6 @@ use Illuminate\Validation\ValidationException;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -24,7 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'account.active' => EnsureAccountIsActive::class,
             'session.inactivity' => EnforceSessionInactivity::class,
             'permission' => RequirePermission::class,
-            'api.token' => AuthenticateApiToken::class,
             'sale.visible' => EnsureSaleVisibility::class,
         ]);
     })
@@ -79,8 +76,5 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => 'Something went wrong. Please try again.',
                 ], 500);
             },
-        );
-        $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
         );
     })->create();
