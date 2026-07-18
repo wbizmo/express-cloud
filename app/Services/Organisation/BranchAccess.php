@@ -13,6 +13,7 @@ final class BranchAccess
     public function canAccess(Account $account, Branch|string $branch): bool
     {
         $branchId = $branch instanceof Branch ? (string) $branch->getKey() : $branch;
+
         return $account->is_allowed_all_branches
             || $account->branches()->whereKey($branchId)->exists();
     }
@@ -24,7 +25,10 @@ final class BranchAccess
 
     public function scope(Account $account, Builder $query, string $column = 'branch_id'): Builder
     {
-        if ($account->is_allowed_all_branches) return $query;
+        if ($account->is_allowed_all_branches) {
+            return $query;
+        }
+
         return $query->whereIn($column, $account->branches()->select('branches.id'));
     }
 }

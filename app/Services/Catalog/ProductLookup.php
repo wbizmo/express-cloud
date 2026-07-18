@@ -39,6 +39,7 @@ final readonly class ProductLookup
             ->map(function (Product $product) use ($branch): array {
                 $stock = $product->branchStock->first();
                 $price = $product->branchPrices->first();
+
                 return [
                     'id' => (string) $product->getKey(),
                     'name' => $product->name,

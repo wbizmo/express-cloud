@@ -21,7 +21,6 @@ use App\Services\Catalog\MoneyInput;
 use App\Services\Inventory\Quantity;
 use App\Services\Procurement\LowStockAlertService;
 use App\Services\Sales\SaleCodeGenerator;
-use App\Services\Organisation\BranchAccess;
 use Illuminate\Support\Facades\DB;
 
 final readonly class CreateSale
@@ -66,7 +65,7 @@ final readonly class CreateSale
             $this->branchAccess->enforce($actor, $branch);
 
             $sale = Sale::query()->create([
-                'sale_code' => $this->codes->generate($type),
+                'sale_code' => $this->codes->generate($type, $branch),
                 'sale_type' => $type,
                 'branch_id' => $branch->getKey(),
                 'customer_id' => $request->filled('customer_id')

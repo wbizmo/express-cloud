@@ -126,7 +126,6 @@ final class PermissionCatalog
                 'customers.receivables.view' => 'View customer receivables',
                 'purchases.record' => 'Record direct purchases',
 
-
                 'quotes.convert' => 'Convert quotes',
             ],
 

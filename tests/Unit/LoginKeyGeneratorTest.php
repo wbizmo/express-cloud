@@ -48,12 +48,12 @@ final class LoginKeyGeneratorTest extends TestCase
     }
 
     public function test_normalization_accepts_grouped_keys(): void
-{
-    self::assertSame(
-        'KMNPQRST',
-        LoginKeyGenerator::normalize('kmnp-qrst'),
-    );
-}
+    {
+        self::assertSame(
+            'KMNPQRST',
+            LoginKeyGenerator::normalize('kmnp-qrst'),
+        );
+    }
 
     public function test_normalization_accepts_spaces_and_lowercase(): void
     {

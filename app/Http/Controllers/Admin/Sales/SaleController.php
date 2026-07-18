@@ -14,7 +14,7 @@ use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\Account;
 use App\Models\Branch;
 use App\Models\PaymentMethod;
-use App\Models\Product;
+use App\Models\ProductBranchStock;
 use App\Models\Sale;
 use App\Services\Organisation\AuditLogger;
 use Illuminate\Contracts\View\View;
@@ -70,6 +70,11 @@ final readonly class SaleController
                 ->orderByDesc('is_default_for_pos')
                 ->orderBy('name')
                 ->get(['id', 'name', 'is_default_for_pos']),
+            'productStocks' => ProductBranchStock::query()
+                ->get(['product_id', 'branch_id', 'quantity_milliunits'])
+                ->mapWithKeys(static fn (ProductBranchStock $stock): array => [
+                    $stock->branch_id.'|'.$stock->product_id => $stock->quantity_milliunits,
+                ]),
         ]);
     }
 

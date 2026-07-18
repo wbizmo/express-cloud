@@ -391,3 +391,150 @@ function installSubmitLoadingState() {
 }
 
 installSubmitLoadingState();
+
+// EXPRESS CLOUD SPRINT 2 POS:START
+document.addEventListener('alpine:init', () => {
+    Alpine.data('posSale', (catalog, stockMap, paymentMethods, initialBranch = '') => ({
+        catalog,
+        stockMap,
+        paymentMethods,
+        query: '',
+        branchId: initialBranch,
+        saleType: 'pos',
+        cart: [],
+        payments: [],
+        customerId: '',
+        notes: '',
+        mobileCartOpen: false,
+        submitting: false,
+        scanMessage: '',
+
+        init() {
+            this.resetPayments();
+            this.$nextTick(() => this.$refs.search?.focus());
+        },
+
+        get filteredProducts() {
+            const q = this.query.trim().toLowerCase();
+            if (!q) return this.catalog;
+            return this.catalog.filter((product) =>
+                product.name.toLowerCase().includes(q)
+                || product.sku.toLowerCase().includes(q)
+                || String(product.barcode || '').toLowerCase().includes(q)
+            );
+        },
+
+        stockFor(product) {
+            if (!product.track_inventory) return null;
+            return Number(this.stockMap[`${this.branchId}|${product.id}`] || 0) / 1000;
+        },
+
+        canAdd(product) {
+            return this.branchId && (!product.track_inventory || this.stockFor(product) > 0);
+        },
+
+        addProduct(product) {
+            if (!this.canAdd(product)) return;
+            const existing = this.cart.find((line) => line.id === product.id);
+            const stock = this.stockFor(product);
+            if (existing) {
+                if (product.track_inventory && existing.quantity >= stock) return;
+                existing.quantity += 1;
+            } else {
+                this.cart.push({ ...product, quantity: 1, discount: 0 });
+            }
+            this.scanMessage = `${product.name} added`;
+            window.setTimeout(() => { this.scanMessage = ''; }, 1200);
+            this.query = '';
+            this.syncDefaultPayment();
+        },
+
+        handleSearchEnter() {
+            const value = this.query.trim().toLowerCase();
+            if (!value) return;
+            const exact = this.catalog.find((product) =>
+                product.sku.toLowerCase() === value
+                || String(product.barcode || '').toLowerCase() === value
+            );
+            if (exact) this.addProduct(exact);
+        },
+
+        changeQuantity(line, delta) {
+            const next = Math.max(1, Number(line.quantity) + delta);
+            const stock = this.stockFor(line);
+            if (line.track_inventory && next > stock) return;
+            line.quantity = next;
+            this.syncDefaultPayment();
+        },
+
+        removeLine(id) {
+            this.cart = this.cart.filter((line) => line.id !== id);
+            this.syncDefaultPayment();
+        },
+
+        clearCart() {
+            this.cart = [];
+            this.resetPayments();
+        },
+
+        get subtotal() {
+            return this.cart.reduce((sum, line) => sum + (line.default_price_kobo * line.quantity), 0);
+        },
+
+        get discountTotal() {
+            return this.cart.reduce((sum, line) => sum + Math.max(0, Number(line.discount || 0) * 100), 0);
+        },
+
+        get total() {
+            return Math.max(0, this.subtotal - this.discountTotal);
+        },
+
+        get paidTotal() {
+            return this.payments.reduce((sum, payment) => sum + Math.max(0, Number(payment.amount || 0) * 100), 0);
+        },
+
+        get balance() {
+            return Math.max(0, this.total - this.paidTotal);
+        },
+
+        money(kobo) {
+            return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 2 }).format(kobo / 100);
+        },
+
+        addPayment() {
+            this.payments.push({ payment_method_id: '', amount: '', reference: '' });
+        },
+
+        removePayment(index) {
+            this.payments.splice(index, 1);
+            if (!this.payments.length) this.addPayment();
+        },
+
+        resetPayments() {
+            const preferred = this.paymentMethods.find((method) => method.is_default_for_pos) || this.paymentMethods[0];
+            this.payments = [{ payment_method_id: preferred?.id || '', amount: '', reference: '' }];
+        },
+
+        syncDefaultPayment() {
+            if (this.saleType === 'quote' || this.payments.length !== 1) return;
+            this.payments[0].amount = (this.total / 100).toFixed(2);
+        },
+
+        switchType(type) {
+            this.saleType = type;
+            if (type === 'quote') {
+                this.payments = [];
+            } else if (!this.payments.length) {
+                this.resetPayments();
+                this.syncDefaultPayment();
+            }
+        },
+
+        submit() {
+            if (!this.branchId || !this.cart.length) return;
+            this.submitting = true;
+            this.$refs.form.submit();
+        },
+    }));
+});
+// EXPRESS CLOUD SPRINT 2 POS:END

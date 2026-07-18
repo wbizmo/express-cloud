@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\Operations\CronDigestController;
-use App\Http\Controllers\Public\SaleVerificationController;
 use App\Http\Controllers\Catalog\ProductLookupController;
+use App\Http\Controllers\Public\SaleVerificationController;
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';

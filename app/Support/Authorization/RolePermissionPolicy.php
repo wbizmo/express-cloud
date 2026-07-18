@@ -91,8 +91,11 @@ final class RolePermissionPolicy
             'auditor' => '/\b(auditor|audit|compliance)\b/u',
         ];
         foreach ($patterns as $family => $pattern) {
-            if (preg_match($pattern, $identity) === 1) return $family;
+            if (preg_match($pattern, $identity) === 1) {
+                return $family;
+            }
         }
+
         return null;
     }
 }

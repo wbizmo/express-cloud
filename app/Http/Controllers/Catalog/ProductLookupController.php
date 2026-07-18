@@ -32,6 +32,7 @@ final readonly class ProductLookupController
         abort_unless($permission !== null && $this->authorization->hasPermission($actor, $permission), 404);
 
         $branch = Branch::query()->findOrFail($request->string('branch_id')->toString());
+
         return response()->json([
             'data' => $this->lookup->search($actor, $branch, $request->string('q')->toString())->all(),
         ]);

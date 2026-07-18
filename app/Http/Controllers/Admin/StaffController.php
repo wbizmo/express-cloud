@@ -120,7 +120,6 @@ final readonly class StaffController
             ->with('generated_access_key', $plainKey);
     }
 
-
     public function revealAccessKey(
         Request $request,
         Account $account,

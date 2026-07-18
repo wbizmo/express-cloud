@@ -31,8 +31,11 @@ final class AuthorizationService
     public function hasAnyPermission(Account $account, array $permissions): bool
     {
         foreach ($permissions as $permission) {
-            if ($this->hasPermission($account, $permission)) return true;
+            if ($this->hasPermission($account, $permission)) {
+                return true;
+            }
         }
+
         return false;
     }
 
