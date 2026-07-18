@@ -7,6 +7,19 @@
             <x-ui.card><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Outstanding on my sales</p><p class="mt-2 text-2xl font-bold">₦{{ number_format($outstandingKobo / 100, 2) }}</p></x-ui.card>
         </div>
 
+        @if($workforceAnnouncements->isNotEmpty())
+            <x-ui.card title="Workforce announcements" class="mt-5">
+                <div class="space-y-3">
+                    @foreach($workforceAnnouncements as $announcement)
+                        <article class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                            <div class="flex items-start justify-between gap-3"><strong class="text-sm">{{ $announcement->title }}</strong><time class="whitespace-nowrap text-xs text-slate-500">{{ $announcement->occurred_at?->diffForHumans() }}</time></div>
+                            <p class="mt-1 text-sm text-slate-600">{{ $announcement->message }}</p>
+                        </article>
+                    @endforeach
+                </div>
+            </x-ui.card>
+        @endif
+
         <div class="mt-5 grid gap-5 xl:grid-cols-[1.5fr_1fr]">
             <x-ui.card>
                 <div class="flex items-center justify-between"><div><h2 class="font-semibold">Recent activity</h2><p class="text-sm text-slate-500">Invoices, POS sales and quotes created by you.</p></div></div>

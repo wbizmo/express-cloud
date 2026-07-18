@@ -1,113 +1,34 @@
 <x-layout.app title="Inventory | Express Cloud">
-    <x-layout.app-shell
-        page-title="Inventory by branch"
-        page-description="Current balances are derived transactionally from the append-only stock ledger."
-    >
-        <x-slot:actions>
-            @can('products.prices.adjust')
-                <a href="{{ route('admin.catalog.price-adjustments.index') }}" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                    <x-ui.icon name="badge-dollar-sign" :size="17" />
-                    Bulk price update
-                </a>
-            @endcan
-        </x-slot:actions>
-        <div class="ec-inventory-split grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-            <x-ui.card title="Branch stock">
-                <div class="ec-responsive-table overflow-x-auto">
-                    <table class="w-full min-w-[820px] text-left text-sm">
-                        <thead>
-                            <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                                <th class="px-3 py-3">Product</th>
-                                <th class="px-3 py-3">Branch</th>
-                                <th class="px-3 py-3">Quantity</th>
-                                <th class="px-3 py-3">Minimum</th>
-                                <th class="px-3 py-3">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse ($stocks as $stock)
-                                <tr>
-                                    <td class="px-3 py-4">
-                                        <p class="font-medium text-slate-950">{{ $stock->product?->name }}</p>
-                                        <p class="font-mono text-xs text-slate-500">{{ $stock->product?->sku }}</p>
-                                    </td>
-                                    <td class="px-3 py-4 text-slate-600">{{ $stock->branch?->name }}</td>
-                                    <td class="px-3 py-4 font-semibold text-slate-950">{{ app(\App\Services\Inventory\Quantity::class)->format($stock->quantity_milliunits) }}</td>
-                                    <td class="px-3 py-4 text-slate-600">{{ app(\App\Services\Inventory\Quantity::class)->format($stock->minimum_stock_milliunits) }}</td>
-                                    <td class="px-3 py-4">
-                                        <x-ui.status-badge :tone="$stock->isLowStock() ? 'warning' : 'success'">
-                                            {{ $stock->isLowStock() ? 'Low stock' : 'Healthy' }}
-                                        </x-ui.status-badge>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="px-3 py-10 text-center text-slate-500">
-                                        No stock balances recorded yet.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+    <x-layout.app-shell page-title="Branch inventory" page-description="Choose the operating branch first. Every balance, transfer and adjustment below is branch-scoped.">
+        <form method="GET" class="mb-5 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-end">
+            <label class="block flex-1"><span class="mb-2 block text-sm font-medium text-slate-700">Operating branch</span><select name="branch" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><option value="">All permitted branches</option>@foreach($branches as $branch)<option value="{{ $branch->id }}" @selected($selectedBranch === (string) $branch->id)>{{ $branch->name }}{{ $branch->code ? ' · '.$branch->code : '' }}</option>@endforeach</select></label>
+            <x-ui.button type="submit">Load branch stock</x-ui.button>
+        </form>
+
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_430px]">
+            <x-ui.card title="Current stock by branch" description="Current quantity and reorder position are visible without leaving the workflow.">
+                <div class="ec-responsive-table overflow-x-auto"><table class="w-full min-w-[860px] text-left text-sm"><thead><tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500"><th class="px-3 py-3">Product</th><th class="px-3 py-3">Branch</th><th class="px-3 py-3">Current</th><th class="px-3 py-3">Minimum</th><th class="px-3 py-3">Available status</th></tr></thead><tbody class="divide-y divide-slate-100">@forelse($stocks as $stock)<tr><td class="px-3 py-4"><p class="font-medium text-slate-950">{{ $stock->product?->name }}</p><p class="font-mono text-xs text-slate-500">{{ $stock->product?->sku }}</p></td><td class="px-3 py-4 text-slate-600">{{ $stock->branch?->name }}</td><td class="px-3 py-4 text-base font-bold {{ $stock->quantity_milliunits <= 0 ? 'text-red-700' : 'text-slate-950' }}">{{ app(\App\Services\Inventory\Quantity::class)->format($stock->quantity_milliunits) }}</td><td class="px-3 py-4 text-slate-600">{{ app(\App\Services\Inventory\Quantity::class)->format($stock->minimum_stock_milliunits) }}</td><td class="px-3 py-4"><x-ui.status-badge :tone="$stock->quantity_milliunits <= 0 ? 'danger' : ($stock->isLowStock() ? 'warning' : 'success')">{{ $stock->quantity_milliunits <= 0 ? 'Zero stock' : ($stock->isLowStock() ? 'Low stock' : 'Available') }}</x-ui.status-badge></td></tr>@empty<tr><td colspan="5" class="px-3 py-10 text-center text-slate-500">No stock balances recorded for this branch selection.</td></tr>@endforelse</tbody></table></div>
             </x-ui.card>
 
-            <div class="min-w-0 space-y-6">
-                <x-ui.card title="Stock intake">
-                    <form method="POST" action="{{ route('admin.inventory.intake') }}" class="space-y-4">
-                        @csrf
-                        <div data-product-finder class="relative">
-                            <input type="search" data-product-query autocomplete="off" placeholder="Scan barcode or type product name / SKU" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
-                            <input type="hidden" data-product-id name="product_id" required>
-                            <div data-product-results hidden class="ec-product-results"></div>
-                            <script type="application/json" data-products-json>@json($products)</script>
-                        </div>
-                        <select name="branch_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
-                            <option value="">Select branch</option>
-                            @foreach ($branches as $branch)
-                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                            @endforeach
-                        </select>
-                        <x-ui.input name="quantity" label="Quantity" required />
-                        <x-ui.input name="unit_cost" type="number" step="0.01" label="Unit cost (₦)" />
-                        <label class="block">
-                            <span class="mb-2 block text-sm font-medium text-slate-700">Reference note</span>
-                            <textarea name="reference_note" required class="min-h-24 w-full rounded-lg border border-slate-300 p-3 text-sm"></textarea>
-                        </label>
-                        <x-ui.button type="submit" class="w-full">Record intake</x-ui.button>
+            <div class="space-y-6" x-data="inventoryBranchTools(@js($products))">
+                <x-ui.card title="Transfer stock" description="See source stock, destination stock and projected balances before submitting.">
+                    <form method="POST" action="{{ route('admin.inventory.transfer') }}" class="space-y-4" x-on:submit="if (!canTransfer()) { $event.preventDefault(); alert(transferError()) }">@csrf
+                        <label class="block"><span class="mb-2 block text-sm font-medium text-slate-700">Product</span><input x-model="query" x-on:input="findProduct" placeholder="Scan barcode or search name / SKU" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><input type="hidden" name="product_id" :value="product?.id"><div x-show="matches.length" class="mt-2 max-h-48 overflow-auto rounded-lg border bg-white"><template x-for="item in matches" :key="item.id"><button type="button" x-on:click="selectProduct(item)" class="block w-full border-b px-3 py-2 text-left text-sm hover:bg-slate-50"><strong x-text="item.name"></strong><span class="ml-2 font-mono text-xs text-slate-500" x-text="item.sku"></span></button></template></div></label>
+                        <div class="grid gap-3 sm:grid-cols-2"><label class="block"><span class="mb-2 block text-sm font-medium text-slate-700">From branch</span><select name="source_branch_id" x-model="source" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><option value="">Select source</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></label><label class="block"><span class="mb-2 block text-sm font-medium text-slate-700">To branch</span><select name="destination_branch_id" x-model="destination" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><option value="">Select destination</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></label></div>
+                        <div class="grid grid-cols-2 gap-3 rounded-xl border bg-slate-50 p-3 text-sm"><div><span class="text-slate-500">Source available</span><strong class="mt-1 block text-lg" x-text="sourceStock"></strong><small class="text-slate-500">After: <span x-text="sourceAfter"></span></small></div><div><span class="text-slate-500">Destination current</span><strong class="mt-1 block text-lg" x-text="destinationStock"></strong><small class="text-slate-500">After: <span x-text="destinationAfter"></span></small></div></div>
+                        <x-ui.input name="quantity" x-model="quantity" type="number" min="0.001" step="0.001" label="Transfer quantity" required />
+                        <label class="block"><span class="mb-2 block text-sm font-medium text-slate-700">Reference note</span><textarea name="reference_note" required class="min-h-24 w-full rounded-lg border border-slate-300 p-3 text-sm" placeholder="Why is this stock being transferred?"></textarea></label>
+                        <x-ui.button type="submit" class="w-full">Complete stock transfer</x-ui.button>
                     </form>
                 </x-ui.card>
 
-                <x-ui.card title="Stock adjustment">
-                    <form method="POST" action="{{ route('admin.inventory.adjust') }}" class="space-y-4">
-                        @csrf
-                        <div data-product-finder class="relative">
-                            <input type="search" data-product-query autocomplete="off" placeholder="Scan barcode or type product name / SKU" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
-                            <input type="hidden" data-product-id name="product_id" required>
-                            <div data-product-results hidden class="ec-product-results"></div>
-                            <script type="application/json" data-products-json>@json($products)</script>
-                        </div>
-                        <select name="branch_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
-                            <option value="">Select branch</option>
-                            @foreach ($branches as $branch)
-                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                            @endforeach
-                        </select>
-                        <x-ui.input name="quantity_delta" label="Quantity change" help="Use a negative value to reduce stock." required />
-                        <select name="reason_code" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
-                            <option value="">Select reason</option>
-                            @foreach ($reasons as $reason)
-                                <option value="{{ $reason->value }}">{{ ucfirst($reason->value) }}</option>
-                            @endforeach
-                        </select>
-                        <label class="block">
-                            <span class="mb-2 block text-sm font-medium text-slate-700">Reference note</span>
-                            <textarea name="reference_note" required class="min-h-24 w-full rounded-lg border border-slate-300 p-3 text-sm"></textarea>
-                        </label>
-                        <x-ui.button type="submit" class="w-full">Record adjustment</x-ui.button>
-                    </form>
-                </x-ui.card>
+                <x-ui.card title="Stock intake"><form method="POST" action="{{ route('admin.inventory.intake') }}" class="space-y-4">@csrf<div data-product-finder class="relative"><input type="search" data-product-query autocomplete="off" placeholder="Scan barcode or type product name / SKU" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><input type="hidden" data-product-id name="product_id" required><div data-product-results hidden class="ec-product-results"></div><script type="application/json" data-products-json>@json($products)</script></div><select name="branch_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><option value="">Select branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select><x-ui.input name="quantity" label="Quantity" required /><x-ui.input name="unit_cost" type="number" step="0.01" label="Unit cost (₦)" /><label class="block"><span class="mb-2 block text-sm font-medium text-slate-700">Reference note</span><textarea name="reference_note" required class="min-h-24 w-full rounded-lg border border-slate-300 p-3 text-sm"></textarea></label><x-ui.button type="submit" class="w-full">Record intake</x-ui.button></form></x-ui.card>
+
+                <x-ui.card title="Stock adjustment"><form method="POST" action="{{ route('admin.inventory.adjust') }}" class="space-y-4">@csrf<div data-product-finder class="relative"><input type="search" data-product-query autocomplete="off" placeholder="Scan barcode or type product name / SKU" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><input type="hidden" data-product-id name="product_id" required><div data-product-results hidden class="ec-product-results"></div><script type="application/json" data-products-json>@json($products)</script></div><select name="branch_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><option value="">Select branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select><x-ui.input name="quantity_delta" label="Quantity change" help="Use a negative value to reduce stock." required /><select name="reason_code" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><option value="">Select reason</option>@foreach($reasons as $reason)<option value="{{ $reason->value }}">{{ ucfirst($reason->value) }}</option>@endforeach</select><label class="block"><span class="mb-2 block text-sm font-medium text-slate-700">Reference note</span><textarea name="reference_note" required class="min-h-24 w-full rounded-lg border border-slate-300 p-3 text-sm"></textarea></label><x-ui.button type="submit" class="w-full">Record adjustment</x-ui.button></form></x-ui.card>
             </div>
         </div>
     </x-layout.app-shell>
 </x-layout.app>
+<script>
+function inventoryBranchTools(products){return{products,query:'',matches:[],product:null,source:'',destination:'',quantity:'',findProduct(){const q=this.query.toLowerCase().trim();this.matches=q?this.products.filter(i=>(i.name+' '+i.sku+' '+(i.barcode||'')).toLowerCase().includes(q)).slice(0,8):[]},selectProduct(item){this.product=item;this.query=item.name+' · '+item.sku;this.matches=[]},stock(branch){if(!this.product||!branch)return 0;return Number(this.product.stocks?.[branch]?.quantity||0)},get sourceStock(){return this.stock(this.source)},get destinationStock(){return this.stock(this.destination)},get sourceAfter(){return Math.max(0,this.sourceStock-Number(this.quantity||0))},get destinationAfter(){return this.destinationStock+Number(this.quantity||0)},canTransfer(){return this.product&&this.source&&this.destination&&this.source!==this.destination&&Number(this.quantity)>0&&Number(this.quantity)<=this.sourceStock},transferError(){if(!this.product)return'Select a product.';if(!this.source||!this.destination)return'Select source and destination branches.';if(this.source===this.destination)return'Source and destination must be different.';if(Number(this.quantity)<=0)return'Enter a valid quantity.';if(Number(this.quantity)>this.sourceStock)return'Transfer quantity exceeds source stock.';return'Check the transfer details.'}}}
+</script>

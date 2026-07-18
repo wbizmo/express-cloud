@@ -21,7 +21,9 @@ final class StaffPerformanceReport
             ->selectRaw('sold_by_account_id AS account_id')
             ->selectRaw('COUNT(*) AS sales_count')
             ->selectRaw('COALESCE(SUM(grand_total_kobo), 0) AS revenue_kobo')
-            ->selectRaw('COUNT(DISTINCT customer_id) AS customers_served');
+            ->selectRaw('COALESCE(SUM(balance_due_kobo), 0) AS outstanding_kobo')
+            ->selectRaw('COUNT(DISTINCT customer_id) AS customers_served')
+            ->selectRaw('COUNT(DISTINCT branch_id) AS branches_worked');
 
         $units = DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
@@ -44,9 +46,12 @@ final class StaffPerformanceReport
                 'accounts.last_name',
                 'staff_sales.sales_count',
                 'staff_sales.revenue_kobo',
+                'staff_sales.outstanding_kobo',
                 'staff_sales.customers_served',
+                'staff_sales.branches_worked',
             ])
             ->selectRaw('COALESCE(staff_units.units_milliunits, 0) AS units_milliunits')
+            ->selectRaw('CASE WHEN staff_sales.sales_count > 0 THEN staff_sales.revenue_kobo / staff_sales.sales_count ELSE 0 END AS average_sale_kobo')
             ->get();
     }
 }

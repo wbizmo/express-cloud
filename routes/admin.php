@@ -384,6 +384,10 @@ Route::middleware([
         ->middleware('permission:reports.staff-performance')
         ->name('reports.staff-performance');
 
+    Route::post('/reports/staff-performance/announcement', [StaffPerformanceController::class, 'announce'])
+        ->middleware('permission:reports.staff-performance')
+        ->name('reports.staff-performance.announcement');
+
     Route::get('/reports', ReportsHubController::class)
         ->middleware('permission:reports.hub.view')
         ->name('reports.hub');

@@ -33,13 +33,10 @@ final readonly class SaleController
         /** @var Account $actor */
         $actor = $request->user();
 
-        /** @var Account $actor */
-        $actor = $request->user();
-
         return view('admin.sales.index', [
             'sales' => Sale::query()
                 ->when(! $actor->can('sales.view.all'), fn ($query) => $query->where('sold_by_account_id', $actor->getKey()))
-                ->when(! $actor->can('sales.view.all'), fn ($query) => $query->where('sold_by_account_id', $actor->getKey()))
+                ->when(! $actor->is_allowed_all_branches, fn ($query) => $query->whereIn('branch_id', $actor->branches()->select('branches.id')))
                 ->with([
                     'branch:id,name',
                     'customer:id,name,phone',
