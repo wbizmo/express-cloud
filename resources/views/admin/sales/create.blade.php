@@ -21,6 +21,7 @@
                 <input type="hidden" name="sale_type" x-bind:value="saleType">
                 <input type="hidden" name="branch_id" x-bind:value="branchId">
                 <input type="hidden" name="customer_id" x-bind:value="customerId">
+@include('admin.sales.partials.quick-customer-modal')
                 <input type="hidden" name="notes" x-bind:value="notes">
 
                 <template x-for="(line, index) in cart" :key="line.id">

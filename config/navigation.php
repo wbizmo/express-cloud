@@ -45,6 +45,7 @@ return [
                 ['label' => 'Reports', 'icon' => 'chart-no-axes-combined', 'route' => 'admin.reports.hub', 'permission' => 'reports.hub.view'],
                 ['label' => 'HR & Performance', 'icon' => 'users-round', 'route' => 'admin.reports.staff-performance', 'permission' => 'reports.staff-performance'],
                 ['label' => 'Lisa AI', 'icon' => 'bot-message-square', 'route' => 'admin.insights.index', 'permission' => 'insights.view'],
+                ['label' => 'Chat with Lisa', 'icon' => 'messages-square', 'route' => 'admin.insights.chat.index', 'permission' => 'lisa.chat'],
             ],
         ],
         [
@@ -56,6 +57,7 @@ return [
                 ['label' => 'Payment Methods', 'icon' => 'credit-card', 'route' => 'admin.payment-methods.index', 'permission' => 'payment-methods.view'],
                 ['label' => 'Business Settings', 'icon' => 'settings', 'route' => 'admin.operations.settings.edit', 'permission' => 'settings.business.manage'],
                 ['label' => 'Activity Log', 'icon' => 'history', 'route' => 'admin.activity.index', 'permission' => 'activity.view'],
+                ['label' => 'Lisa Chat Audit', 'icon' => 'bot', 'route' => 'admin.insights.chat.audit', 'permission' => 'lisa.audit.view'],
                 ['label' => 'Live Sessions', 'icon' => 'monitor-smartphone', 'route' => 'admin.security.sessions.index', 'permission' => 'security.sessions.view'],
                 ['label' => 'Backups', 'icon' => 'database-backup', 'route' => 'admin.operations.backups.index', 'permission' => 'backups.view'],
             ],

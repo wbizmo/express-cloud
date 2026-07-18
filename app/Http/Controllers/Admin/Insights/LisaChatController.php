@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Admin\Insights;
+
+use App\Models\Account;
+use App\Models\LisaConversation;
+use App\Models\LisaMessage;
+use App\Services\Insights\LisaConversationEngine;
+use App\Services\Organisation\AuditLogger;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+final readonly class LisaChatController
+{
+    public function __construct(private LisaConversationEngine $engine, private AuditLogger $audit) {}
+
+    public function index(Request $request): View
+    {
+        /** @var Account $actor */ $actor = $request->user();
+        $search = $request->string('search')->trim()->toString();
+
+        return view('admin.insights.chat', ['activeConversation' => null, 'conversations' => LisaConversation::query()->where('account_id', $actor->getKey())
+            ->when($search !== '', fn ($q) => $q->where(fn ($n) => $n->where('title', 'like', '%'.$search.'%')->orWhereHas('messages', fn ($m) => $m->where('content', 'like', '%'.$search.'%'))))
+            ->latest('last_message_at')->paginate(30)->withQueryString()]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $c = LisaConversation::query()->create(['account_id' => $request->user()->getKey(), 'branch_id' => $request->input('branch_id'), 'last_message_at' => now()]);
+        $this->audit->record($request, 'lisa.conversation.created', 'lisa_conversation', $c);
+
+        return redirect()->route('admin.insights.chat.show', $c);
+    }
+
+    public function show(Request $request, LisaConversation $conversation): View
+    {
+        abort_unless((string) $conversation->account_id === (string) $request->user()->getKey(), 403);
+
+        return view('admin.insights.chat', ['activeConversation' => $conversation->load('messages'), 'conversations' => LisaConversation::query()->where('account_id', $request->user()->getKey())->latest('last_message_at')->paginate(30)]);
+    }
+
+    public function message(Request $request, LisaConversation $conversation): JsonResponse
+    {
+        /** @var Account $actor */ $actor = $request->user();
+        abort_unless((string) $conversation->account_id === (string) $actor->getKey(), 403);
+        $v = $request->validate(['message' => ['required', 'string', 'max:5000']]);
+        $question = trim($v['message']);
+        $start = hrtime(true);
+        LisaMessage::query()->create(['conversation_id' => $conversation->getKey(), 'account_id' => $actor->getKey(), 'role' => 'user', 'content' => $question]);
+        $result = $this->engine->answer($actor, $question);
+        $ms = (int) round((hrtime(true) - $start) / 1000000);
+        LisaMessage::query()->create(['conversation_id' => $conversation->getKey(), 'role' => 'assistant', 'content' => $result['reply'], 'context_snapshot' => $result['context'], 'response_time_ms' => $ms]);
+        if ($conversation->title === 'New conversation') {
+            $conversation->title = Str::limit($question, 80);
+        } $conversation->last_message_at = now();
+        $conversation->save();
+        $this->audit->record($request, 'lisa.message.sent', 'lisa_conversation', $conversation, after: ['question_preview' => Str::limit($question, 160), 'response_time_ms' => $ms]);
+
+        return response()->json(['reply' => $result['reply'], 'response_time_ms' => $ms]);
+    }
+
+    public function audit(Request $request): View
+    {
+        return view('admin.insights.audit', ['conversations' => LisaConversation::query()->with(['account', 'branch'])->withCount('messages')->latest('last_message_at')->paginate(50)]);
+    }
+
+    public function auditShow(LisaConversation $conversation): View
+    {
+        return view('admin.insights.audit-show',['conversation' => $conversation->load(['account', 'branch', 'messages'])]);
+    }
+}

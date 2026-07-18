@@ -45,6 +45,6 @@ final readonly class ProductPriceAdjustmentController
             }
         });
 
-        return back()->with('status','Branch prices updated.');
+        return back()->with('status', 'Branch prices updated.');
     }
 }

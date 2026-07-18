@@ -17,6 +17,11 @@ final class Customer extends Model
 
     /** @var list<string> */
     protected $fillable = [
+        'deprecation_reason',
+        'deprecated_by_account_id',
+        'deprecated_at',
+        'notes',
+        'whatsapp_phone',
         'customer_code',
         'name',
         'phone',
