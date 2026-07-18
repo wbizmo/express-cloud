@@ -21,13 +21,14 @@
         <input
             type="search"
             x-model="term"
+            x-bind:disabled="!branchId()"
+            x-bind:placeholder="branchId() ? 'Scan barcode or search product name / SKU' : 'Select a branch to enable product search'"
             x-on:input.debounce.180ms="search()"
             x-on:keydown.enter.prevent="chooseExactOrFirst()"
             x-on:focus="term && search()"
             autocomplete="off"
             inputmode="search"
             class="min-h-11 w-full min-w-0 rounded-lg border border-slate-300 px-3.5 text-sm"
-            placeholder="Scan barcode, or type product name / SKU"
         >
     </label>
     <div x-show="open" x-cloak class="relative z-30 mt-1 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
@@ -45,7 +46,9 @@
                 @endif
             </button>
         </template>
+        <p x-show="loading" class="p-3 text-sm text-slate-500">Searching products…</p>
         <p x-show="!loading && results.length === 0" class="p-3 text-sm text-slate-500">No matching product in this branch.</p>
     </div>
+    <p x-show="!branchId()" class="mt-2 text-xs font-medium text-amber-700">Choose a branch above. The barcode scanner and product search will activate immediately.</p>
     <p x-show="selected" class="mt-2 truncate text-xs text-slate-600" x-text="selected ? `${selected.name} · ${selected.sku}` : ''"></p>
 </div>

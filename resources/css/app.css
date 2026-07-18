@@ -530,3 +530,71 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   .ec-page, .ec-content, main { padding-inline: .75rem; }
   input, select, textarea, button { max-width: 100%; }
 }
+
+
+/* Sprint 1 v1.0.4 production parity */
+button,
+[role="button"],
+a[href],
+label[for],
+select,
+summary {
+    cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+[aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+.ec-topbar {
+    position: sticky !important;
+    top: 0;
+    z-index: 40;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.ec-page-main,
+.ec-page-content,
+.ec-card,
+.ec-card > *,
+.grid,
+.flex {
+    min-width: 0;
+}
+
+.ec-responsive-table,
+.ec-horizontal-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ec-product-scanner input:disabled {
+    cursor: not-allowed;
+    background: rgb(248 250 252);
+    color: rgb(100 116 139);
+}
+
+[data-submit-button][aria-busy="true"] {
+    pointer-events: none;
+}
+
+@media (max-width: 1535px) {
+    .ec-dashboard-split,
+    .ec-inventory-split {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .ec-topbar {
+        position: sticky !important;
+    }
+}

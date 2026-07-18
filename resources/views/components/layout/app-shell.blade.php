@@ -18,11 +18,21 @@
         <x-navigation.topbar />
 
         <main class="ec-page-main w-full max-w-full overflow-x-clip px-4 py-6 sm:px-6 lg:px-6">
-            <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <nav class="mb-2 text-xs font-medium text-slate-500" aria-label="Breadcrumb">
-                        Express Cloud / Workspace
-                    </nav>
+            <header class="mb-6 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div class="min-w-0">
+                    <div class="mb-3 flex min-w-0 flex-wrap items-center gap-3">
+                        <button
+                            type="button"
+                            class="ec-back-button"
+                            x-on:click="window.history.length > 1 ? window.history.back() : window.location.assign(@js(route(request()->routeIs('admin.*') ? 'admin.dashboard' : 'staff.dashboard')))"
+                        >
+                            <x-ui.icon name="arrow-left" :size="16" />
+                            <span>Back</span>
+                        </button>
+                        <nav class="text-xs font-medium text-slate-500" aria-label="Breadcrumb">
+                            Express Cloud / Workspace
+                        </nav>
+                    </div>
 
                     <h1 class="text-2xl font-bold tracking-tight text-slate-950 sm:text-[2rem]">
                         {{ $pageTitle }}
@@ -36,7 +46,7 @@
                 </div>
 
                 @isset($actions)
-                    <div class="flex shrink-0 flex-wrap items-center gap-2">
+                    <div class="flex min-w-0 shrink-0 flex-wrap items-center gap-2">
                         {{ $actions }}
                     </div>
                 @endisset

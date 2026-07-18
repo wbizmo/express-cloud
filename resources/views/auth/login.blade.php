@@ -118,7 +118,6 @@
                                 id="staff-search"
                                 type="search"
                                 autocomplete="off"
-                                placeholder="Type your first or last name"
                                 x-model="query"
                                 x-on:input.debounce.250ms="search()"
                                 x-on:focus="if (results.length) open = true"
@@ -179,7 +178,6 @@
                             inputmode="text"
                             autocomplete="one-time-code"
                             maxlength="9"
-                            placeholder="ECBV-YKQW"
                             value="{{ old('access_key') }}"
                             x-data
                             x-on:input="

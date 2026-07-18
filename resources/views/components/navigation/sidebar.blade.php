@@ -42,12 +42,14 @@
                     <p x-show="!$store.shell.sidebarCollapsed" class="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">{{ $section['label'] }}</p>
                     <div class="space-y-1">
                         @foreach ($visibleItems as $item)
-                            <x-navigation.sidebar-link
-                                :label="$item['label']"
-                                :icon="$item['icon']"
-                                :href="route($item['route'])"
-                                :active="request()->routeIs($item['route']) || request()->routeIs(str_replace('.index', '.*', $item['route']))"
-                            />
+                            @if (\Illuminate\Support\Facades\Route::has($item['route']))
+                                <x-navigation.sidebar-link
+                                    :label="$item['label']"
+                                    :icon="$item['icon']"
+                                    :href="route($item['route'])"
+                                    :active="request()->routeIs($item['route']) || request()->routeIs(str_replace('.index', '.*', $item['route']))"
+                                />
+                            @endif
                         @endforeach
                     </div>
                 </section>
@@ -58,7 +60,9 @@
     <div class="border-t border-white/10 p-3">
         <div class="space-y-1">
             @foreach (collect(config('navigation.secondary', []))->filter($canSee) as $item)
-                <x-navigation.sidebar-link :label="$item['label']" :icon="$item['icon']" :href="route($item['route'])" :active="request()->routeIs($item['route'])" />
+                @if (\Illuminate\Support\Facades\Route::has($item['route']))
+                    <x-navigation.sidebar-link :label="$item['label']" :icon="$item['icon']" :href="route($item['route'])" :active="request()->routeIs($item['route'])" />
+                @endif
             @endforeach
         </div>
         <button type="button" class="mt-3 flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-300 hover:bg-white/8 hover:text-white" @click="$store.shell.toggleSidebar()">

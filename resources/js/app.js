@@ -362,119 +362,32 @@ document.addEventListener('alpine:init', () => {
     }).observe(document.documentElement, { childList: true, subtree: true });
 })();
 
-document.addEventListener('alpine:init', () => {
-    Alpine.data('productScanner', ({ endpoint, context, branchField }) => ({
-        term: '', results: [], selected: null, selectedId: '', open: false, loading: false,
-        branchId() {
-            const field = document.querySelector(`[name="${branchField}"]`);
-            return field ? field.value : '';
-        },
-        async search() {
-            this.selected = null; this.selectedId = '';
-            if (!this.term.trim() || !this.branchId()) { this.results = []; this.open = false; return; }
-            this.loading = true;
-            try {
-                const url = new URL(endpoint, window.location.origin);
-                url.searchParams.set('q', this.term.trim());
-                url.searchParams.set('branch_id', this.branchId());
-                url.searchParams.set('context', context);
-                const response = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
-                if (!response.ok) { this.results = []; this.open = false; return; }
-                this.results = (await response.json()).data || [];
-                this.open = true;
-            } finally { this.loading = false; }
-        },
-        chooseExactOrFirst() {
-            const q = this.term.trim().toLowerCase();
-            const item = this.results.find(i => (i.barcode || '').toLowerCase() === q || (i.sku || '').toLowerCase() === q) || this.results[0];
-            if (item) this.select(item); else this.search();
-        },
-        select(item) {
-            this.selected = item; this.selectedId = item.id; this.term = item.name; this.open = false;
-            this.$dispatch('product-selected', { ...item });
-        },
-        close() { this.open = false; },
-    }));
-});
+/* Sprint 1: consistent submit feedback without changing controller behaviour. */
+function installSubmitLoadingState() {
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
 
-/**
- * Progressive quantity controls for every server-rendered product operation.
- * Applies to sales, stock intake, transfers, adjustments, purchasing, returns,
- * and any future product form using a conventional quantity/qty/units field.
- */
-(function installProductQuantitySteppers() {
-    const quantityName = /(^|\[|_)(quantity|qty|units|milliunits)(\]|_|$)/i;
+        form.querySelectorAll('[data-submit-button]').forEach((button) => {
+            if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+            button.dataset.originalHtml = button.innerHTML;
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+            button.innerHTML = '<span class="ec-spinner" aria-hidden="true"></span><span>Working…</span>';
+        });
+    });
 
-    function precision(value) {
-        const text = String(value ?? '');
-        return text.includes('.') ? text.split('.')[1].length : 0;
-    }
-
-    function enhance(input) {
-        if (!(input instanceof HTMLInputElement)) return;
-        if (input.dataset.quantityStepperReady === '1') return;
-        if (!input.name || !quantityName.test(input.name)) return;
-        if (input.type === 'hidden' || input.disabled || input.readOnly) return;
-        if (!['number', 'text', 'search'].includes(input.type)) return;
-
-        input.dataset.quantityStepperReady = '1';
-        input.inputMode = input.inputMode || 'decimal';
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'ec-quantity-stepper';
-        wrapper.setAttribute('role', 'group');
-        wrapper.setAttribute('aria-label', 'Quantity controls');
-
-        const minus = document.createElement('button');
-        minus.type = 'button';
-        minus.className = 'ec-quantity-stepper__button';
-        minus.setAttribute('aria-label', 'Decrease quantity');
-        minus.textContent = '−';
-
-        const plus = document.createElement('button');
-        plus.type = 'button';
-        plus.className = 'ec-quantity-stepper__button';
-        plus.setAttribute('aria-label', 'Increase quantity');
-        plus.textContent = '+';
-
-        input.parentNode.insertBefore(wrapper, input);
-        wrapper.append(minus, input, plus);
-        input.classList.add('ec-quantity-stepper__input');
-
-        const update = (direction) => {
-            const configuredStep = Number(input.step);
-            const step = Number.isFinite(configuredStep) && configuredStep > 0
-                ? configuredStep
-                : /milliunits/i.test(input.name) ? 1000 : 1;
-            const minimum = input.min !== '' ? Number(input.min) : 0;
-            const maximum = input.max !== '' ? Number(input.max) : Number.POSITIVE_INFINITY;
-            const current = Number(input.value || 0);
-            const next = Math.min(maximum, Math.max(minimum, current + (direction * step)));
-            const places = Math.max(precision(step), precision(input.value));
-
-            input.value = places > 0 ? next.toFixed(places) : String(Math.round(next));
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-        };
-
-        minus.addEventListener('click', () => update(-1));
-        plus.addEventListener('click', () => update(1));
-    }
-
-    function scan(root = document) {
-        root.querySelectorAll('input[name]').forEach(enhance);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => scan());
-    document.addEventListener('alpine:initialized', () => scan());
-
-    new MutationObserver((mutations) => {
-        for (const mutation of mutations) {
-            for (const node of mutation.addedNodes) {
-                if (!(node instanceof Element)) continue;
-                if (node.matches?.('input[name]')) enhance(node);
-                scan(node);
+    window.addEventListener('pageshow', () => {
+        document.querySelectorAll('[data-submit-button][aria-busy="true"]').forEach((button) => {
+            if (!(button instanceof HTMLButtonElement)) return;
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            if (button.dataset.originalHtml) {
+                button.innerHTML = button.dataset.originalHtml;
+                delete button.dataset.originalHtml;
             }
-        }
-    }).observe(document.documentElement, { childList: true, subtree: true });
-})();
+        });
+    });
+}
+
+installSubmitLoadingState();

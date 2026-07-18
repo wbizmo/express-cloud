@@ -74,7 +74,7 @@
             </x-ui.card>
         </div>
 
-        <div class="mt-6 grid gap-6 xl:grid-cols-[1fr_420px]">
+        <div class="ec-dashboard-split mt-6 grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
             <x-ui.card title="Sales trend" description="Daily trend data for the selected date range.">
                 <div class="ec-responsive-table overflow-x-auto">
                     <table class="w-full min-w-[560px] text-left text-sm">

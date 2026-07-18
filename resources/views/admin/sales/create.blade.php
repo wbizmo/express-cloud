@@ -12,8 +12,7 @@
             </x-ui.card>
 
             <x-ui.card title="Products" description="USB and Bluetooth barcode scanners work like keyboard input. Select the branch before scanning.">
-                <div x-show="!branchId" class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Select the sale branch before scanning products.</div>
-                <div x-show="branchId" class="min-w-0 space-y-4">
+                <div class="min-w-0 space-y-4">
                     <x-catalog.product-scanner name="scanner_product_id" branch-field="branch_id" context="sale" />
                     <div class="ec-responsive-table" x-show="lines.length">
                         <table class="w-full min-w-[760px] text-sm">

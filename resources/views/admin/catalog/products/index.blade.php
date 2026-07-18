@@ -4,7 +4,19 @@
         page-description="Manage product identity and pricing without modifying stock history."
     >
         <x-slot:actions>
-            <a href="{{ route('admin.catalog.products.create') }}" class="inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700">
+            @can('products.prices.adjust')
+                <a href="{{ route('admin.catalog.price-adjustments.index') }}" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                    <x-ui.icon name="badge-dollar-sign" :size="17" />
+                    Bulk price update
+                </a>
+            @endcan
+            @can('categories.manage')
+                <a href="{{ route('admin.catalog.categories.index') }}" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Categories</a>
+            @endcan
+            @can('brands.manage')
+                <a href="{{ route('admin.catalog.brands.index') }}" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Brands</a>
+            @endcan
+            <a href="{{ route('admin.catalog.products.create') }}" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700">
                 <x-ui.icon name="plus" :size="17" />
                 New product
             </a>

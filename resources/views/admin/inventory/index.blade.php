@@ -3,7 +3,15 @@
         page-title="Inventory by branch"
         page-description="Current balances are derived transactionally from the append-only stock ledger."
     >
-        <div class="grid gap-6 xl:grid-cols-[1fr_420px]">
+        <x-slot:actions>
+            @can('products.prices.adjust')
+                <a href="{{ route('admin.catalog.price-adjustments.index') }}" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                    <x-ui.icon name="badge-dollar-sign" :size="17" />
+                    Bulk price update
+                </a>
+            @endcan
+        </x-slot:actions>
+        <div class="ec-inventory-split grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
             <x-ui.card title="Branch stock">
                 <div class="ec-responsive-table overflow-x-auto">
                     <table class="w-full min-w-[820px] text-left text-sm">
@@ -44,7 +52,7 @@
                 </div>
             </x-ui.card>
 
-            <div class="space-y-6">
+            <div class="min-w-0 space-y-6">
                 <x-ui.card title="Stock intake">
                     <form method="POST" action="{{ route('admin.inventory.intake') }}" class="space-y-4">
                         @csrf

@@ -40,7 +40,7 @@ final class RolePermissionPolicy
             'accounting.journals.view', 'accounting.journals.create',
             'accounting.journals.reverse', 'accounting.periods.manage',
             'accounting.reports.view', 'accounting.sync', 'accounting.depreciation.post',
-            'reports.hub.view', 'reports.export',
+            'reports.hub.view', 'reports.export', 'activity.view',
         ],
         'auditor' => [
             'dashboard.audit.view', 'company.view', 'branches.view', 'staff.view',
@@ -60,6 +60,7 @@ final class RolePermissionPolicy
             'customers.update', 'procurement.view', 'procurement.create',
             'procurement.approve', 'procurement.receive', 'reports.staff-performance',
             'documents.sales.print', 'catalog.sale-search', 'catalog.inventory-search',
+            'activity.view',
         ],
     ];
 

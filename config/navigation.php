@@ -8,7 +8,6 @@ return [
             'label' => 'Workspace',
             'items' => [
                 ['label' => 'Admin Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.dashboard', 'permission' => 'dashboard.view'],
-                ['label' => 'My Dashboard', 'icon' => 'gauge', 'route' => 'staff.dashboard', 'permission' => null],
                 ['label' => 'Create Sale', 'icon' => 'shopping-cart', 'route' => 'admin.sales.create', 'permission' => 'sales.create'],
                 ['label' => 'Sales & Quotes', 'icon' => 'receipt-text', 'route' => 'admin.sales.index', 'permission_any' => ['sales.view', 'sales.view.own', 'sales.view.all']],
                 ['label' => 'Customers & Credit', 'icon' => 'users', 'route' => 'admin.customers.index', 'permission' => 'customers.view'],
@@ -19,6 +18,9 @@ return [
             'label' => 'Catalogue & Stock',
             'items' => [
                 ['label' => 'Products', 'icon' => 'package', 'route' => 'admin.catalog.products.index', 'permission' => 'products.view'],
+                ['label' => 'Bulk Price Update', 'icon' => 'badge-dollar-sign', 'route' => 'admin.catalog.price-adjustments.index', 'permission' => 'products.prices.adjust'],
+                ['label' => 'Categories', 'icon' => 'folders', 'route' => 'admin.catalog.categories.index', 'permission' => 'categories.manage'],
+                ['label' => 'Brands', 'icon' => 'tags', 'route' => 'admin.catalog.brands.index', 'permission' => 'brands.manage'],
                 ['label' => 'Product Import', 'icon' => 'file-up', 'route' => 'admin.imports.products.index', 'permission_any' => ['products.import', 'products.import-history']],
                 ['label' => 'Inventory', 'icon' => 'warehouse', 'route' => 'admin.inventory.index', 'permission' => 'inventory.view'],
                 ['label' => 'Stock Movements', 'icon' => 'arrow-left-right', 'route' => 'admin.inventory.movements', 'permission' => 'inventory.movements.view'],
@@ -54,7 +56,6 @@ return [
                 ['label' => 'Business Settings', 'icon' => 'settings', 'route' => 'admin.operations.settings.edit', 'permission' => 'settings.business.manage'],
                 ['label' => 'Activity Log', 'icon' => 'history', 'route' => 'admin.activity.index', 'permission' => 'activity.view'],
                 ['label' => 'Live Sessions', 'icon' => 'monitor-smartphone', 'route' => 'admin.security.sessions.index', 'permission' => 'security.sessions.view'],
-                ['label' => 'API Tokens', 'icon' => 'key-round', 'route' => 'admin.api.tokens.index', 'permission' => 'api.tokens.manage'],
                 ['label' => 'Backups', 'icon' => 'database-backup', 'route' => 'admin.operations.backups.index', 'permission' => 'backups.view'],
             ],
         ],
