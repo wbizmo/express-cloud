@@ -38,3 +38,7 @@ storage/app/backups/
 storage/app/backups/*
 storage/app/private/generated-reports/
 storage/app/public/company-branding/
+
+# Laravel runtime sessions
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore

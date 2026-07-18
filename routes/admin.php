@@ -20,9 +20,11 @@ use App\Http\Controllers\Admin\Commercial\CustomerReceivableController;
 use App\Http\Controllers\Admin\Commercial\PurchaseReceiptController;
 use App\Http\Controllers\Admin\Commercial\VoucherController;
 use App\Http\Controllers\Admin\Customers\CustomerController;
+use App\Http\Controllers\Admin\Customers\QuickCustomerController;
 use App\Http\Controllers\Admin\Documents\ProductBarcodeController;
 use App\Http\Controllers\Admin\Documents\SaleDocumentController;
 use App\Http\Controllers\Admin\Imports\ProductImportController;
+use App\Http\Controllers\Admin\Insights\LisaChatController;
 use App\Http\Controllers\Admin\Insights\LisaInsightController;
 use App\Http\Controllers\Admin\Inventory\InventoryController;
 use App\Http\Controllers\Admin\Operations\AdminDashboardController;
@@ -36,6 +38,7 @@ use App\Http\Controllers\Admin\Procurement\LowStockReportController;
 use App\Http\Controllers\Admin\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Admin\Reports\ReportExportController;
 use App\Http\Controllers\Admin\Reports\ReportsHubController;
+use App\Http\Controllers\Admin\Reports\UniversalExportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\Sales\SaleController;
 use App\Http\Controllers\Admin\Security\LiveSessionController;
@@ -44,9 +47,6 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\SupplierFinance\SupplierBalanceReportController;
 use App\Http\Controllers\Admin\SupplierFinance\SupplierBillController;
 use App\Http\Controllers\Admin\SupplierFinance\SupplierReturnController;
-use App\\Http\\Controllers\\Admin\\Customers\\QuickCustomerController;
-use App\\Http\\Controllers\\Admin\\Insights\\LisaChatController;
-use App\\Http\\Controllers\\Admin\\Reports\\UniversalExportController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([
@@ -558,18 +558,18 @@ Route::middleware([
         ->name('insights.dismiss');
 
     Route::prefix('lisa')->name('insights.chat.')->group(function (): void {
-        Route::get('/chat',[LisaChatController::class,'index'])->middleware('permission:lisa.chat')->name('index');
-        Route::post('/chat',[LisaChatController::class,'store'])->middleware('permission:lisa.chat')->name('store');
-        Route::get('/chat/{conversation}',[LisaChatController::class,'show'])->middleware('permission:lisa.chat')->name('show');
-        Route::post('/chat/{conversation}/message',[LisaChatController::class,'message'])->middleware('permission:lisa.chat')->name('message');
-        Route::get('/audit',[LisaChatController::class,'audit'])->middleware('permission:lisa.audit.view')->name('audit');
-        Route::get('/audit/{conversation}',[LisaChatController::class,'auditShow'])->middleware('permission:lisa.audit.view')->name('audit.show');
+        Route::get('/chat', [LisaChatController::class, 'index'])->middleware('permission:lisa.chat')->name('index');
+        Route::post('/chat', [LisaChatController::class, 'store'])->middleware('permission:lisa.chat')->name('store');
+        Route::get('/chat/{conversation}', [LisaChatController::class, 'show'])->middleware('permission:lisa.chat')->name('show');
+        Route::post('/chat/{conversation}/message', [LisaChatController::class, 'message'])->middleware('permission:lisa.chat')->name('message');
+        Route::get('/audit', [LisaChatController::class, 'audit'])->middleware('permission:lisa.audit.view')->name('audit');
+        Route::get('/audit/{conversation}', [LisaChatController::class, 'auditShow'])->middleware('permission:lisa.audit.view')->name('audit.show');
     });
     Route::prefix('exports')->name('exports.')->group(function (): void {
-        Route::get('/sales/{sale}',[UniversalExportController::class,'sale'])->middleware('permission:exports.sales')->name('sales');
-        Route::get('/stock/{movement}',[UniversalExportController::class,'movement'])->middleware('permission:exports.inventory')->name('stock');
-        Route::get('/purchases/{order}',[UniversalExportController::class,'purchase'])->middleware('permission:exports.procurement')->name('purchases');
-        Route::get('/audit',[UniversalExportController::class,'audit'])->middleware('permission:activity.export')->name('audit');
+        Route::get('/sales/{sale}', [UniversalExportController::class, 'sale'])->middleware('permission:exports.sales')->name('sales');
+        Route::get('/stock/{movement}', [UniversalExportController::class, 'movement'])->middleware('permission:exports.inventory')->name('stock');
+        Route::get('/purchases/{order}', [UniversalExportController::class, 'purchase'])->middleware('permission:exports.procurement')->name('purchases');
+        Route::get('/audit', [UniversalExportController::class, 'audit'])->middleware('permission:activity.export')->name('audit');
     });
 
 });
