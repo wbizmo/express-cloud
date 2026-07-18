@@ -22,7 +22,7 @@ final class LisaInsightEngine
         $discounts = (int) DB::table('sales')
             ->whereBetween('sale_date', [$from, $to])
             ->whereNotIn('status', ['cancelled'])
-            ->sum('discount_total_kobo');
+            ->sum('discount_amount_kobo');
 
         if ($currentRevenue > 0 && $discounts > (int) round($currentRevenue * 0.08)) {
             $generated += $this->store([
