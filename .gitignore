@@ -55,3 +55,4 @@ storage/app/public/company-branding/
 .cache/
 .local/
 .script-logs/
+.replit
