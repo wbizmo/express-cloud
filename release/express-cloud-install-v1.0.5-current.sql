@@ -1835,7 +1835,7 @@ INSERT INTO `permissions` (`id`,`name`,`slug`,`group`,`description`,`created_at`
 ('01KZV105P0000000000000000K','Purchases Create','purchases.create','procurement','Purchases Create','2026-07-18 12:00:00','2026-07-18 12:00:00'),
 ('01KZV105P0000000000000000M','Activity Export','activity.export','audit','Activity Export','2026-07-18 12:00:00','2026-07-18 12:00:00'),
 ('01KZV105P0000000000000000N','Activity View All-Branches','activity.view.all-branches','audit','Activity View All-Branches','2026-07-18 12:00:00','2026-07-18 12:00:00'),
-('01KZV105P0000000000000000P','Insights View','insights.view','lisa','Insights View','2026-07-18 12:00:00','2026-07-18 12:00:00'),
+('01KZV105P0000000000000000P','Insights View','lisa.insights.view','lisa','Insights View','2026-07-18 12:00:00','2026-07-18 12:00:00'),
 ('01KZV105P0000000000000000Q','Lisa Chat','lisa.chat','lisa','Lisa Chat','2026-07-18 12:00:00','2026-07-18 12:00:00'),
 ('01KZV105P0000000000000000R','Lisa Conversations Search','lisa.conversations.search','lisa','Lisa Conversations Search','2026-07-18 12:00:00','2026-07-18 12:00:00'),
 ('01KZV105P0000000000000000S','Lisa Audit View','lisa.audit.view','lisa','Lisa Audit View','2026-07-18 12:00:00','2026-07-18 12:00:00'),
