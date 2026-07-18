@@ -46,3 +46,12 @@ storage/app/public/company-branding/
 # Compiled Blade runtime files
 /storage/framework/views/*
 !/storage/framework/views/.gitkeep
+.replit
+.replit.nix
+.agent/
+.chat/
+.config/
+.upm/
+.cache/
+.local/
+.script-logs/

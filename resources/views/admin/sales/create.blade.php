@@ -12,7 +12,7 @@
 
     <x-layout.app-shell page-title="POS checkout" page-description="Barcode-first checkout, branch stock visibility, split payments, invoices and quotes.">
         <div
-            x-data="posSale(@js($catalog), @js($productStocks), @js($paymentMethods), @js(old('branch_id', $branches->first()?->id ?? '')))"
+            x-data="posSale(@js($catalog), @js($productStocks), @js($productPrices), @js($paymentMethods), @js(old('branch_id', $branches->first()?->id ?? '')))"
             class="min-h-[calc(100vh-9rem)]"
         >
             <form x-ref="form" method="POST" action="{{ route('admin.sales.store') }}" x-on:submit.prevent="submit" class="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,.65fr)]">
@@ -28,7 +28,7 @@
                     <div>
                         <input type="hidden" x-bind:name="`items[${index}][product_id]`" x-bind:value="line.id">
                         <input type="hidden" x-bind:name="`items[${index}][quantity]`" x-bind:value="line.quantity">
-                        <input type="hidden" x-bind:name="`items[${index}][unit_price]`" x-bind:value="(line.default_price_kobo / 100).toFixed(2)">
+                        <input type="hidden" x-bind:name="`items[${index}][unit_price]`" x-bind:value="(line.unit_price_kobo / 100).toFixed(2)">
                         <input type="hidden" x-bind:name="`items[${index}][discount]`" x-bind:value="Number(line.discount || 0).toFixed(2)">
                     </div>
                 </template>
@@ -69,7 +69,7 @@
                                     </div>
                                     <h3 class="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-slate-900" x-text="product.name"></h3>
                                     <div class="mt-3 flex items-end justify-between gap-2">
-                                        <strong class="text-sm text-slate-950" x-text="money(product.default_price_kobo)"></strong>
+                                        <strong class="text-sm text-slate-950" x-text="money(branchPrice(product))"></strong>
                                         <span class="text-right text-[11px] font-medium" x-bind:class="product.track_inventory && stockFor(product) <= 0 ? 'text-red-600' : 'text-slate-500'" x-text="product.track_inventory ? `${stockFor(product)} left` : 'Not tracked'"></span>
                                     </div>
                                 </button>
@@ -101,17 +101,17 @@
                             <template x-for="line in cart" :key="line.id">
                                 <article class="rounded-xl border border-slate-200 p-3">
                                     <div class="flex items-start justify-between gap-3">
-                                        <div class="min-w-0 flex-1"><h3 class="truncate text-sm font-semibold" x-text="line.name"></h3><p class="mt-1 text-xs text-slate-500" x-text="money(line.default_price_kobo)"></p></div>
+                                        <div class="min-w-0 flex-1"><h3 class="truncate text-sm font-semibold" x-text="line.name"></h3><p class="mt-1 text-xs text-slate-500" x-text="money(line.unit_price_kobo)"></p></div>
                                         <button type="button" x-on:click="removeLine(line.id)" class="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"><i data-lucide="x" class="h-4 w-4"></i></button>
                                     </div>
                                     <div class="mt-3 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
                                         <div class="flex items-center overflow-hidden rounded-lg border border-slate-300">
                                             <button type="button" x-on:click="changeQuantity(line, -1)" class="h-8 w-8 hover:bg-slate-100">−</button>
-                                            <span class="w-9 text-center text-sm font-semibold" x-text="line.quantity"></span>
+                                            <input type="number" min="1" step="1" class="ec-pos-quantity-input" x-model.number="line.quantity" :max="line.track_inventory ? stockFor(line) : null" @input="setQuantity(line, $event.target.value)" @change="setQuantity(line, $event.target.value)" aria-label="Item quantity">
                                             <button type="button" x-on:click="changeQuantity(line, 1)" class="h-8 w-8 hover:bg-slate-100">+</button>
                                         </div>
                                         <input x-model.number="line.discount" type="number" min="0" step="0.01" placeholder="Discount ₦" class="min-h-8 min-w-0 rounded-lg border border-slate-300 px-2 text-sm">
-                                        <strong class="text-sm" x-text="money((line.default_price_kobo * line.quantity) - (Number(line.discount || 0) * 100))"></strong>
+                                        <strong class="text-sm" x-text="money((line.unit_price_kobo * line.quantity) - (Number(line.discount || 0) * 100))"></strong>
                                     </div>
                                 </article>
                             </template>

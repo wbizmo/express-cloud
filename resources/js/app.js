@@ -394,9 +394,10 @@ installSubmitLoadingState();
 
 // EXPRESS CLOUD SPRINT 2 POS:START
 document.addEventListener('alpine:init', () => {
-    Alpine.data('posSale', (catalog, stockMap, paymentMethods, initialBranch = '') => ({
+    Alpine.data('posSale', (catalog, stockMap, priceMap, paymentMethods, initialBranch = '') => ({
         catalog,
         stockMap,
+        priceMap,
         paymentMethods,
         query: '',
         branchId: initialBranch,
@@ -411,6 +412,7 @@ document.addEventListener('alpine:init', () => {
 
         init() {
             this.resetPayments();
+            this.$watch('branchId', () => this.repriceCart());
             this.$nextTick(() => this.$refs.search?.focus());
         },
 
@@ -428,6 +430,26 @@ document.addEventListener('alpine:init', () => {
             if (!product.track_inventory) return null;
             return Number(this.stockMap[`${this.branchId}|${product.id}`] || 0) / 1000;
         },
+        branchPrice(product) {
+            const value = this.priceMap?.[`${this.branchId}|${product.id}`];
+            return value === undefined || value === null || value === ''
+                ? Number(product.default_price_kobo || 0)
+                : Number(value);
+        },
+
+        repriceCart() {
+            this.cart = this.cart
+                .filter((line) => !line.track_inventory || this.stockFor(line) > 0)
+                .map((line) => ({
+                    ...line,
+                    quantity: line.track_inventory
+                        ? Math.min(Math.max(1, Number(line.quantity) || 1), this.stockFor(line))
+                        : Math.max(1, Number(line.quantity) || 1),
+                    unit_price_kobo: this.branchPrice(line),
+                }));
+
+            this.syncDefaultPayment();
+        },
 
         canAdd(product) {
             return this.branchId && (!product.track_inventory || this.stockFor(product) > 0);
@@ -439,9 +461,12 @@ document.addEventListener('alpine:init', () => {
             const stock = this.stockFor(product);
             if (existing) {
                 if (product.track_inventory && existing.quantity >= stock) return;
-                existing.quantity += 1;
+                existing.quantity = product.track_inventory
+                    ? Math.min(stock, existing.quantity + 1)
+                    : existing.quantity + 1;
+                existing.unit_price_kobo = this.branchPrice(product);
             } else {
-                this.cart.push({ ...product, quantity: 1, discount: 0 });
+                this.cart.push({ ...product, quantity: 1, discount: 0, unit_price_kobo: this.branchPrice(product) });
             }
             this.scanMessage = `${product.name} added`;
             window.setTimeout(() => { this.scanMessage = ''; }, 1200);
@@ -460,10 +485,22 @@ document.addEventListener('alpine:init', () => {
         },
 
         changeQuantity(line, delta) {
-            const next = Math.max(1, Number(line.quantity) + delta);
+            this.setQuantity(line, Number(line.quantity) + delta);
+        },
+
+        setQuantity(line, value) {
+            const requested = Math.max(1, Math.floor(Number(value) || 1));
             const stock = this.stockFor(line);
-            if (line.track_inventory && next > stock) return;
-            line.quantity = next;
+
+            line.quantity = line.track_inventory
+                ? Math.min(requested, Math.max(0, stock))
+                : requested;
+
+            if (line.track_inventory && line.quantity < 1) {
+                this.removeLine(line.id);
+                return;
+            }
+
             this.syncDefaultPayment();
         },
 
@@ -478,7 +515,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         get subtotal() {
-            return this.cart.reduce((sum, line) => sum + (line.default_price_kobo * line.quantity), 0);
+            return this.cart.reduce((sum, line) => sum + (line.unit_price_kobo * line.quantity), 0);
         },
 
         get discountTotal() {
