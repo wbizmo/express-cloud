@@ -51,7 +51,7 @@
                 </form>
             </x-ui.card>
 
-            <x-ui.card title="Import history">
+            <div class="min-w-0 max-w-full overflow-hidden"><div class="min-w-0 max-w-full overflow-hidden"><x-ui.card title="Import history">
                 <div class="ec-responsive-table overflow-x-auto">
                     <table class="w-full min-w-[820px] text-left text-sm">
                         <thead>
@@ -112,7 +112,7 @@
                         </tbody>
                     </table>
                 </div>
-            </x-ui.card>
+            </x-ui.card></div>
         </div>
     </x-layout.app-shell>
 </x-layout.app>

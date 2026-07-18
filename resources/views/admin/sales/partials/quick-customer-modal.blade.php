@@ -1,1 +1,117 @@
-<div x-data="quickCustomer('{{ route('admin.customers.quick-store') }}','{{ csrf_token() }}')"><button type="button" x-on:click="open=true" class="mt-2 text-sm font-semibold text-blue-700">+ New customer</button><div x-cloak x-show="open" class="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 p-4"><div x-on:click.outside="open=false" class="w-full max-w-xl rounded-2xl bg-white p-6"><h2 class="text-xl font-bold">Add customer</h2><p class="mt-1 text-sm text-slate-600">Only name is required. Walk-in customer may remain blank.</p><form class="mt-5 grid gap-4 md:grid-cols-2" x-on:submit.prevent="save"><label class="md:col-span-2">Name *<input x-model="form.name" required class="mt-1 min-h-11 w-full rounded-xl border px-3"></label><label>Phone<input x-model="form.phone" class="mt-1 min-h-11 w-full rounded-xl border px-3"></label><label>WhatsApp<input x-model="form.whatsapp_phone" class="mt-1 min-h-11 w-full rounded-xl border px-3"></label><label class="md:col-span-2">Email<input type="email" x-model="form.email" class="mt-1 min-h-11 w-full rounded-xl border px-3"></label><label class="md:col-span-2">Address<textarea x-model="form.address" class="mt-1 w-full rounded-xl border p-3"></textarea></label><label class="md:col-span-2">Notes<textarea x-model="form.notes" class="mt-1 w-full rounded-xl border p-3"></textarea></label><p x-show="error" x-text="error" class="md:col-span-2 text-red-700"></p><div class="flex justify-end gap-3 md:col-span-2"><button type="button" x-on:click="open=false" class="rounded-xl border px-4 py-2">Cancel</button><button :disabled="saving" class="rounded-xl bg-blue-700 px-4 py-2 font-semibold text-white" x-text="saving?'Saving...':'Save customer'"></button></div></form></div></div></div><script>function quickCustomer(endpoint,csrf){return{open:false,saving:false,error:'',form:{name:'',phone:'',whatsapp_phone:'',email:'',address:'',notes:''},async save(){this.saving=true;this.error='';try{const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrf},body:JSON.stringify(this.form)});const p=await r.json();if(!r.ok)throw new Error(p.message||'Could not save customer.');window.dispatchEvent(new CustomEvent('customer-created',{detail:p}));this.open=false;this.form={name:'',phone:'',whatsapp_phone:'',email:'',address:'',notes:''};}catch(e){this.error=e.message}finally{this.saving=false}}}}</script>
+<div x-data="quickCustomer('{{ route('admin.customers.quick-store') }}', '{{ csrf_token() }}')">
+    <button
+        type="button"
+        x-on:click="open = true"
+        class="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+    >
+        <span aria-hidden="true">+</span>
+        New customer
+    </button>
+
+    <div
+        x-cloak
+        x-show="open"
+        x-transition.opacity
+        x-on:keydown.escape.window="open = false"
+        class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 p-3 sm:p-5"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-customer-title"
+    >
+        <section
+            x-on:click.outside="open = false"
+            class="flex max-h-[min(82vh,720px)] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        >
+            <header class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4">
+                <div>
+                    <h2 id="quick-customer-title" class="text-lg font-bold text-slate-950">Add customer</h2>
+                    <p class="mt-1 text-sm text-slate-600">Only the customer name is required.</p>
+                </div>
+                <button
+                    type="button"
+                    x-on:click="open = false"
+                    class="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 text-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                    aria-label="Close customer form"
+                >
+                    ×
+                </button>
+            </header>
+
+            <form class="flex min-h-0 flex-1 flex-col" x-on:submit.prevent="save">
+                <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <label class="sm:col-span-2">
+                            <span class="text-sm font-medium text-slate-700">Name *</span>
+                            <input x-model="form.name" required class="mt-1 min-h-11 w-full rounded-xl border border-slate-300 px-3">
+                        </label>
+                        <label>
+                            <span class="text-sm font-medium text-slate-700">Phone</span>
+                            <input x-model="form.phone" class="mt-1 min-h-11 w-full rounded-xl border border-slate-300 px-3">
+                        </label>
+                        <label>
+                            <span class="text-sm font-medium text-slate-700">WhatsApp</span>
+                            <input x-model="form.whatsapp_phone" class="mt-1 min-h-11 w-full rounded-xl border border-slate-300 px-3">
+                        </label>
+                        <label class="sm:col-span-2">
+                            <span class="text-sm font-medium text-slate-700">Email</span>
+                            <input type="email" x-model="form.email" class="mt-1 min-h-11 w-full rounded-xl border border-slate-300 px-3">
+                        </label>
+                        <label class="sm:col-span-2">
+                            <span class="text-sm font-medium text-slate-700">Address</span>
+                            <textarea x-model="form.address" rows="3" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></textarea>
+                        </label>
+                        <label class="sm:col-span-2">
+                            <span class="text-sm font-medium text-slate-700">Notes</span>
+                            <textarea x-model="form.notes" rows="3" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></textarea>
+                        </label>
+                        <p x-show="error" x-text="error" class="sm:col-span-2 rounded-lg bg-red-50 p-3 text-sm text-red-700"></p>
+                    </div>
+                </div>
+
+                <footer class="sticky bottom-0 flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-white px-5 py-4">
+                    <button type="button" x-on:click="open = false" class="min-h-10 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="saving" class="min-h-10 rounded-xl bg-blue-700 px-5 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50" x-text="saving ? 'Saving…' : 'Save customer'"></button>
+                </footer>
+            </form>
+        </section>
+    </div>
+</div>
+
+<script>
+function quickCustomer(endpoint, csrf) {
+    return {
+        open: false,
+        saving: false,
+        error: '',
+        form: {name: '', phone: '', whatsapp_phone: '', email: '', address: '', notes: ''},
+        async save() {
+            this.saving = true;
+            this.error = '';
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                    },
+                    body: JSON.stringify(this.form),
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.message || 'Could not save customer.');
+                }
+                window.dispatchEvent(new CustomEvent('customer-created', {detail: payload}));
+                this.open = false;
+                this.form = {name: '', phone: '', whatsapp_phone: '', email: '', address: '', notes: ''};
+            } catch (error) {
+                this.error = error.message;
+            } finally {
+                this.saving = false;
+            }
+        },
+    };
+}
+</script>

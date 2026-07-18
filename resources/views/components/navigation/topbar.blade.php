@@ -1,5 +1,5 @@
 <header
-    class="ec-topbar sticky top-0 z-40 flex h-16 w-full max-w-full items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6"
+    class="ec-topbar fixed left-0 right-0 top-0 z-40 lg:left-[var(--ec-sidebar-offset,280px)] lg:left-[var(--ec-sidebar-offset,280px)] flex h-16 w-full max-w-full items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6"
 >
     <button
         type="button"

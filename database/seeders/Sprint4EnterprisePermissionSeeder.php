@@ -13,23 +13,69 @@ final class Sprint4EnterprisePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach (Sprint4Permissions::grouped() as $group => $names) {
-            foreach ($names as $name) {
-                Permission::query()->firstOrCreate(['name' => $name], ['label' => str($name)->replace('.', ' ')->title(), 'group' => $group]);
+        foreach (Sprint4Permissions::grouped() as $group => $slugs) {
+            foreach ($slugs as $slug) {
+                Permission::query()->updateOrCreate(
+                    ['slug' => $slug],
+                    [
+                        'name' => str($slug)->replace('.', ' ')->title()->toString(),
+                        'description' => str($slug)->replace('.', ' ')->title()->toString(),
+                        'group' => $group,
+                    ],
+                );
             }
         }
-        $grant = function ($roleName, $names) {
-            $r = Role::query()->whereRaw('LOWER(name)=?', [mb_strtolower($roleName)])->first();
-            if ($r) {
-                $r->permissions()->syncWithoutDetaching(Permission::query()->whereIn('name', $names)->pluck('id'));
+
+        $grant = static function (string $roleName, array $slugs): void {
+            $role = Role::query()
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($roleName)])
+                ->first();
+
+            if ($role === null) {
+                return;
             }
+
+            $role->permissions()->syncWithoutDetaching(
+                Permission::query()->whereIn('slug', $slugs)->pluck('id')->all(),
+            );
         };
-        foreach (['Super Admin', 'Admin', 'Company Owner'] as $r) {
-            $grant($r, Sprint4Permissions::all());
+
+        foreach (['System Owner', 'Super Admin', 'Admin', 'Company Owner'] as $roleName) {
+            $grant($roleName, Sprint4Permissions::all());
         }
-        $grant('Branch Manager', array_values(array_diff(Sprint4Permissions::all(), ['activity.view.all-branches', 'lisa.audit.view'])));
-        $inventory = Role::query()->firstOrCreate(['name' => 'Inventory Staff'], ['description' => 'Branch-scoped stock transfer and purchasing. Product creation remains separately assignable.']);
-        $inventory->permissions()->syncWithoutDetaching(Permission::query()->whereIn('name', ['inventory.view', 'inventory.transfer', 'inventory.intake', 'products.view', 'suppliers.view', 'procurement.view', 'procurement.create', 'procurement.receive', 'purchases.view', 'purchases.create', 'categories.manage', 'branches.view'])->pluck('id'));
-        $grant('Accounting', ['suppliers.view', 'procurement.view', 'purchases.view', 'exports.procurement', 'reports.daily-digest.view']);
+
+        $grant(
+            'Branch Manager',
+            array_values(array_diff(
+                Sprint4Permissions::all(),
+                ['activity.view.all-branches', 'lisa.audit.view'],
+            )),
+        );
+
+        $inventory = Role::query()->firstOrCreate(
+            ['name' => 'Inventory Staff'],
+            ['description' => 'Branch-scoped inventory and purchasing access.'],
+        );
+
+        $inventory->permissions()->syncWithoutDetaching(
+            Permission::query()
+                ->whereIn('slug', [
+                    'inventory.view',
+                    'inventory.transfer',
+                    'inventory.intake',
+                    'products.view',
+                    'products.prices.adjust',
+                    'suppliers.view',
+                    'procurement.view',
+                    'procurement.create',
+                    'procurement.receive',
+                    'purchases.view',
+                    'purchases.create',
+                    'categories.manage',
+                    'branches.view',
+                ])
+                ->pluck('id')
+                ->all(),
+        );
     }
 }

@@ -16,12 +16,15 @@ final class StaffPerformanceReport
             ->whereBetween('sale_date', [$from, $to])
             ->whereIn('sale_type', ['invoice', 'pos'])
             ->whereNotIn('status', ['cancelled'])
-            ->when($branchId !== null, static fn ($query) => $query->where('branch_id', $branchId))
+            ->when(
+                $branchId !== null,
+                static fn ($query) => $query->where('branch_id', $branchId)
+            )
             ->groupBy('sold_by_account_id')
             ->selectRaw('sold_by_account_id AS account_id')
             ->selectRaw('COUNT(*) AS sales_count')
             ->selectRaw('COALESCE(SUM(grand_total_kobo), 0) AS revenue_kobo')
-            ->selectRaw('COALESCE(SUM(balance_due_kobo), 0) AS outstanding_kobo')
+            ->selectRaw('COALESCE(SUM(GREATEST(grand_total_kobo - paid_amount_kobo, 0)), 0) AS outstanding_kobo')
             ->selectRaw('COUNT(DISTINCT customer_id) AS customers_served')
             ->selectRaw('COUNT(DISTINCT branch_id) AS branches_worked');
 
@@ -30,14 +33,25 @@ final class StaffPerformanceReport
             ->whereBetween('sales.sale_date', [$from, $to])
             ->whereIn('sales.sale_type', ['invoice', 'pos'])
             ->whereNotIn('sales.status', ['cancelled'])
-            ->when($branchId !== null, static fn ($query) => $query->where('sales.branch_id', $branchId))
+            ->when(
+                $branchId !== null,
+                static fn ($query) => $query->where('sales.branch_id', $branchId)
+            )
             ->groupBy('sales.sold_by_account_id')
             ->selectRaw('sales.sold_by_account_id AS account_id')
             ->selectRaw('COALESCE(SUM(sale_items.quantity_milliunits), 0) AS units_milliunits');
 
         return DB::table('accounts')
-            ->joinSub($sales, 'staff_sales', static fn ($join) => $join->on('staff_sales.account_id', '=', 'accounts.id'))
-            ->leftJoinSub($units, 'staff_units', static fn ($join) => $join->on('staff_units.account_id', '=', 'accounts.id'))
+            ->joinSub(
+                $sales,
+                'staff_sales',
+                static fn ($join) => $join->on('staff_sales.account_id', '=', 'accounts.id')
+            )
+            ->leftJoinSub(
+                $units,
+                'staff_units',
+                static fn ($join) => $join->on('staff_units.account_id', '=', 'accounts.id')
+            )
             ->where('accounts.status', 'active')
             ->orderByDesc('staff_sales.revenue_kobo')
             ->select([
@@ -51,7 +65,13 @@ final class StaffPerformanceReport
                 'staff_sales.branches_worked',
             ])
             ->selectRaw('COALESCE(staff_units.units_milliunits, 0) AS units_milliunits')
-            ->selectRaw('CASE WHEN staff_sales.sales_count > 0 THEN staff_sales.revenue_kobo / staff_sales.sales_count ELSE 0 END AS average_sale_kobo')
+            ->selectRaw(
+                'CASE
+                    WHEN staff_sales.sales_count > 0
+                    THEN staff_sales.revenue_kobo / staff_sales.sales_count
+                    ELSE 0
+                END AS average_sale_kobo'
+            )
             ->get();
     }
 }

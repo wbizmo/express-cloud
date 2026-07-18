@@ -132,6 +132,14 @@ Route::middleware([
             ->middleware('permission:products.create')
             ->name('products.store');
 
+        Route::get('/products/{product}/edit', [ProductController::class, 'edit'])
+            ->middleware('permission:products.update')
+            ->name('products.edit');
+
+        Route::put('/products/{product}', [ProductController::class, 'update'])
+            ->middleware('permission:products.update')
+            ->name('products.update');
+
         Route::get(
             '/categories',
             [ClassificationController::class, 'categories'],

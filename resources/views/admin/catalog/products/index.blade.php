@@ -34,6 +34,7 @@
                             <th class="px-3 py-3">Price</th>
                             <th class="px-3 py-3">Inventory</th>
                             <th class="px-3 py-3">Status</th>
+                            <th class="px-3 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -54,10 +55,15 @@
                                         {{ ucfirst($product->status->value) }}
                                     </x-ui.status-badge>
                                 </td>
+                                <td class="px-3 py-4 text-right">
+                                    ('products.update')
+                                        <a href="{{ route('admin.catalog.products.edit', ) }}" class="inline-flex min-h-9 items-center rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-slate-700">Edit</a>
+                                    
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-3 py-10 text-center text-slate-500">
+                                <td colspan="8" class="px-3 py-10 text-center text-slate-500">
                                     No products configured.
                                 </td>
                             </tr>

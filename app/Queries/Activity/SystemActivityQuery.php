@@ -21,26 +21,38 @@ final class SystemActivityQuery
             ? 'activity_logs'
             : 'audit_logs';
 
-        $query = DB::table($table);
+        $actorColumn = Schema::hasColumn($table, 'actor_account_id')
+            ? 'actor_account_id'
+            : 'actor_id';
+
+        $query = DB::table($table.' as activity')
+            ->leftJoin('accounts as actor_account', 'actor_account.id', '=', 'activity.'.$actorColumn)
+            ->leftJoin('branches as actor_branch', 'actor_branch.id', '=', 'activity.branch_id')
+            ->select([
+                'activity.*',
+                'actor_account.first_name as actor_first_name',
+                'actor_account.last_name as actor_last_name',
+                'actor_branch.name as actor_branch_name',
+            ]);
 
         if ($actor !== null) {
-            $query->where('actor_id', $actor);
+            $query->where('activity.'.$actorColumn, $actor);
         }
 
         if ($entityType !== null) {
-            $query->where('entity_type', $entityType);
+            $query->where('activity.entity_type', $entityType);
         }
 
         if ($from !== null) {
-            $query->whereDate('created_at', '>=', $from);
+            $query->whereDate('activity.created_at', '>=', $from);
         }
 
         if ($to !== null) {
-            $query->whereDate('created_at', '<=', $to);
+            $query->whereDate('activity.created_at', '<=', $to);
         }
 
         return $query
-            ->orderByDesc('created_at')
+            ->orderByDesc('activity.created_at')
             ->cursorPaginate(60);
     }
 }

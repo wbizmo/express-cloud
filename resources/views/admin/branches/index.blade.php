@@ -3,8 +3,8 @@
         page-title="Branches"
         page-description="Manage physical operating locations without removing historical records."
     >
-        <div class="grid gap-6 xl:grid-cols-[1fr_380px]">
-            <x-ui.card title="Branch directory">
+        <div class="grid min-w-0 max-w-full gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(300px,380px)]">
+            <div class="min-w-0 max-w-full overflow-hidden"><div class="min-w-0 max-w-full overflow-hidden"><x-ui.card title="Branch directory">
                 <div class="ec-responsive-table overflow-x-auto">
                     <table class="w-full min-w-[720px] text-left text-sm">
                         <thead>
@@ -54,9 +54,9 @@
                         </tbody>
                     </table>
                 </div>
-            </x-ui.card>
+            </x-ui.card></div>
 
-            <x-ui.card title="Add branch" description="Branch codes are uppercase and unique.">
+            <div class="min-w-0 max-w-full"><x-ui.card title="Add branch" description="Branch codes are uppercase and unique.">
                 <form method="POST" action="{{ route('admin.branches.store') }}" class="space-y-4">
                     @csrf
                     <x-ui.input name="name" label="Branch name" required />
@@ -72,7 +72,7 @@
                     </label>
                     <x-ui.button type="submit" class="w-full">Create branch</x-ui.button>
                 </form>
-            </x-ui.card>
+            </x-ui.card></div></div>
         </div>
     </x-layout.app-shell>
 </x-layout.app>

@@ -14,6 +14,8 @@ use App\Http\Requests\Sales\StoreSaleRequest;
 use App\Models\Account;
 use App\Models\Branch;
 use App\Models\PaymentMethod;
+use App\Models\Product;
+use App\Models\ProductBranchPrice;
 use App\Models\ProductBranchStock;
 use App\Models\Sale;
 use App\Services\Organisation\AuditLogger;
@@ -35,8 +37,20 @@ final readonly class SaleController
 
         return view('admin.sales.index', [
             'sales' => Sale::query()
-                ->when(! $actor->can('sales.view.all'), fn ($query) => $query->where('sold_by_account_id', $actor->getKey()))
-                ->when(! $actor->is_allowed_all_branches, fn ($query) => $query->whereIn('branch_id', $actor->branches()->select('branches.id')))
+                ->when(
+                    ! $actor->can('sales.view.all'),
+                    fn ($query) => $query->where(
+                        'sold_by_account_id',
+                        $actor->getKey(),
+                    ),
+                )
+                ->when(
+                    ! $actor->is_allowed_all_branches,
+                    fn ($query) => $query->whereIn(
+                        'branch_id',
+                        $actor->branches()->select('branches.id'),
+                    ),
+                )
                 ->with([
                     'branch:id,name',
                     'customer:id,name,phone',
@@ -60,23 +74,60 @@ final readonly class SaleController
         return view('admin.sales.create', [
             'branches' => Branch::query()
                 ->where('status', 'active')
-                ->when(! $request->user()->is_allowed_all_branches, fn ($query) => $query->whereIn('id', $request->user()->branches()->select('branches.id')))
-                ->orderBy('name')->get(['id', 'name']),
+                ->when(
+                    ! $request->user()->is_allowed_all_branches,
+                    fn ($query) => $query->whereIn(
+                        'id',
+                        $request->user()->branches()->select('branches.id'),
+                    ),
+                )
+                ->orderBy('name')
+                ->get(['id', 'name']),
+
             'paymentMethods' => PaymentMethod::query()
                 ->where('is_active', true)
                 ->orderByDesc('is_default_for_pos')
                 ->orderBy('name')
                 ->get(['id', 'name', 'is_default_for_pos']),
-            'productStocks' => ProductBranchStock::query()
-                ->get(['product_id', 'branch_id', 'quantity_milliunits'])
-                ->mapWithKeys(static fn (ProductBranchStock $stock): array => [
-                    $stock->branch_id.'|'.$stock->product_id => $stock->quantity_milliunits,
-                ]),            'productPrices' => ProductBranchStock::query()
-                ->whereNotNull('selling_price_kobo')
-                ->get(['product_id', 'branch_id', 'selling_price_kobo'])
-                ->mapWithKeys(static fn (ProductBranchStock $stock): array => [
-                    $stock->branch_id.'|'.$stock->product_id => (int) $stock->selling_price_kobo,
+
+            'products' => Product::query()
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get([
+                    'id',
+                    'name',
+                    'sku',
+                    'barcode',
+                    'track_inventory',
+                    'default_price_kobo',
                 ]),
+
+            'productStocks' => ProductBranchStock::query()
+                ->get([
+                    'product_id',
+                    'branch_id',
+                    'quantity_milliunits',
+                ])
+                ->mapWithKeys(
+                    static fn (ProductBranchStock $stock): array => [
+                        $stock->branch_id.'|'.$stock->product_id
+                            => (int) $stock->quantity_milliunits,
+                    ],
+                ),
+
+            'productPrices' => ProductBranchStock::query()
+                ->whereNotNull('selling_price_kobo')
+                ->get([
+                    'product_id',
+                    'branch_id',
+                    'selling_price_kobo',
+                ])
+                ->mapWithKeys(
+                    static fn (ProductBranchStock $stock): array => [
+                        $stock->branch_id.'|'.$stock->product_id
+                            => (int) $stock->selling_price_kobo,
+                    ],
+                ),
         ]);
     }
 
@@ -183,6 +234,7 @@ final readonly class SaleController
     ): RedirectResponse {
         /** @var Account $actor */
         $actor = $request->user();
+
         $sale = $converter->execute(
             $quote,
             $request,
