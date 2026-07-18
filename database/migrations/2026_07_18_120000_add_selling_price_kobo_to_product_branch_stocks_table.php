@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('product_branch_stocks', function (Blueprint $table): void {
+        Schema::table('product_branch_stock', function (Blueprint $table): void {
             $table->unsignedBigInteger('selling_price_kobo')
                 ->nullable()
                 ->after('quantity_milliunits')
@@ -20,7 +20,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('product_branch_stocks', function (Blueprint $table): void {
+        Schema::table('product_branch_stock', function (Blueprint $table): void {
             $table->dropColumn('selling_price_kobo');
         });
     }
