@@ -115,17 +115,16 @@ final readonly class SaleController
                     ],
                 ),
 
-            'productPrices' => ProductBranchStock::query()
-                ->whereNotNull('selling_price_kobo')
+            'productPrices' => ProductBranchPrice::query()
                 ->get([
                     'product_id',
                     'branch_id',
-                    'selling_price_kobo',
+                    'price_kobo',
                 ])
                 ->mapWithKeys(
-                    static fn (ProductBranchStock $stock): array => [
-                        $stock->branch_id.'|'.$stock->product_id
-                            => (int) $stock->selling_price_kobo,
+                    static fn (ProductBranchPrice $price): array => [
+                        $price->branch_id.'|'.$price->product_id
+                            => (int) $price->price_kobo,
                     ],
                 ),
         ]);
