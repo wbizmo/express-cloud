@@ -54,9 +54,10 @@ final class LisaInsightEngine
             ]);
         }
 
+        // ✅ FIX: replaced GREATEST with CASE for SQLite compatibility
         $outstanding = (int) DB::table('sales')
             ->whereNotIn('status', ['cancelled'])
-            ->selectRaw('COALESCE(SUM(GREATEST(grand_total_kobo - paid_amount_kobo, 0)), 0) AS outstanding_total')
+            ->selectRaw('COALESCE(SUM(CASE WHEN grand_total_kobo - paid_amount_kobo > 0 THEN grand_total_kobo - paid_amount_kobo ELSE 0 END), 0) AS outstanding_total')
             ->value('outstanding_total');
 
         if ($outstanding > 0) {

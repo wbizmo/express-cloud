@@ -41,6 +41,9 @@ return [
             'label' => 'Finance & Intelligence',
             'items' => [
                 ['label' => 'Chart of Accounts', 'icon' => 'list-tree', 'route' => 'admin.accounting.chart-of-accounts.index', 'permission' => 'accounting.accounts.view'],
+                ["label" => "Journal Entries", "icon" => "pen-line", "route" => "admin.accounting.journal-entries.index", "permission" => "accounting.journals.view"],
+                ["label" => "Opening Balance", "icon" => "scale", "route" => "admin.accounting.opening-balance.create", "permission" => "accounting.journals.manage"],
+                ["label" => "Batch Journal Entry", "icon" => "layers", "route" => "admin.accounting.batch-journal.create", "permission" => "accounting.journals.manage"],
                 ['label' => 'Accounting', 'icon' => 'landmark', 'route' => 'admin.accounting.reports.index', 'permission' => 'accounting.reports.view'],
                 ['label' => 'Fixed Assets', 'icon' => 'building-2', 'route' => 'admin.accounting-operations.assets.index', 'permission' => 'assets.view'],
                 ['label' => 'Reports', 'icon' => 'chart-no-axes-combined', 'route' => 'admin.reports.hub', 'permission' => 'reports.hub.view'],

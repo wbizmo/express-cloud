@@ -25,6 +25,7 @@ final class StoreLedgerAccountRequest extends FormRequest
             'is_control_account' => ['sometimes', 'boolean'],
             'allow_manual_posting' => ['sometimes', 'boolean'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'opening_balance_kobo' => ['nullable', 'integer'],
         ];
     }
 }

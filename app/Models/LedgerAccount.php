@@ -14,6 +14,8 @@ final class LedgerAccount extends Model
 {
     use HasUlids;
 
+    protected $table = 'ledger_accounts';
+
     protected $fillable = [
         'code',
         'name',
@@ -45,5 +47,11 @@ final class LedgerAccount extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    // ✅ Relationship to journal lines – needed for balance calculation
+    public function journalLines(): HasMany
+    {
+        return $this->hasMany(JournalLine::class, 'ledger_account_id');
     }
 }

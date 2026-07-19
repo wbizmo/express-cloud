@@ -1,5 +1,10 @@
 <header
-    class="ec-topbar fixed left-0 right-0 top-0 z-40 lg:left-[var(--ec-sidebar-offset,280px)] flex h-16 w-full max-w-full items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6"
+    class="ec-topbar fixed top-0 z-40 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6"
+    x-data
+    :style="{
+        left: $store.shell.sidebarCollapsed ? '72px' : 'var(--ec-sidebar-offset, 280px)',
+        right: '0px'
+    }"
 >
     <button
         type="button"
@@ -27,13 +32,7 @@
     </div>
 
     <div class="ml-auto flex items-center gap-1.5">
-        <button
-            type="button"
-            class="grid h-10 w-10 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-            aria-label="Notifications"
-        >
-            <x-ui.icon name="bell" />
-        </button>
+        {{-- BELL ICON REMOVED --}}
 
         <div x-data="{ open: false }" class="relative">
             <button
@@ -86,7 +85,6 @@
                     <p class="text-xs text-slate-500">Authorised account</p>
                 </div>
 
-                {{-- ✅ FIXED: missing <a tag added --}}
                 <a
                     href="{{ route('staff.profile.show') }}"
                     class="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-sm text-slate-700 hover:bg-slate-100"
@@ -127,6 +125,8 @@
     .ec-topbar {
         position: fixed !important;
         top: 0;
+        right: 0;
         width: auto !important;
+        transition: left 0.2s ease;
     }
 </style>

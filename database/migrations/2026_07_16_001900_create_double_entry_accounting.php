@@ -11,18 +11,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('sale_items', function (Blueprint $table): void {
-            $table->unsignedBigInteger('unit_cost_kobo_snapshot')
-                ->default(0)
-                ->after('unit_price_kobo');
-        });
+        // ✅ Only add the column if it doesn't already exist
+        if (!Schema::hasColumn('sale_items', 'unit_cost_kobo_snapshot')) {
+            Schema::table('sale_items', function (Blueprint $table): void {
+                $table->unsignedBigInteger('unit_cost_kobo_snapshot')
+                    ->default(0)
+                    ->after('unit_price_kobo');
+            });
+        }
 
-        DB::statement(
-            'UPDATE sale_items si '
-            .'JOIN products p ON p.id = si.product_id '
-            .'SET si.unit_cost_kobo_snapshot = p.default_cost_price_kobo '
-            .'WHERE si.unit_cost_kobo_snapshot = 0',
-        );
+        // Update existing rows using the appropriate syntax for each driver
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement("UPDATE sale_items SET unit_cost_kobo_snapshot = (SELECT default_cost_price_kobo FROM products WHERE products.id = sale_items.product_id) WHERE unit_cost_kobo_snapshot = 0");
+        } else {
+            DB::statement("UPDATE sale_items si JOIN products p ON p.id = si.product_id SET si.unit_cost_kobo_snapshot = p.default_cost_price_kobo WHERE si.unit_cost_kobo_snapshot = 0");
+        }
 
         Schema::create('ledger_accounts', function (Blueprint $table): void {
             $table->ulid('id')->primary();
@@ -147,14 +150,17 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Drop the column if it exists (to be clean)
+        if (Schema::hasColumn('sale_items', 'unit_cost_kobo_snapshot')) {
+            Schema::table('sale_items', function (Blueprint $table): void {
+                $table->dropColumn('unit_cost_kobo_snapshot');
+            });
+        }
+
         Schema::dropIfExists('asset_depreciation_postings');
         Schema::dropIfExists('journal_lines');
         Schema::dropIfExists('journal_entries');
         Schema::dropIfExists('accounting_periods');
         Schema::dropIfExists('ledger_accounts');
-
-        Schema::table('sale_items', function (Blueprint $table): void {
-            $table->dropColumn('unit_cost_kobo_snapshot');
-        });
     }
 };

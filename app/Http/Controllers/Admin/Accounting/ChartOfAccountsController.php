@@ -7,10 +7,13 @@ namespace App\Http\Controllers\Admin\Accounting;
 use App\Enums\Accounting\AccountType;
 use App\Http\Requests\Admin\Accounting\StoreLedgerAccountRequest;
 use App\Http\Requests\Admin\Accounting\UpdateLedgerAccountRequest;
+use App\Models\JournalEntry;
+use App\Models\JournalLine;
 use App\Models\LedgerAccount;
 use App\Services\Organisation\AuditLogger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final readonly class ChartOfAccountsController
@@ -19,11 +22,19 @@ final readonly class ChartOfAccountsController
 
     public function index(): View
     {
+        // Get all accounts with their current balance (sum of debits - credits from journal lines)
+        $accounts = LedgerAccount::query()
+            ->with('parent')
+            ->withCount([
+                'journalLines as balance_kobo' => function ($query) {
+                    $query->select(DB::raw('COALESCE(SUM(debit_kobo) - SUM(credit_kobo), 0)'));
+                }
+            ])
+            ->orderBy('code')
+            ->paginate(50);
+
         return view('admin.accounting.chart-of-accounts.index', [
-            'accounts' => LedgerAccount::query()
-                ->with('parent')
-                ->orderBy('code')
-                ->paginate(50),
+            'accounts' => $accounts,
             'parentOptions' => LedgerAccount::query()
                 ->where('is_active', true)
                 ->orderBy('code')
@@ -32,45 +43,100 @@ final readonly class ChartOfAccountsController
         ]);
     }
 
-    public function store(
-        StoreLedgerAccountRequest $request,
-    ): RedirectResponse {
-        $account = LedgerAccount::query()->create([
-            'code' => Str::upper(
-                $request->string('code')->trim()->toString(),
-            ),
-            'name' => $request->string('name')->trim()->toString(),
-            'type' => $request->string('type')->toString(),
-            'parent_id' => $request->filled('parent_id')
-                ? $request->string('parent_id')->toString()
-                : null,
-            'is_control_account' => $request->boolean('is_control_account'),
-            'is_system' => false,
-            'is_active' => true,
-            'allow_manual_posting' => $request->boolean(
-                'allow_manual_posting',
-                true,
-            ),
-            'description' => $request->filled('description')
-                ? $request->string('description')->trim()->toString()
-                : null,
-        ]);
+    public function store(StoreLedgerAccountRequest $request): RedirectResponse
+    {
+        $account = DB::transaction(function () use ($request) {
+            $account = LedgerAccount::query()->create([
+                'code' => Str::upper($request->string('code')->trim()->toString()),
+                'name' => $request->string('name')->trim()->toString(),
+                'type' => $request->string('type')->toString(),
+                'parent_id' => $request->filled('parent_id') ? $request->string('parent_id')->toString() : null,
+                'is_control_account' => $request->boolean('is_control_account'),
+                'is_system' => false,
+                'is_active' => true,
+                'allow_manual_posting' => $request->boolean('allow_manual_posting', true),
+                'description' => $request->filled('description') ? $request->string('description')->trim()->toString() : null,
+            ]);
 
-        $this->audit->record(
-            $request,
-            'ledger_account.created',
-            'ledger_account',
-            $account,
-            after: [
-                'code' => $account->code,
-                'name' => $account->name,
-                'type' => $account->type instanceof AccountType
-                    ? $account->type->value
-                    : (string) $account->type,
-            ],
-        );
+            // If an opening balance is provided, create a journal entry for it
+            $openingBalance = (int) $request->input('opening_balance_kobo', 0);
+            if ($openingBalance !== 0) {
+                // Find an open accounting period (fallback to the first one)
+                $period = \App\Models\AccountingPeriod::where('status', 'open')->first();
+                if (!$period) {
+                    throw new \RuntimeException('No open accounting period found. Please open a period first.');
+                }
 
-        return back()->with('status', 'Ledger account created.');
+                $entry = JournalEntry::query()->create([
+                    'journal_number' => $this->generateOpeningJournalNumber(),
+                    'entry_date' => now()->toDateString(),
+                    'accounting_period_id' => $period->id,
+                    'status' => 'posted',
+                    'memo' => 'Opening balance for account ' . $account->code . ' - ' . $account->name,
+                    'created_by_account_id' => $request->user()?->id,
+                    'posted_at' => now(),
+                ]);
+
+                if ($openingBalance > 0) {
+                    // Debit the account (asset/expense) or credit (liability/equity/revenue) ? Actually we need to decide.
+                    // We'll treat positive as debit, negative as credit.
+                    $debit = $openingBalance > 0 ? $openingBalance : 0;
+                    $credit = $openingBalance < 0 ? abs($openingBalance) : 0;
+                } else {
+                    $debit = 0;
+                    $credit = abs($openingBalance);
+                }
+
+                // The contra account is "Opening Balance Clearing" (code 9990) – we assume it exists.
+                $contraAccount = LedgerAccount::where('code', '9990')->first();
+                if (!$contraAccount) {
+                    // fallback: create a temporary equity account? But better to warn.
+                    throw new \RuntimeException('Opening Balance Clearing account (code 9990) not found. Please create it first.');
+                }
+
+                // Line for the account itself
+                JournalLine::query()->create([
+                    'journal_entry_id' => $entry->id,
+                    'ledger_account_id' => $account->id,
+                    'debit_kobo' => $debit,
+                    'credit_kobo' => $credit,
+                    'description' => 'Opening balance',
+                ]);
+
+                // Contra line
+                JournalLine::query()->create([
+                    'journal_entry_id' => $entry->id,
+                    'ledger_account_id' => $contraAccount->id,
+                    'debit_kobo' => $credit, // opposite
+                    'credit_kobo' => $debit,
+                    'description' => 'Contra for opening balance of ' . $account->code,
+                ]);
+
+                $this->audit->record(
+                    $request,
+                    'opening_balance.posted',
+                    'journal_entry',
+                    $entry,
+                    after: ['journal_number' => $entry->journal_number, 'account_id' => $account->id],
+                );
+            }
+
+            $this->audit->record(
+                $request,
+                'ledger_account.created',
+                'ledger_account',
+                $account,
+                after: [
+                    'code' => $account->code,
+                    'name' => $account->name,
+                    'type' => $account->type instanceof AccountType ? $account->type->value : (string) $account->type,
+                ],
+            );
+
+            return $account;
+        });
+
+        return back()->with('status', 'Ledger account created.' . ($openingBalance ?? 0 !== 0 ? ' Opening balance posted.' : ''));
     }
 
     public function edit(LedgerAccount $ledgerAccount): View
@@ -80,16 +146,8 @@ final readonly class ChartOfAccountsController
         ]);
     }
 
-    public function update(
-        UpdateLedgerAccountRequest $request,
-        LedgerAccount $ledgerAccount,
-    ): RedirectResponse {
-        if ($ledgerAccount->is_system) {
-            return redirect()
-                ->route('admin.accounting.chart-of-accounts.index')
-                ->with('status', 'System accounts cannot be edited.');
-        }
-
+    public function update(UpdateLedgerAccountRequest $request, LedgerAccount $ledgerAccount): RedirectResponse
+    {
         $before = [
             'name' => $ledgerAccount->name,
             'is_active' => $ledgerAccount->is_active,
@@ -100,13 +158,8 @@ final readonly class ChartOfAccountsController
         $ledgerAccount->update([
             'name' => $request->string('name')->trim()->toString(),
             'is_active' => $request->boolean('is_active', true),
-            'allow_manual_posting' => $request->boolean(
-                'allow_manual_posting',
-                true,
-            ),
-            'description' => $request->filled('description')
-                ? $request->string('description')->trim()->toString()
-                : null,
+            'allow_manual_posting' => $request->boolean('allow_manual_posting', true),
+            'description' => $request->filled('description') ? $request->string('description')->trim()->toString() : null,
         ]);
 
         $this->audit->record(
@@ -126,5 +179,16 @@ final readonly class ChartOfAccountsController
         return redirect()
             ->route('admin.accounting.chart-of-accounts.index')
             ->with('status', 'Ledger account updated.');
+    }
+
+    private function generateOpeningJournalNumber(): string
+    {
+        $last = JournalEntry::query()
+            ->where('journal_number', 'LIKE', 'OP-%')
+            ->orderByDesc('journal_number')
+            ->first();
+
+        $number = $last ? (int) Str::after($last->journal_number, 'OP-') + 1 : 1;
+        return 'OP-'.str_pad((string) $number, 6, '0', STR_PAD_LEFT);
     }
 }

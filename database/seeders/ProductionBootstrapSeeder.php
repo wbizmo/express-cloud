@@ -170,10 +170,11 @@ final class ProductionBootstrapSeeder extends Seeder
                 ],
             );
 
-            AccountingPeriod::query()->firstOrCreate(
+            // ✅ FIX: use Carbon objects instead of date strings to match datetime columns
+            AccountingPeriod::query()->updateOrCreate(
                 [
-                    'starts_on' => now()->startOfYear()->toDateString(),
-                    'ends_on' => now()->endOfYear()->toDateString(),
+                    'starts_on' => now()->startOfYear(),
+                    'ends_on' => now()->endOfYear(),
                 ],
                 [
                     'name' => now()->format('Y').' Financial Year',

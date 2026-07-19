@@ -8,6 +8,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Support\Authorization\Sprint4Permissions;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;  // 👈 added for slug generation
 
 final class Sprint4EnterprisePermissionSeeder extends Seeder
 {
@@ -52,9 +53,14 @@ final class Sprint4EnterprisePermissionSeeder extends Seeder
             )),
         );
 
-        $inventory = Role::query()->firstOrCreate(
-            ['name' => 'Inventory Staff'],
-            ['description' => 'Branch-scoped inventory and purchasing access.'],
+        // ✅ Fixed: Now includes 'slug' to satisfy NOT NULL constraint
+        $inventory = Role::query()->updateOrCreate(
+            ['slug' => 'inventory-staff'],                                 // 👈 find by slug
+            [
+                'name' => 'Inventory Staff',
+                'description' => 'Branch-scoped inventory and purchasing access.',
+                'slug' => 'inventory-staff',                              // 👈 also set it on create
+            ]
         );
 
         $inventory->permissions()->syncWithoutDetaching(

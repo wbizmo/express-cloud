@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\Accounting\AccountingReportController;
+use App\Http\Controllers\Admin\Accounting\BatchJournalEntryController;
 use App\Http\Controllers\Admin\Accounting\ChartOfAccountsController;
+use App\Http\Controllers\Admin\Accounting\JournalEntryController;
+use App\Http\Controllers\Admin\Accounting\OpeningBalanceController;
 use App\Http\Controllers\Admin\AccountingOperations\DocumentBrandingController;
 use App\Http\Controllers\Admin\AccountingOperations\FixedAssetController;
 use App\Http\Controllers\Admin\AccountingOperations\OperationDocumentController;
@@ -565,6 +568,55 @@ Route::middleware([
                 ->middleware('permission:accounting.accounts.manage')
                 ->name('update');
         });
+
+    // ================== JOURNAL ENTRIES ==================
+    Route::prefix('accounting/journal-entries')
+        ->name('accounting.journal-entries.')
+        ->group(function (): void {
+            Route::get('/', [JournalEntryController::class, 'index'])
+                ->middleware('permission:accounting.journals.view')
+                ->name('index');
+            Route::get('/create', [JournalEntryController::class, 'create'])
+                ->middleware('permission:accounting.journals.manage')
+                ->name('create');
+            Route::post('/', [JournalEntryController::class, 'store'])
+                ->middleware('permission:accounting.journals.manage')
+                ->name('store');
+            Route::get('/{journalEntry}', [JournalEntryController::class, 'show'])
+                ->middleware('permission:accounting.journals.view')
+                ->name('show');
+            Route::get('/{journalEntry}/edit', [JournalEntryController::class, 'edit'])
+                ->middleware('permission:accounting.journals.manage')
+                ->name('edit');
+            Route::patch('/{journalEntry}', [JournalEntryController::class, 'update'])
+                ->middleware('permission:accounting.journals.manage')
+                ->name('update');
+        });
+
+    // ================== BATCH JOURNAL ==================
+    Route::prefix('accounting/batch-journal')
+        ->name('accounting.batch-journal.')
+        ->group(function (): void {
+            Route::get('/create', [BatchJournalEntryController::class, 'create'])
+                ->middleware('permission:accounting.journals.manage')
+                ->name('create');
+            Route::post('/', [BatchJournalEntryController::class, 'store'])
+                ->middleware('permission:accounting.journals.manage')
+                ->name('store');
+        });
+
+    // ================== OPENING BALANCE ==================
+    Route::prefix('accounting/opening-balance')
+        ->name('accounting.opening-balance.')
+        ->group(function (): void {
+            Route::get('/create', [OpeningBalanceController::class, 'create'])
+                ->middleware('permission:accounting.journals.manage')
+                ->name('create');
+            Route::post('/', [OpeningBalanceController::class, 'store'])
+                ->middleware('permission:accounting.journals.manage')
+                ->name('store');
+        });
+    // ====================================================
 
     Route::get(
         '/accounting/reports',

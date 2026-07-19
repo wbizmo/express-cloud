@@ -24,7 +24,8 @@ final class StaffPerformanceReport
             ->selectRaw('sold_by_account_id AS account_id')
             ->selectRaw('COUNT(*) AS sales_count')
             ->selectRaw('COALESCE(SUM(grand_total_kobo), 0) AS revenue_kobo')
-            ->selectRaw('COALESCE(SUM(GREATEST(grand_total_kobo - paid_amount_kobo, 0)), 0) AS outstanding_kobo')
+            // ✅ FIX: replace GREATEST with CASE for SQLite
+            ->selectRaw('COALESCE(SUM(CASE WHEN grand_total_kobo - paid_amount_kobo > 0 THEN grand_total_kobo - paid_amount_kobo ELSE 0 END), 0) AS outstanding_kobo')
             ->selectRaw('COUNT(DISTINCT customer_id) AS customers_served')
             ->selectRaw('COUNT(DISTINCT branch_id) AS branches_worked');
 
