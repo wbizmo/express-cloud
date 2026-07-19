@@ -2,7 +2,7 @@
     <button
         type="button"
         x-on:click="open = true"
-        class="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        class="mb-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
     >
         <span aria-hidden="true">+</span>
         New customer
@@ -37,7 +37,8 @@
                 </button>
             </header>
 
-            <form class="flex min-h-0 flex-1 flex-col" x-on:submit.prevent="save">
+            {{-- Keep the form but we'll override its submit --}}
+            <form class="flex min-h-0 flex-1 flex-col">
                 <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <label class="sm:col-span-2">
@@ -45,7 +46,7 @@
                             <input x-model="form.name" required class="mt-1 min-h-11 w-full rounded-xl border border-slate-300 px-3">
                         </label>
                         <label>
-                            <span class="text-sm font-medium text-slate-700">Phone</span>
+                            <span class="text-sm font-medium text-slate-700">Phone *</span>
                             <input x-model="form.phone" class="mt-1 min-h-11 w-full rounded-xl border border-slate-300 px-3">
                         </label>
                         <label>
@@ -72,7 +73,14 @@
                     <button type="button" x-on:click="open = false" class="min-h-10 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                         Cancel
                     </button>
-                    <button type="submit" :disabled="saving" class="min-h-10 rounded-xl bg-blue-700 px-5 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50" x-text="saving ? 'Saving…' : 'Save customer'"></button>
+                    {{-- CHANGED: use x-on:click instead of type="submit" --}}
+                    <button
+                        type="button"
+                        x-on:click="save"
+                        :disabled="saving"
+                        class="min-h-10 rounded-xl bg-blue-700 px-5 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50"
+                        x-text="saving ? 'Saving…' : 'Save customer'"
+                    ></button>
                 </footer>
             </form>
         </section>
@@ -87,6 +95,7 @@ function quickCustomer(endpoint, csrf) {
         error: '',
         form: {name: '', phone: '', whatsapp_phone: '', email: '', address: '', notes: ''},
         async save() {
+            console.log('save() called'); // <-- added for debugging
             this.saving = true;
             this.error = '';
             try {
@@ -101,6 +110,11 @@ function quickCustomer(endpoint, csrf) {
                 });
                 const payload = await response.json();
                 if (!response.ok) {
+                    // handle validation errors
+                    if (payload.errors) {
+                        const messages = Object.values(payload.errors).flat().join(' ');
+                        throw new Error(messages);
+                    }
                     throw new Error(payload.message || 'Could not save customer.');
                 }
                 window.dispatchEvent(new CustomEvent('customer-created', {detail: payload}));
