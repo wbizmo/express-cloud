@@ -13,7 +13,7 @@ final readonly class LisaConversationEngine
     public function __construct(private LisaBusinessContext $context) {}
 
     /** @return array{reply:string, context:array<string,mixed>} */
-    public function reply(Account $actor, LisaConversation $conversation, string $question): array
+    public function answer(Account $actor, LisaConversation $conversation, string $question): array
     {
         $business = $this->context->for($actor);
         $normalized = Str::lower(trim($question));

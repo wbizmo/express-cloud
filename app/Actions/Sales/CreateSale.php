@@ -19,6 +19,7 @@ use App\Models\SaleItem;
 use App\Models\StockMovement;
 use App\Services\Catalog\MoneyInput;
 use App\Services\Inventory\Quantity;
+use App\Services\Organisation\BranchAccess;
 use App\Services\Procurement\LowStockAlertService;
 use App\Services\Sales\SaleCodeGenerator;
 use Illuminate\Support\Facades\DB;
@@ -30,15 +31,14 @@ final readonly class CreateSale
         private MoneyInput $money,
         private SaleCodeGenerator $codes,
         private LowStockAlertService $alerts,
+        private BranchAccess $branchAccess, // <-- ADDED
     ) {}
 
     public function execute(
         StoreSaleRequest $request,
         Account $actor,
     ): Sale {
-        $idempotencyKey = $request->string(
-            'idempotency_key',
-        )->trim()->toString();
+        $idempotencyKey = $request->string('idempotency_key')->trim()->toString();
 
         $existing = Sale::query()
             ->where('idempotency_key', $idempotencyKey)
@@ -62,7 +62,7 @@ final readonly class CreateSale
             $branch = Branch::query()->findOrFail(
                 $request->string('branch_id')->toString(),
             );
-            $this->branchAccess->enforce($actor, $branch);
+            $this->branchAccess->enforce($actor, $branch); // <-- NOW WORKS
 
             $sale = Sale::query()->create([
                 'sale_code' => $this->codes->generate($type, $branch),

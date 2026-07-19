@@ -64,13 +64,17 @@ final readonly class SaleController
                     ),
                 )
                 ->orderByDesc('created_at')
-                ->cursorPaginate(50)
+                ->cursorPaginate(10)
                 ->withQueryString(),
         ]);
     }
 
     public function create(Request $request): View
     {
+        $search = $request->string('q')->trim()->toString();
+        // Get initial branch ID from old input or first active branch (for price/stock display)
+        $initialBranchId = old('branch_id', $request->string('branch_id')->toString() ?: $request->user()->branches()->first()?->id ?? '');
+
         return view('admin.sales.create', [
             'branches' => Branch::query()
                 ->where('status', 'active')
@@ -90,17 +94,19 @@ final readonly class SaleController
                 ->orderBy('name')
                 ->get(['id', 'name', 'is_default_for_pos']),
 
+            // ✅ Paginated + searchable products
             'products' => Product::query()
                 ->where('status', 'active')
+                ->when($search, function ($query, $search) {
+                    return $query->where(function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                          ->orWhere('sku', 'like', "%{$search}%")
+                          ->orWhere('barcode', 'like', "%{$search}%");
+                    });
+                })
                 ->orderBy('name')
-                ->get([
-                    'id',
-                    'name',
-                    'sku',
-                    'barcode',
-                    'track_inventory',
-                    'default_price_kobo',
-                ]),
+                ->paginate(10)
+                ->withQueryString(),
 
             'productStocks' => ProductBranchStock::query()
                 ->get([
@@ -127,6 +133,9 @@ final readonly class SaleController
                             => (int) $price->price_kobo,
                     ],
                 ),
+
+            // Pass initial branch ID to view for price/stock display (optional)
+            'initialBranchId' => $initialBranchId,
         ]);
     }
 

@@ -1,12 +1,8 @@
-<div x-data="quickCustomer('{{ route('admin.customers.quick-store') }}', '{{ csrf_token() }}')">
-    <button
-        type="button"
-        x-on:click="open = true"
-        class="mb-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
-    >
-        <span aria-hidden="true">+</span>
-        New customer
-    </button>
+<div
+    x-data="quickCustomer('{{ route('admin.customers.quick-store') }}', '{{ csrf_token() }}')"
+    x-on:open-customer-modal.window="open = true"
+>
+    {{-- Internal button removed – now opened via event --}}
 
     <div
         x-cloak
@@ -37,9 +33,9 @@
                 </button>
             </header>
 
-            {{-- Keep the form but we'll override its submit --}}
             <form class="flex min-h-0 flex-1 flex-col">
                 <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+                    <p x-show="error" x-text="error" class="sm:col-span-2 rounded-lg bg-red-50 p-3 text-sm text-red-700"></p>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <label class="sm:col-span-2">
                             <span class="text-sm font-medium text-slate-700">Name *</span>
@@ -65,7 +61,7 @@
                             <span class="text-sm font-medium text-slate-700">Notes</span>
                             <textarea x-model="form.notes" rows="3" class="mt-1 w-full rounded-xl border border-slate-300 p-3"></textarea>
                         </label>
-                        <p x-show="error" x-text="error" class="sm:col-span-2 rounded-lg bg-red-50 p-3 text-sm text-red-700"></p>
+                        <!--<p x-show="error" x-text="error" class="sm:col-span-2 rounded-lg bg-red-50 p-3 text-sm text-red-700"></p>-->
                     </div>
                 </div>
 
@@ -73,7 +69,6 @@
                     <button type="button" x-on:click="open = false" class="min-h-10 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                         Cancel
                     </button>
-                    {{-- CHANGED: use x-on:click instead of type="submit" --}}
                     <button
                         type="button"
                         x-on:click="save"
@@ -95,7 +90,6 @@ function quickCustomer(endpoint, csrf) {
         error: '',
         form: {name: '', phone: '', whatsapp_phone: '', email: '', address: '', notes: ''},
         async save() {
-            console.log('save() called'); // <-- added for debugging
             this.saving = true;
             this.error = '';
             try {
@@ -110,14 +104,14 @@ function quickCustomer(endpoint, csrf) {
                 });
                 const payload = await response.json();
                 if (!response.ok) {
-                    // handle validation errors
                     if (payload.errors) {
                         const messages = Object.values(payload.errors).flat().join(' ');
                         throw new Error(messages);
                     }
                     throw new Error(payload.message || 'Could not save customer.');
                 }
-                window.dispatchEvent(new CustomEvent('customer-created', {detail: payload}));
+                // Dispatch event that the parent listens to (customer-selected)
+                window.dispatchEvent(new CustomEvent('customer-selected', {detail: {id: payload.id}}));
                 this.open = false;
                 this.form = {name: '', phone: '', whatsapp_phone: '', email: '', address: '', notes: ''};
             } catch (error) {

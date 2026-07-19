@@ -392,14 +392,14 @@ function installSubmitLoadingState() {
 
 installSubmitLoadingState();
 
-// EXPRESS CLOUD SPRINT 2 POS:START
+// EXPRESS CLOUD SPRINT 2 POS:START – stable, working version (no AJAX grid)
 document.addEventListener('alpine:init', () => {
     Alpine.data('posSale', (catalog, stockMap, priceMap, paymentMethods, initialBranch = '') => ({
+        // Cart and payment state
         catalog,
         stockMap,
         priceMap,
         paymentMethods,
-        query: '',
         branchId: initialBranch,
         saleType: 'pos',
         cart: [],
@@ -410,26 +410,24 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         scanMessage: '',
 
+        // Search state (for UI binding only – actual search is server-side)
+        query: '',
+
         init() {
             this.resetPayments();
             this.$watch('branchId', () => this.repriceCart());
-            this.$nextTick(() => this.$refs.search?.focus());
-        },
-
-        get filteredProducts() {
-            const q = this.query.trim().toLowerCase();
-            if (!q) return this.catalog;
-            return this.catalog.filter((product) =>
-                product.name.toLowerCase().includes(q)
-                || product.sku.toLowerCase().includes(q)
-                || String(product.barcode || '').toLowerCase().includes(q)
-            );
+            this.$nextTick(() => {
+                if (this.$refs.search) {
+                    this.$refs.search.focus();
+                }
+            });
         },
 
         stockFor(product) {
             if (!product.track_inventory) return null;
             return Number(this.stockMap[`${this.branchId}|${product.id}`] || 0) / 1000;
         },
+
         branchPrice(product) {
             const value = this.priceMap?.[`${this.branchId}|${product.id}`];
             return value === undefined || value === null || value === ''
@@ -475,13 +473,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         handleSearchEnter() {
-            const value = this.query.trim().toLowerCase();
-            if (!value) return;
-            const exact = this.catalog.find((product) =>
-                product.sku.toLowerCase() === value
-                || String(product.barcode || '').toLowerCase() === value
-            );
-            if (exact) this.addProduct(exact);
+            // Server-side search handles this – kept for compatibility
         },
 
         changeQuantity(line, delta) {
@@ -575,4 +567,3 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 // EXPRESS CLOUD SPRINT 2 POS:END
-
