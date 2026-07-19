@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\Accounting\AccountingReportController;
+use App\Http\Controllers\Admin\Accounting\ChartOfAccountsController;
 use App\Http\Controllers\Admin\AccountingOperations\DocumentBrandingController;
 use App\Http\Controllers\Admin\AccountingOperations\FixedAssetController;
 use App\Http\Controllers\Admin\AccountingOperations\OperationDocumentController;
@@ -546,6 +547,23 @@ Route::middleware([
                 ])
                 ->middleware('permission:operation_documents.download')
                 ->name('documents.spreadsheet');
+        });
+
+    Route::prefix('accounting/chart-of-accounts')
+        ->name('accounting.chart-of-accounts.')
+        ->group(function (): void {
+            Route::get('/', [ChartOfAccountsController::class, 'index'])
+                ->middleware('permission:accounting.accounts.view')
+                ->name('index');
+            Route::post('/', [ChartOfAccountsController::class, 'store'])
+                ->middleware('permission:accounting.accounts.manage')
+                ->name('store');
+            Route::get('/{ledgerAccount}/edit', [ChartOfAccountsController::class, 'edit'])
+                ->middleware('permission:accounting.accounts.manage')
+                ->name('edit');
+            Route::patch('/{ledgerAccount}', [ChartOfAccountsController::class, 'update'])
+                ->middleware('permission:accounting.accounts.manage')
+                ->name('update');
         });
 
     Route::get(
