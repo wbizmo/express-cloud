@@ -39,7 +39,7 @@ final readonly class JournalEntryController
         }
 
         return view('admin.accounting.journal-entries.index', [
-            'entries' => $query->paginate(20),
+            'entries' => $query->paginate(10),
             'statuses' => ['draft', 'posted', 'reversed'],
         ]);
     }

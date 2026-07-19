@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Controllers\Admin\Accounting;
 
 use App\Models\AccountingPeriod;
@@ -14,7 +12,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Validator;
 
 final class BatchJournalEntryController
 {
@@ -54,6 +51,25 @@ final class BatchJournalEntryController
             'entries.*.lines.*.description' => ['nullable', 'string', 'max:500'],
         ]);
 
+        // Pre‑validation: check each entry's balance
+        $errors = [];
+        foreach ($request->input('entries') as $index => $entryData) {
+            $totalDebit = 0;
+            $totalCredit = 0;
+            foreach ($entryData['lines'] as $line) {
+                $totalDebit += (int) ($line['debit_kobo'] ?? 0);
+                $totalCredit += (int) ($line['credit_kobo'] ?? 0);
+            }
+            if ($totalDebit !== $totalCredit) {
+                $errors[] = "Entry #" . ($index + 1) . " is unbalanced (Debit: $totalDebit, Credit: $totalCredit).";
+            }
+        }
+
+        if (!empty($errors)) {
+            return back()->withErrors(['entries' => implode(' ', $errors)])->withInput();
+        }
+
+        // All balanced – proceed
         DB::transaction(function () use ($request) {
             foreach ($request->input('entries') as $entryData) {
                 $entry = JournalEntry::query()->create([
@@ -84,6 +100,7 @@ final class BatchJournalEntryController
                     ]);
                 }
 
+                // Safety check (should never trigger)
                 if ($totalDebit !== $totalCredit) {
                     throw new \RuntimeException("Journal entry {$entry->journal_number} is unbalanced.");
                 }

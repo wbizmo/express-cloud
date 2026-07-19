@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\Accounting\JournalStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class JournalEntry extends Model
 {
     use HasUlids;
+
+    protected $table = 'journal_entries';
 
     protected $fillable = [
         'journal_number',
@@ -29,19 +31,35 @@ final class JournalEntry extends Model
         'reversed_at',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'entry_date' => 'date',
+        'posted_at' => 'datetime',
+        'reversed_at' => 'datetime',
+    ];
+
+    // ✅ Fixed: relationship to accounting period
+    public function accountingPeriod(): BelongsTo
     {
-        return [
-            'entry_date' => 'immutable_date',
-            'status' => JournalStatus::class,
-            'posted_at' => 'immutable_datetime',
-            'reversed_at' => 'immutable_datetime',
-        ];
+        return $this->belongsTo(AccountingPeriod::class);
     }
 
-    /** @return HasMany<JournalLine, $this> */
+    public function createdByAccount(): BelongsTo
+    {
+        return $this->belongsTo(Account::class, 'created_by_account_id');
+    }
+
     public function lines(): HasMany
     {
         return $this->hasMany(JournalLine::class);
+    }
+
+    public function reversalOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reversal_of_entry_id');
+    }
+
+    public function reversedBy(): HasMany
+    {
+        return $this->hasMany(self::class, 'reversal_of_entry_id');
     }
 }
