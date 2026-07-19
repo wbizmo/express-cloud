@@ -1,6 +1,137 @@
-<x-layout.app title="HR & Performance | Express Cloud"><x-layout.app-shell page-title="HR & performance" page-description="Workforce visibility built from real sales activity: KPIs, ranking, coaching signals and branch announcements.">
-<form method="GET" class="mb-6 grid gap-4 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-4"><x-ui.input name="from" type="date" label="From" :value="$from" /><x-ui.input name="to" type="date" label="To" :value="$to" /><label class="block"><span class="mb-2 block text-sm font-medium text-slate-700">Branch</span><select name="branch" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><option value="">All permitted branches</option>@foreach($branches as $branch)<option value="{{ $branch->id }}" @selected($selectedBranch === (string)$branch->id)>{{ $branch->name }}</option>@endforeach</select></label><div class="flex items-end"><x-ui.button type="submit" class="w-full">Apply filters</x-ui.button></div></form>
-<div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5"><x-ui.card><p class="text-xs font-semibold uppercase text-slate-500">Active sellers</p><p class="mt-2 text-2xl font-bold">{{ number_format($summary['active_sellers']) }}</p></x-ui.card><x-ui.card><p class="text-xs font-semibold uppercase text-slate-500">Transactions</p><p class="mt-2 text-2xl font-bold">{{ number_format($summary['sales_count']) }}</p></x-ui.card><x-ui.card><p class="text-xs font-semibold uppercase text-slate-500">Revenue</p><p class="mt-2 text-2xl font-bold">₦{{ number_format($summary['revenue_kobo']/100,2) }}</p></x-ui.card><x-ui.card><p class="text-xs font-semibold uppercase text-slate-500">Outstanding</p><p class="mt-2 text-2xl font-bold text-amber-700">₦{{ number_format($summary['outstanding_kobo']/100,2) }}</p></x-ui.card><x-ui.card><p class="text-xs font-semibold uppercase text-slate-500">Avg revenue/staff</p><p class="mt-2 text-2xl font-bold">₦{{ number_format($summary['average_revenue_kobo']/100,2) }}</p></x-ui.card></div>
-<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]"><x-ui.card title="Sales staff KPI ranking" description="Performance signals support coaching; they are not a substitute for management review."><div class="ec-responsive-table overflow-x-auto"><table class="w-full min-w-[1040px] text-left text-sm"><thead><tr class="border-b text-xs uppercase tracking-wide text-slate-500"><th class="px-3 py-3">Rank</th><th class="px-3 py-3">Staff</th><th class="px-3 py-3">Band</th><th class="px-3 py-3">Sales</th><th class="px-3 py-3">Revenue</th><th class="px-3 py-3">Avg sale</th><th class="px-3 py-3">Units</th><th class="px-3 py-3">Customers</th><th class="px-3 py-3">Outstanding</th></tr></thead><tbody class="divide-y">@forelse($rows as $index=>$row)@php($ratio=$summary['average_revenue_kobo']>0?((int)$row->revenue_kobo/$summary['average_revenue_kobo']):0)<tr><td class="px-3 py-4 font-semibold">{{ $index+1 }}</td><td class="px-3 py-4"><strong>{{ trim($row->first_name.' '.$row->last_name) }}</strong><small class="block text-slate-500">{{ $row->branches_worked }} branch{{ $row->branches_worked==1?'':'es' }}</small></td><td class="px-3 py-4"><x-ui.status-badge :tone="$ratio>=1.25?'success':($ratio<0.65?'warning':'neutral')">{{ $ratio>=1.25?'High performer':($ratio<0.65?'Coaching review':'On track') }}</x-ui.status-badge></td><td class="px-3 py-4">{{ $row->sales_count }}</td><td class="px-3 py-4 font-semibold">₦{{ number_format(((int)$row->revenue_kobo)/100,2) }}</td><td class="px-3 py-4">₦{{ number_format(((int)$row->average_sale_kobo)/100,2) }}</td><td class="px-3 py-4">{{ app(\App\Services\Inventory\Quantity::class)->format((int)$row->units_milliunits) }}</td><td class="px-3 py-4">{{ $row->customers_served }}</td><td class="px-3 py-4 {{ $row->outstanding_kobo>0?'text-amber-700':'' }}">₦{{ number_format(((int)$row->outstanding_kobo)/100,2) }}</td></tr>@empty<tr><td colspan="9" class="px-3 py-10 text-center text-slate-500">No staff performance data in this period.</td></tr>@endforelse</tbody></table></div></x-ui.card>
-<div class="space-y-6"><x-ui.card title="Publish workforce announcement" description="Post a company-wide or branch-specific message to staff dashboards."><form method="POST" action="{{ route('admin.reports.staff-performance.announcement') }}" class="space-y-4">@csrf<label class="block"><span class="mb-2 block text-sm font-medium text-slate-700">Audience</span><select name="branch_id" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm"><option value="">All permitted staff</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></label><x-ui.input name="title" label="Title" maxlength="120" required /><label class="block"><span class="mb-2 block text-sm font-medium text-slate-700">Message</span><textarea name="message" required maxlength="1000" class="min-h-32 w-full rounded-lg border border-slate-300 p-3 text-sm" placeholder="Shift guidance, targets, training notice or operational update..."></textarea></label><x-ui.button type="submit" class="w-full">Publish announcement</x-ui.button></form></x-ui.card><x-ui.card title="HR scope introduced"><ul class="space-y-2 text-sm text-slate-600"><li>• Branch-scoped staff KPI visibility</li><li>• Revenue, sales, units and customer metrics</li><li>• High-performance and coaching-review signals</li><li>• Company and branch workforce announcements</li><li>• Existing staff, role and permission administration</li></ul><p class="mt-4 text-xs text-slate-500">Payroll, attendance and leave are intentionally not fabricated because the current database has no reliable records for them.</p></x-ui.card></div></div>
-</x-layout.app-shell></x-layout.app>
+  <x-layout.app title="HR & Performance | Express Cloud">
+      <x-layout.app-shell
+          page-title="HR & performance"
+          page-description="Workforce visibility built from real sales activity: KPIs, ranking, coaching signals and branch announcements."
+      >
+          {{-- Outer container with overflow protection --}}
+          <div class="max-w-full overflow-hidden">
+              {{-- Filter form --}}
+              <form method="GET" class="mb-6 grid gap-4 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-4">
+                  <x-ui.input name="from" type="date" label="From" :value="$from" />
+                  <x-ui.input name="to" type="date" label="To" :value="$to" />
+                  <label class="block">
+                      <span class="mb-2 block text-sm font-medium text-slate-700">Branch</span>
+                      <select name="branch" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
+                          <option value="">All permitted branches</option>
+                          @foreach($branches as $branch)
+                              <option value="{{ $branch->id }}" @selected($selectedBranch === (string)$branch->id)>{{ $branch->name }}</option>
+                          @endforeach
+                      </select>
+                  </label>
+                  <div class="flex items-end">
+                      <x-ui.button type="submit" class="w-full">Apply filters</x-ui.button>
+                  </div>
+              </form>
+
+              {{-- KPI summary cards --}}
+              <div class="mb-6 grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                  <x-ui.card class="w-full min-w-0">
+                      <p class="text-xs font-semibold uppercase text-slate-500">Active sellers</p>
+                      <p class="mt-2 text-2xl font-bold">{{ number_format($summary['active_sellers']) }}</p>
+                  </x-ui.card>
+                  <x-ui.card class="w-full min-w-0">
+                      <p class="text-xs font-semibold uppercase text-slate-500">Transactions</p>
+                      <p class="mt-2 text-2xl font-bold">{{ number_format($summary['sales_count']) }}</p>
+                  </x-ui.card>
+                  <x-ui.card class="w-full min-w-0">
+                      <p class="text-xs font-semibold uppercase text-slate-500">Revenue</p>
+                      <p class="mt-2 text-2xl font-bold">₦{{ number_format($summary['revenue_kobo']/100,2) }}</p>
+                  </x-ui.card>
+                  <x-ui.card class="w-full min-w-0">
+                      <p class="text-xs font-semibold uppercase text-slate-500">Outstanding</p>
+                      <p class="mt-2 text-2xl font-bold text-amber-700">₦{{ number_format($summary['outstanding_kobo']/100,2) }}</p>
+                  </x-ui.card>
+                  <x-ui.card class="w-full min-w-0">
+                      <p class="text-xs font-semibold uppercase text-slate-500">Avg revenue/staff</p>
+                      <p class="mt-2 text-2xl font-bold">₦{{ number_format($summary['average_revenue_kobo']/100,2) }}</p>
+                  </x-ui.card>
+              </div>
+
+              {{-- Main two-column layout (table + side cards) --}}
+              <div class="grid max-w-full gap-6 overflow-hidden xl:grid-cols-[minmax(0,1fr)_390px]">
+                  {{-- Table card --}}
+                  <x-ui.card title="Sales staff KPI ranking" description="Performance signals support coaching; they are not a substitute for management review." class="min-w-0">
+                      <div class="ec-responsive-table overflow-x-auto">
+                          <table class="w-full min-w-[1040px] text-left text-sm">
+                              <thead>
+                                  <tr class="border-b text-xs uppercase tracking-wide text-slate-500">
+                                      <th class="px-3 py-3">Rank</th>
+                                      <th class="px-3 py-3">Staff</th>
+                                      <th class="px-3 py-3">Band</th>
+                                      <th class="px-3 py-3">Sales</th>
+                                      <th class="px-3 py-3">Revenue</th>
+                                      <th class="px-3 py-3">Avg sale</th>
+                                      <th class="px-3 py-3">Units</th>
+                                      <th class="px-3 py-3">Customers</th>
+                                      <th class="px-3 py-3">Outstanding</th>
+                                  </tr>
+                              </thead>
+                              <tbody class="divide-y">
+                                  @forelse($rows as $index=>$row)
+                                      @php($ratio=$summary['average_revenue_kobo']>0?((int)$row->revenue_kobo/$summary['average_revenue_kobo']):0)
+                                      <tr>
+                                          <td class="px-3 py-4 font-semibold">{{ $index+1 }}</td>
+                                          <td class="px-3 py-4">
+                                              <strong>{{ trim($row->first_name.' '.$row->last_name) }}</strong>
+                                              <small class="block text-slate-500">{{ $row->branches_worked }} branch{{ $row->branches_worked==1?'':'es' }}</small>
+                                          </td>
+                                          <td class="px-3 py-4">
+                                              <x-ui.status-badge :tone="$ratio>=1.25?'success':($ratio<0.65?'warning':'neutral')">
+                                                  {{ $ratio>=1.25?'High performer':($ratio<0.65?'Coaching review':'On track') }}
+                                              </x-ui.status-badge>
+                                          </td>
+                                          <td class="px-3 py-4">{{ $row->sales_count }}</td>
+                                          <td class="px-3 py-4 font-semibold">₦{{ number_format(((int)$row->revenue_kobo)/100,2) }}</td>
+                                          <td class="px-3 py-4">₦{{ number_format(((int)$row->average_sale_kobo)/100,2) }}</td>
+                                          <td class="px-3 py-4">{{ app(\App\Services\Inventory\Quantity::class)->format((int)$row->units_milliunits) }}</td>
+                                          <td class="px-3 py-4">{{ $row->customers_served }}</td>
+                                          <td class="px-3 py-4 {{ $row->outstanding_kobo>0?'text-amber-700':'' }}">₦{{ number_format(((int)$row->outstanding_kobo)/100,2) }}</td>
+                                      </tr>
+                                  @empty
+                                      <tr>
+                                          <td colspan="9" class="px-3 py-10 text-center text-slate-500">No staff performance data in this period.</td>
+                                      </tr>
+                                  @endforelse
+                              </tbody>
+                          </table>
+                      </div>
+                  </x-ui.card>
+
+                  {{-- Right sidebar --}}
+                  <div class="space-y-6">
+                      <x-ui.card title="Publish workforce announcement" description="Post a company-wide or branch-specific message to staff dashboards.">
+                          <form method="POST" action="{{ route('admin.reports.staff-performance.announcement') }}" class="space-y-4">
+                              @csrf
+                              <label class="block">
+                                  <span class="mb-2 block text-sm font-medium text-slate-700">Audience</span>
+                                  <select name="branch_id" class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
+                                      <option value="">All permitted staff</option>
+                                      @foreach($branches as $branch)
+                                          <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                      @endforeach
+                                  </select>
+                              </label>
+                              <x-ui.input name="title" label="Title" maxlength="120" required />
+                              <label class="block">
+                                  <span class="mb-2 block text-sm font-medium text-slate-700">Message</span>
+                                  <textarea name="message" required maxlength="1000" class="min-h-32 w-full rounded-lg border border-slate-300 p-3 text-sm" placeholder="Shift guidance, targets, training notice or operational update..."></textarea>
+                              </label>
+                              <x-ui.button type="submit" class="w-full">Publish announcement</x-ui.button>
+                          </form>
+                      </x-ui.card>
+
+                      <x-ui.card title="HR scope introduced">
+                          <ul class="space-y-2 text-sm text-slate-600">
+                              <li>• Branch-scoped staff KPI visibility</li>
+                              <li>• Revenue, sales, units and customer metrics</li>
+                              <li>• High-performance and coaching-review signals</li>
+                              <li>• Company and branch workforce announcements</li>
+                              <li>• Existing staff, role and permission administration</li>
+                          </ul>
+                          <p class="mt-4 text-xs text-slate-500">Payroll, attendance and leave are intentionally not fabricated because the current database has no reliable records for them.</p>
+                      </x-ui.card>
+                  </div>
+              </div>
+          </div>
+      </x-layout.app-shell>
+  </x-layout.app>
