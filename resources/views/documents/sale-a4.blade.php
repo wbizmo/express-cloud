@@ -30,7 +30,7 @@ h1 { font-size:28px; margin:0 0 8px; }
 <img class="logo" src="{{ public_path('storage/'.$settings->business_logo_path) }}" alt="">
 @endif
 <h2>{{ $settings->business_name }}</h2>
-<div class="meta">{{ $sale->branch?->name }}<br>{{ $sale->branch?->address }}<br>{{ $sale->branch?->phone }}</div>
+<div class="meta">{{ $documentBranch?->name }}<br>{{ $documentBranch?->address }}<br>{{ $documentBranch?->phone }}</div>
 </td>
 <td class="right">
 <h1>{{ strtoupper($sale->sale_type->value) }}</h1>

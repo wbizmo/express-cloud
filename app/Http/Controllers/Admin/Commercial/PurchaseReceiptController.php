@@ -34,8 +34,8 @@ final readonly class PurchaseReceiptController
         return view('admin.commercial.purchase-receipt-create', [
             'suppliers' => Supplier::query()
                 ->where('status', 'active')
-                ->orderBy('name')
-                ->get(['id', 'name', 'code']),
+                ->orderBy('company_name')
+                ->get(['id', 'company_name', 'supplier_code']),
             'branches' => Branch::query()
                 ->where('status', 'active')
                 ->orderBy('name')

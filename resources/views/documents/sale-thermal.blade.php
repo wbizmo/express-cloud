@@ -21,9 +21,9 @@ img.qr { width: 34mm; height: 34mm; }
         <img class="logo" src="{{ public_path('storage/'.$settings->business_logo_path) }}" alt="">
     @endif
     <h1 style="font-size:16px;margin:4px 0;">{{ $settings->business_name }}</h1>
-    <p style="margin:2px 0;">{{ $sale->branch?->name }}</p>
-    <p style="margin:2px 0;">{{ $sale->branch?->address }}</p>
-    @if ($sale->branch?->phone)<p style="margin:2px 0;">{{ $sale->branch->phone }}</p>@endif
+    <p style="margin:2px 0;">{{ $documentBranch?->name }}</p>
+    <p style="margin:2px 0;">{{ $documentBranch?->address }}</p>
+    @if ($documentBranch?->phone)<p style="margin:2px 0;">{{ $documentBranch->phone }}</p>@endif
 </div>
 <div class="rule"></div>
 <div class="row"><span>{{ strtoupper($sale->sale_type->value) }}</span><strong>{{ $sale->sale_code }}</strong></div>

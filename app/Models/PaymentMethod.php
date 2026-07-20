@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class PaymentMethod extends Model
 {
@@ -22,6 +23,7 @@ final class PaymentMethod extends Model
         'is_system_default',
         'is_default_for_pos',
         'is_active',
+        'ledger_account_id',
         'created_by_account_id',
     ];
 
@@ -32,6 +34,11 @@ final class PaymentMethod extends Model
             'is_default_for_pos' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function ledgerAccount(): BelongsTo
+    {
+        return $this->belongsTo(LedgerAccount::class);
     }
 
     public function mayBeDeleted(): bool

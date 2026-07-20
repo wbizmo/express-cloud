@@ -17,6 +17,8 @@ final readonly class LisaBusinessContext
      *     today: array{sales_count: int, sales_total_kobo: int, unpaid_total_kobo: int},
      *     inventory: array{low_stock_rows: int, zero_stock_rows: int},
      *     procurement: array{open_purchase_orders: int},
+     *     accounting: array{month_revenue_kobo: int, month_expense_kobo: int, cash_and_bank_kobo: int},
+     *     staffPerformance: list<array{name: string, sales_count: int, sales_total_kobo: int}>,
      * }
      */
     public function for(Account $account): array
@@ -27,6 +29,8 @@ final readonly class LisaBusinessContext
             'today' => $this->todaySales($branchIds),
             'inventory' => $this->inventory($branchIds),
             'procurement' => $this->procurement($branchIds),
+            'accounting' => $this->accounting($branchIds),
+            'staffPerformance' => $this->staffPerformance($branchIds),
         ];
     }
 
@@ -95,5 +99,112 @@ final readonly class LisaBusinessContext
         return [
             'open_purchase_orders' => $openPurchaseOrders,
         ];
+    }
+
+    /**
+     * @param  list<string>|null  $branchIds
+     * @return array{month_revenue_kobo: int, month_expense_kobo: int, cash_and_bank_kobo: int}
+     */
+    private function accounting(?array $branchIds): array
+    {
+        $monthStart = today()->startOfMonth()->toDateString();
+        $monthEnd = today()->toDateString();
+
+        $movement = static function (string $type) use ($branchIds, $monthStart, $monthEnd): int {
+            return (int) DB::table('journal_lines')
+                ->join(
+                    'journal_entries',
+                    'journal_entries.id',
+                    '=',
+                    'journal_lines.journal_entry_id',
+                )
+                ->join(
+                    'ledger_accounts',
+                    'ledger_accounts.id',
+                    '=',
+                    'journal_lines.ledger_account_id',
+                )
+                ->where('ledger_accounts.type', $type)
+                ->where('journal_entries.status', 'posted')
+                ->whereBetween('journal_entries.entry_date', [$monthStart, $monthEnd])
+                ->when(
+                    $branchIds !== null,
+                    fn ($q) => $q->whereIn('journal_entries.branch_id', $branchIds),
+                )
+                ->selectRaw(
+                    $type === 'revenue'
+                        ? 'COALESCE(SUM(journal_lines.credit_kobo - journal_lines.debit_kobo), 0) AS total'
+                        : 'COALESCE(SUM(journal_lines.debit_kobo - journal_lines.credit_kobo), 0) AS total',
+                )
+                ->value('total');
+        };
+
+        $cashAndBank = (int) DB::table('journal_lines')
+            ->join(
+                'ledger_accounts',
+                'ledger_accounts.id',
+                '=',
+                'journal_lines.ledger_account_id',
+            )
+            ->join(
+                'journal_entries',
+                'journal_entries.id',
+                '=',
+                'journal_lines.journal_entry_id',
+            )
+            ->whereIn('ledger_accounts.code', ['1000', '1010', '1020'])
+            ->where('journal_entries.status', 'posted')
+            ->when(
+                $branchIds !== null,
+                fn ($q) => $q->whereIn('journal_entries.branch_id', $branchIds),
+            )
+            ->selectRaw(
+                'COALESCE(SUM(journal_lines.debit_kobo - journal_lines.credit_kobo), 0) AS total',
+            )
+            ->value('total');
+
+        return [
+            'month_revenue_kobo' => $movement('revenue'),
+            'month_expense_kobo' => $movement('expense'),
+            'cash_and_bank_kobo' => $cashAndBank,
+        ];
+    }
+
+    /**
+     * @param  list<string>|null  $branchIds
+     * @return list<array{name: string, sales_count: int, sales_total_kobo: int}>
+     */
+    private function staffPerformance(?array $branchIds): array
+    {
+        $monthStart = today()->startOfMonth()->toDateString();
+
+        return DB::table('sales')
+            ->join(
+                'accounts',
+                'accounts.id',
+                '=',
+                'sales.sold_by_account_id',
+            )
+            ->where('sales.sale_date', '>=', $monthStart)
+            ->whereNotIn('sales.status', ['cancelled'])
+            ->when(
+                $branchIds !== null,
+                fn ($q) => $q->whereIn('sales.branch_id', $branchIds),
+            )
+            ->groupBy('accounts.id', 'accounts.first_name', 'accounts.last_name')
+            ->orderByDesc('sales_total_kobo')
+            ->limit(10)
+            ->selectRaw(
+                "CONCAT(accounts.first_name, ' ', accounts.last_name) AS name",
+            )
+            ->selectRaw('COUNT(*) AS sales_count')
+            ->selectRaw('SUM(sales.grand_total_kobo) AS sales_total_kobo')
+            ->get()
+            ->map(static fn (object $row): array => [
+                'name' => (string) $row->name,
+                'sales_count' => (int) $row->sales_count,
+                'sales_total_kobo' => (int) $row->sales_total_kobo,
+            ])
+            ->all();
     }
 }

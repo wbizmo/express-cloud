@@ -24,6 +24,7 @@ final readonly class StaffDashboardController
             'account' => $account,
             'workforceAnnouncements' => AdminNotification::query()
                 ->where('entity_type', 'workforce_announcement')
+                ->whereNull('resolved_at')
                 ->where(static fn ($query) => $query
                     ->whereNull('branch_id')
                     ->orWhereIn('branch_id', $branchIds))

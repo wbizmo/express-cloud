@@ -6,6 +6,7 @@ use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Staff\Commercial\SaleReturnController;
 use App\Http\Controllers\Staff\Commercial\SaleSettlementController;
 use App\Http\Controllers\Staff\StaffDashboardController;
+use App\Http\Controllers\Staff\WorkforceAnnouncementController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([
@@ -16,6 +17,13 @@ Route::middleware([
     Route::get('/dashboard', StaffDashboardController::class)
         ->middleware('permission:dashboard.staff.view')
         ->name('dashboard');
+
+    Route::patch(
+        '/announcements/{announcement}/dismiss',
+        [WorkforceAnnouncementController::class, 'dismiss'],
+    )
+        ->middleware('permission:dashboard.staff.view')
+        ->name('announcements.dismiss');
 
     Route::get('/profile', [ProfileController::class, 'show'])
         ->name('profile.show');

@@ -29,7 +29,7 @@ final readonly class PurchaseOrderController
             'orders' => PurchaseOrder::query()
                 ->with(['supplier:id,company_name', 'branch:id,name'])
                 ->orderByDesc('created_at')
-                ->cursorPaginate(40),
+                ->cursorPaginate(config('pagination.default', 10)),
             'suppliers' => Supplier::query()
                 ->where('status', 'active')
                 ->orderBy('company_name')

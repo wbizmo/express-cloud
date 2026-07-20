@@ -5,8 +5,8 @@
 @csrf
 <x-ui.card title="Purchase details">
 <div class="grid gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-4">
-<label><span class="mb-2 block text-sm font-medium">Supplier</span><select name="supplier_id" required><option value="">Select supplier</option>@foreach($suppliers as $supplier)<option value="{{ $supplier->id }}">{{ $supplier->name }} {{ $supplier->code ? '· '.$supplier->code : '' }}</option>@endforeach</select></label>
-<label><span class="mb-2 block text-sm font-medium">Receiving branch</span><select name="branch_id" required><option value="">Select branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}">{{ $branch->name }}</option>@endforeach</select></label>
+<label><span class="mb-2 block text-sm font-medium">Supplier</span><x-ui.searchable-select name="supplier_id" :options="$suppliers->map(fn ($s) => ['value' => $s->id, 'label' => $s->company_name.($s->supplier_code ? ' · '.$s->supplier_code : '')])" placeholder="Select supplier" required /></label>
+<label><span class="mb-2 block text-sm font-medium">Receiving branch</span><x-ui.searchable-select name="branch_id" :options="$branches->map(fn ($b) => ['value' => $b->id, 'label' => $b->name])" placeholder="Select branch" required /></label>
 <x-ui.input name="purchased_at" type="date" label="Purchase date" :value="today()->toDateString()" required />
 <x-ui.input name="supplier_reference" label="Supplier reference" />
 </div>

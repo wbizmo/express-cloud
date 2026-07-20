@@ -22,6 +22,12 @@ final class StorePaymentMethodRequest extends FormRequest
             'bank_name' => ['nullable', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:2000'],
             'is_default_for_pos' => ['sometimes', 'boolean'],
+            'ledger_account_id' => [
+                'nullable',
+                'string',
+                'exists:ledger_accounts,id',
+            ],
+            'new_ledger_account_name' => ['nullable', 'string', 'max:180'],
         ];
     }
 }

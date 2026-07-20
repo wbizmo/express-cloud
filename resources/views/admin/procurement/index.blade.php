@@ -40,18 +40,8 @@
             <x-ui.card title="Create purchase order">
                 <form method="POST" action="{{ route('admin.procurement.orders.store') }}" class="space-y-4" x-data="{ lines: [0] }">
                     @csrf
-                    <select name="supplier_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
-                        <option value="">Select supplier</option>
-                        @foreach ($suppliers as $supplier)
-                            <option value="{{ $supplier->id }}">{{ $supplier->company_name }} — {{ $supplier->supplier_code }}</option>
-                        @endforeach
-                    </select>
-                    <select name="branch_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
-                        <option value="">Receiving branch</option>
-                        @foreach ($branches as $branch)
-                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-ui.searchable-select name="supplier_id" :options="$suppliers->map(fn ($s) => ['value' => $s->id, 'label' => $s->company_name.' — '.$s->supplier_code])" placeholder="Select supplier" required />
+                    <x-ui.searchable-select name="branch_id" :options="$branches->map(fn ($b) => ['value' => $b->id, 'label' => $b->name])" placeholder="Receiving branch" required />
                     <x-ui.input name="expected_at" type="date" label="Expected date" />
                     <template x-for="index in lines" :key="index">
                         <div class="space-y-3 rounded-xl border border-slate-200 p-4">

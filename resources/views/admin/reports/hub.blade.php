@@ -8,11 +8,19 @@
 </form>
 <div class="mb-6 flex flex-wrap gap-3">
 <a class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold" href="{{ route('admin.reports.exports.sales', request()->query()) }}">Export sales CSV</a>
+<a class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold" href="{{ route('admin.sales.export', ['format' => 'xlsx'] + request()->query()) }}">Export sales Excel</a>
+<a class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold" href="{{ route('admin.sales.export', ['format' => 'pdf'] + request()->query()) }}">Export sales PDF</a>
 <a class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold" href="{{ route('admin.reports.exports.staff', request()->query()) }}">Export staff CSV</a>
 <a class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold" href="{{ route('admin.reports.exports.low-stock') }}">Export low stock CSV</a>
 </div>
+<div class="mb-6 flex flex-wrap gap-3">
+<a class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" href="{{ route('admin.accounting.chart-of-accounts.index') }}">Chart of Accounts</a>
+<a class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" href="{{ route('admin.accounting.reports.index') }}">Accounting Reports</a>
+<a class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" href="{{ route('admin.insights.index') }}">Lisa AI Insights</a>
+</div>
 <x-ui.card title="Recent sales">
 <div class="ec-responsive-table overflow-x-auto"><table class="w-full min-w-[900px] text-left text-sm"><thead><tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500"><th class="px-3 py-3">Code</th><th class="px-3 py-3">Type</th><th class="px-3 py-3">Date</th><th class="px-3 py-3">Branch</th><th class="px-3 py-3">Staff</th><th class="px-3 py-3">Total</th><th class="px-3 py-3">Status</th></tr></thead><tbody class="divide-y divide-slate-100">@forelse($sales as $row)<tr><td class="px-3 py-4 font-mono">{{ $row->sale_code }}</td><td class="px-3 py-4">{{ ucfirst($row->sale_type) }}</td><td class="px-3 py-4">{{ $row->sale_date }}</td><td class="px-3 py-4">{{ $row->branch_name }}</td><td class="px-3 py-4">{{ trim($row->first_name.' '.$row->last_name) }}</td><td class="px-3 py-4 font-semibold">₦{{ number_format(((int)$row->grand_total_kobo)/100,2) }}</td><td class="px-3 py-4">{{ ucfirst($row->status) }}</td></tr>@empty<tr><td colspan="7" class="px-3 py-10 text-center text-slate-500">No sales in this period.</td></tr>@endforelse</tbody></table></div>
+<div class="mt-4">{{ $sales->links() }}</div>
 </x-ui.card>
 <div class="mt-6 grid gap-6 xl:grid-cols-[repeat(2,minmax(0,1fr))]">
 <x-ui.card title="Top items"><div class="space-y-3">@forelse($topItems as $row)<div class="flex justify-between rounded-lg border border-slate-200 p-3"><span>{{ $row->product_name_snapshot }}</span><strong>{{ app(\App\Services\Inventory\Quantity::class)->format((int)$row->units_milliunits) }} units</strong></div>@empty<p class="text-sm text-slate-500">No item data.</p>@endforelse</div></x-ui.card>

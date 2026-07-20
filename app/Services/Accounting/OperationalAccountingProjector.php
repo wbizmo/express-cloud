@@ -90,20 +90,15 @@ final readonly class OperationalAccountingProjector
     {
         $sale = $payment->sale()->firstOrFail();
         $method = $payment->paymentMethod()->firstOrFail();
-        $accountName = str_contains(mb_strtolower($method->name), 'cash')
-            ? 'cash'
-            : (str_contains(mb_strtolower($method->name), 'card')
-                || str_contains(mb_strtolower($method->name), 'pos')
-                    ? 'card_clearing'
-                    : 'bank');
+        $accountId = $method->ledger_account_id
+            ?? $this->legacyAccountIdForMethodName($method->name);
 
         $this->journals->post(
             CarbonImmutable::parse($payment->paid_at),
             "Payment for {$sale->sale_code}",
             [
                 [
-                    'account_id' => $this->accounts
-                        ->configured($accountName)->getKey(),
+                    'account_id' => $accountId,
                     'debit_kobo' => $payment->amount_kobo,
                 ],
                 [
@@ -119,6 +114,24 @@ final readonly class OperationalAccountingProjector
             (string) $payment->getKey(),
             'received',
         );
+    }
+
+    /**
+     * Legacy fallback for payment methods created before the explicit
+     * ledger_account_id link existed. New and edited payment methods should
+     * always carry an explicit link (see PaymentMethodController), so this
+     * path only serves old, never-relinked rows.
+     */
+    private function legacyAccountIdForMethodName(string $name): string
+    {
+        $accountName = str_contains(mb_strtolower($name), 'cash')
+            ? 'cash'
+            : (str_contains(mb_strtolower($name), 'card')
+                || str_contains(mb_strtolower($name), 'pos')
+                    ? 'card_clearing'
+                    : 'bank');
+
+        return $this->accounts->configured($accountName)->getKey();
     }
 
     public function purchase(PurchaseReceipt $purchase): void

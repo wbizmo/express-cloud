@@ -38,7 +38,6 @@ final class ReportsHubController
                 ),
             )
             ->orderByDesc('sales.sale_date')
-            ->limit(100)
             ->select([
                 'sales.sale_code',
                 'sales.sale_type',
@@ -49,7 +48,8 @@ final class ReportsHubController
                 'accounts.first_name',
                 'accounts.last_name',
             ])
-            ->get();
+            ->paginate(config('pagination.default', 10))
+            ->withQueryString();
 
         $topItems = DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')

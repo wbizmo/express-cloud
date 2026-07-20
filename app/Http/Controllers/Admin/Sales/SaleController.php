@@ -19,14 +19,19 @@ use App\Models\ProductBranchPrice;
 use App\Models\ProductBranchStock;
 use App\Models\Sale;
 use App\Services\Organisation\AuditLogger;
+use App\Services\Reports\Exports\TabularExport;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 final readonly class SaleController
 {
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(
+        private AuditLogger $audit,
+        private TabularExport $export,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -36,37 +41,100 @@ final readonly class SaleController
         $actor = $request->user();
 
         return view('admin.sales.index', [
-            'sales' => Sale::query()
-                ->when(
-                    ! $actor->can('sales.view.all'),
-                    fn ($query) => $query->where(
-                        'sold_by_account_id',
-                        $actor->getKey(),
-                    ),
-                )
-                ->when(
-                    ! $actor->is_allowed_all_branches,
-                    fn ($query) => $query->whereIn(
-                        'branch_id',
-                        $actor->branches()->select('branches.id'),
-                    ),
-                )
+            'sales' => $this->scopedQuery($actor, $type)
                 ->with([
                     'branch:id,name',
                     'customer:id,name,phone',
                     'soldBy:id,first_name,last_name',
                 ])
-                ->when(
-                    $type !== '',
-                    static fn ($query) => $query->where(
-                        'sale_type',
-                        $type,
-                    ),
-                )
                 ->orderByDesc('created_at')
                 ->cursorPaginate(10)
                 ->withQueryString(),
         ]);
+    }
+
+    public function export(Request $request): mixed
+    {
+        /** @var Account $actor */
+        $actor = $request->user();
+        abort_unless($actor->can('sales.export'), 403);
+
+        $type = $request->string('type')->toString();
+        $format = $request->string('format', 'csv')->toString();
+
+        $headings = [
+            'Sale Code', 'Type', 'Branch', 'Customer', 'Status',
+            'Grand Total', 'Balance Due', 'Initiated By', 'Date',
+        ];
+
+        $rows = $this->scopedQuery($actor, $type)
+            ->with([
+                'branch:id,name',
+                'customer:id,name,phone',
+                'soldBy:id,first_name,last_name',
+            ])
+            ->orderByDesc('created_at')
+            ->limit(20000)
+            ->get()
+            ->map(static fn (Sale $sale): array => [
+                $sale->sale_code,
+                (string) $sale->sale_type,
+                $sale->branch?->name,
+                $sale->customer?->name ?? 'Walk-in',
+                (string) $sale->status,
+                number_format($sale->grand_total_kobo / 100, 2),
+                number_format($sale->balanceDueKobo() / 100, 2),
+                trim(
+                    ($sale->soldBy?->first_name ?? '').' '
+                        .($sale->soldBy?->last_name ?? ''),
+                ),
+                $sale->created_at?->format('Y-m-d H:i'),
+            ]);
+
+        $filename = 'sales-'.now()->format('Ymd-His');
+
+        return match ($format) {
+            'xlsx' => $this->export->excel(
+                "{$filename}.xlsx",
+                'Sales',
+                $headings,
+                $rows,
+            ),
+            'pdf' => $this->export->pdf(
+                "{$filename}.pdf",
+                'Sales Report',
+                $headings,
+                $rows,
+            ),
+            default => $this->export->csv(
+                "{$filename}.csv",
+                $headings,
+                $rows,
+            ),
+        };
+    }
+
+    private function scopedQuery(Account $actor, string $type): Builder
+    {
+        return Sale::query()
+            ->when(
+                ! $actor->can('sales.view.all'),
+                fn ($query) => $query->where(
+                    'sold_by_account_id',
+                    $actor->getKey(),
+                ),
+            )
+            ->when(
+                ! $actor->is_allowed_all_branches,
+                fn ($query) => $query->whereIn(
+                    'branch_id',
+                    $actor->branches()->select('branches.id'),
+                ),
+            )
+            ->when(
+                $type !== '',
+                static fn ($query) => $query->where('sale_type', $type),
+            );
     }
 
     public function create(Request $request): View
@@ -100,8 +168,8 @@ final readonly class SaleController
                 ->when($search, function ($query, $search) {
                     return $query->where(function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
-                          ->orWhere('sku', 'like', "%{$search}%")
-                          ->orWhere('barcode', 'like', "%{$search}%");
+                            ->orWhere('sku', 'like', "%{$search}%")
+                            ->orWhere('barcode', 'like', "%{$search}%");
                     });
                 })
                 ->orderBy('name')
@@ -116,8 +184,7 @@ final readonly class SaleController
                 ])
                 ->mapWithKeys(
                     static fn (ProductBranchStock $stock): array => [
-                        $stock->branch_id.'|'.$stock->product_id
-                            => (int) $stock->quantity_milliunits,
+                        $stock->branch_id.'|'.$stock->product_id => (int) $stock->quantity_milliunits,
                     ],
                 ),
 
@@ -129,8 +196,7 @@ final readonly class SaleController
                 ])
                 ->mapWithKeys(
                     static fn (ProductBranchPrice $price): array => [
-                        $price->branch_id.'|'.$price->product_id
-                            => (int) $price->price_kobo,
+                        $price->branch_id.'|'.$price->product_id => (int) $price->price_kobo,
                     ],
                 ),
 

@@ -20,6 +20,14 @@
                                         @endif
                                     </div>
                                     <p class="mt-1 text-sm text-slate-500">{{ $method->bank_name ?: $method->description }}</p>
+                                    <p class="mt-1 text-xs text-slate-400">
+                                        Ledger:
+                                        @if ($method->ledgerAccount)
+                                            <span class="font-mono">{{ $method->ledgerAccount->code }}</span> — {{ $method->ledgerAccount->name }}
+                                        @else
+                                            <span class="text-amber-600">Not linked — postings use the legacy fallback</span>
+                                        @endif
+                                    </p>
                                 </div>
                                 <x-ui.status-badge :tone="$method->is_active ? 'success' : 'neutral'">
                                     {{ $method->is_active ? 'Active' : 'Inactive' }}
@@ -48,6 +56,10 @@
                         </article>
                     @endforeach
                 </div>
+
+                <div class="mt-4">
+                    {{ $methods->links() }}
+                </div>
             </x-ui.card>
 
             <x-ui.card title="Add payment method">
@@ -56,6 +68,20 @@
                     <x-ui.input name="name" label="Method name" required />
                     <x-ui.input name="bank_name" label="Bank name" />
                     <x-ui.input name="account_number" label="Account number" />
+                    <label class="block">
+                        <span class="mb-2 block text-sm font-medium text-slate-700">Link to ledger account</span>
+                        <select name="ledger_account_id" class="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm">
+                            <option value="">Create a new ledger account instead</option>
+                            @foreach ($bankAccounts as $account)
+                                <option value="{{ $account->id }}">{{ $account->code }} — {{ $account->name }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <x-ui.input
+                        name="new_ledger_account_name"
+                        label="New ledger account name (if not linking above)"
+                        placeholder="e.g. Zenith Bank - Main"
+                    />
                     <label class="block">
                         <span class="mb-2 block text-sm font-medium text-slate-700">Description</span>
                         <textarea name="description" class="min-h-24 w-full rounded-lg border border-slate-300 p-3 text-sm"></textarea>

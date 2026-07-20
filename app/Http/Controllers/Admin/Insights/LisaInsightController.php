@@ -26,7 +26,7 @@ final readonly class LisaInsightController
                 ->whereBetween('period_end', [$from, $to])
                 ->whereNull('dismissed_at')
                 ->latest('generated_at')
-                ->paginate(24)
+                ->paginate(config('pagination.default', 10))
                 ->withQueryString(),
         ]);
     }

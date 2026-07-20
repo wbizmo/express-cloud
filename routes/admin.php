@@ -308,6 +308,10 @@ Route::middleware([
             ->middleware('permission:sales.view')
             ->name('index');
 
+        Route::get('/export', [SaleController::class, 'export'])
+            ->middleware('permission:sales.export')
+            ->name('export');
+
         Route::get('/create', [SaleController::class, 'create'])
             ->middleware('permission:sales.create')
             ->name('create');
@@ -624,6 +628,13 @@ Route::middleware([
     )
         ->middleware('permission:accounting.reports.view')
         ->name('accounting.reports.index');
+
+    Route::get(
+        '/accounting/reports/export',
+        [AccountingReportController::class, 'export'],
+    )
+        ->middleware('permission:accounting.reports.export')
+        ->name('accounting.reports.export');
 
     Route::get('/insights', [LisaInsightController::class, 'index'])
         ->middleware('permission:insights.view')

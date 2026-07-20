@@ -4,6 +4,11 @@
                             page-description="Invoices, quotes, and POS transactions share one consistent sales engine."
                         >
                             <x-slot:actions>
+                                @can('sales.export')
+                                    <a href="{{ route('admin.sales.export', ['format' => 'csv'] + request()->query()) }}" class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">CSV</a>
+                                    <a href="{{ route('admin.sales.export', ['format' => 'xlsx'] + request()->query()) }}" class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">Excel</a>
+                                    <a href="{{ route('admin.sales.export', ['format' => 'pdf'] + request()->query()) }}" class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">PDF</a>
+                                @endcan
                                 <a href="{{ route('admin.sales.create') }}" class="inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700">
                                     <x-ui.icon name="plus" :size="17" />
                                     New sale

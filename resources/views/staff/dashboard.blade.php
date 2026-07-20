@@ -14,6 +14,11 @@
                         <article class="rounded-lg border border-slate-200 bg-slate-50 p-3">
                             <div class="flex items-start justify-between gap-3"><strong class="text-sm">{{ $announcement->title }}</strong><time class="whitespace-nowrap text-xs text-slate-500">{{ $announcement->occurred_at?->diffForHumans() }}</time></div>
                             <p class="mt-1 text-sm text-slate-600">{{ $announcement->message }}</p>
+                            <form method="POST" action="{{ route('staff.announcements.dismiss', $announcement) }}" class="mt-2">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="text-xs font-medium text-slate-500 hover:text-slate-900">Dismiss</button>
+                            </form>
                         </article>
                     @endforeach
                 </div>
