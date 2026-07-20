@@ -22,6 +22,9 @@ final readonly class CustomerReceivableController
                 $request->filled('search')
                     ? $request->string('search')->toString()
                     : null,
+                $request->filled('sort')
+                    ? $request->string('sort')->toString()
+                    : null,
             ),
         ]);
     }

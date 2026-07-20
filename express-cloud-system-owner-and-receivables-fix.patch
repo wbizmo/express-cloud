@@ -1,0 +1,123 @@
+diff --git a/app/Http/Controllers/Admin/Commercial/CustomerReceivableController.php b/app/Http/Controllers/Admin/Commercial/CustomerReceivableController.php
+index 2e03fbc..2a0861d 100644
+--- a/app/Http/Controllers/Admin/Commercial/CustomerReceivableController.php
++++ b/app/Http/Controllers/Admin/Commercial/CustomerReceivableController.php
+@@ -22,6 +22,9 @@ public function index(Request $request): View
+                 $request->filled('search')
+                     ? $request->string('search')->toString()
+                     : null,
++                $request->filled('sort')
++                    ? $request->string('sort')->toString()
++                    : null,
+             ),
+         ]);
+     }
+diff --git a/app/Queries/Commercial/CustomerReceivableQuery.php b/app/Queries/Commercial/CustomerReceivableQuery.php
+index 99a62e2..a3ee22d 100644
+--- a/app/Queries/Commercial/CustomerReceivableQuery.php
++++ b/app/Queries/Commercial/CustomerReceivableQuery.php
+@@ -11,7 +11,7 @@
+ final class CustomerReceivableQuery
+ {
+     /** @return LengthAwarePaginator<int, Customer> */
+-    public function customers(?string $search): LengthAwarePaginator
++    public function customers(?string $search, ?string $sort = null): LengthAwarePaginator
+     {
+         return Customer::query()
+             ->select('customers.*')
+@@ -34,9 +34,17 @@ static function ($nested) use ($search): void {
+                     },
+                 ),
+             )
+-            ->orderByDesc('outstanding_kobo')
+-            ->orderBy('name')
+-            ->paginate(40)
++            ->when(
++                $sort === 'name',
++                static fn ($query) => $query->orderBy('name'),
++            )
++            ->when(
++                $sort !== 'name',
++                static fn ($query) => $query
++                    ->orderByDesc('outstanding_kobo')
++                    ->orderBy('name'),
++            )
++            ->paginate(config('pagination.default', 10))
+             ->withQueryString();
+     }
+ }
+diff --git a/app/Services/Organisation/AuthorizationService.php b/app/Services/Organisation/AuthorizationService.php
+index cfac2b2..f7c8290 100644
+--- a/app/Services/Organisation/AuthorizationService.php
++++ b/app/Services/Organisation/AuthorizationService.php
+@@ -5,6 +5,7 @@
+ namespace App\Services\Organisation;
+ 
+ use App\Models\Account;
++use App\Models\Permission;
+ use Illuminate\Support\Collection;
+ 
+ final class AuthorizationService
+@@ -19,6 +20,10 @@ public function hasPermission(Account $account, string $permission): bool
+             return $this->permissionCache[$accountId][$permission];
+         }
+ 
++        if ($this->isSystemOwner($account)) {
++            return $this->permissionCache[$accountId][$permission] = true;
++        }
++
+         $allowed = $account->roles()
+             ->where('roles.is_active', true)
+             ->whereHas('permissions', static fn ($query) => $query->where('permissions.slug', $permission))
+@@ -27,6 +32,21 @@ public function hasPermission(Account $account, string $permission): bool
+         return $this->permissionCache[$accountId][$permission] = $allowed;
+     }
+ 
++    /**
++     * The system-owner role is meant to always have every permission in
++     * the system, independent of whatever has or hasn't been explicitly
++     * assigned to it in role_permissions — new permission slugs added
++     * later should not silently lock this role out until someone
++     * remembers to re-grant them.
++     */
++    private function isSystemOwner(Account $account): bool
++    {
++        return $account->roles()
++            ->where('roles.is_active', true)
++            ->where('roles.slug', 'system-owner')
++            ->exists();
++    }
++
+     /** @param list<string> $permissions */
+     public function hasAnyPermission(Account $account, array $permissions): bool
+     {
+@@ -42,6 +62,10 @@ public function hasAnyPermission(Account $account, array $permissions): bool
+     /** @return Collection<int, string> */
+     public function permissionSlugs(Account $account): Collection
+     {
++        if ($this->isSystemOwner($account)) {
++            return Permission::query()->pluck('slug');
++        }
++
+         return $account->roles()
+             ->where('roles.is_active', true)
+             ->with('permissions:id,slug')
+diff --git a/resources/views/admin/commercial/receivables.blade.php b/resources/views/admin/commercial/receivables.blade.php
+index d86871d..d2932c9 100644
+--- a/resources/views/admin/commercial/receivables.blade.php
++++ b/resources/views/admin/commercial/receivables.blade.php
+@@ -6,7 +6,13 @@
+ <div class="flex items-end"><x-ui.button type="submit">Search</x-ui.button></div>
+ </form>
+ <x-ui.card title="Outstanding customers">
+-<div class="ec-responsive-table overflow-x-auto"><table class="w-full min-w-[720px] text-left text-sm"><thead><tr><th class="px-3 py-3">Customer</th><th class="px-3 py-3">Phone</th><th class="px-3 py-3">Outstanding</th><th class="px-3 py-3"></th></tr></thead><tbody>@forelse($customers as $customer)<tr class="border-t border-slate-100"><td class="px-3 py-4 font-semibold">{{ $customer->name }}</td><td class="px-3 py-4">{{ $customer->phone }}</td><td class="px-3 py-4 font-semibold {{ (int)$customer->outstanding_kobo > 0 ? 'text-red-700' : 'text-emerald-700' }}">₦{{ number_format(((int)$customer->outstanding_kobo)/100,2) }}</td><td class="px-3 py-4 text-right"><a class="font-semibold text-slate-900" href="{{ route('admin.commercial.receivables.show',$customer) }}">Open account</a></td></tr>@empty<tr><td colspan="4" class="px-3 py-10 text-center text-slate-500">No customers found.</td></tr>@endforelse</tbody></table></div>
++<div class="ec-responsive-table overflow-x-auto"><table class="w-full min-w-[720px] text-left text-sm"><thead><tr>
++<th class="px-3 py-3"><a href="{{ request()->fullUrlWithQuery(['sort' => 'name']) }}">Customer</a></th>
++<th class="px-3 py-3">Phone</th>
++<th class="px-3 py-3"><a href="{{ request()->fullUrlWithQuery(['sort' => 'outstanding']) }}">Outstanding</a></th>
++<th class="px-3 py-3"></th>
++</tr></thead><tbody>@forelse($customers as $customer)<tr class="border-t border-slate-100"><td class="px-3 py-4 font-semibold">{{ $customer->name }}</td><td class="px-3 py-4">{{ $customer->phone }}</td><td class="px-3 py-4 font-semibold {{ (int)$customer->outstanding_kobo > 0 ? 'text-red-700' : 'text-emerald-700' }}">₦{{ number_format(((int)$customer->outstanding_kobo)/100,2) }}</td><td class="px-3 py-4 text-right"><a class="font-semibold text-slate-900" href="{{ route('admin.commercial.receivables.show',$customer) }}">Open account</a></td></tr>@empty<tr><td colspan="4" class="px-3 py-10 text-center text-slate-500">No customers found.</td></tr>@endforelse</tbody></table></div>
++<div class="mt-4">{{ $customers->links() }}</div>
+ </x-ui.card>
+ </x-layout.app-shell>
+ </x-layout.app>

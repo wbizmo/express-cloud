@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 final class CustomerReceivableQuery
 {
     /** @return LengthAwarePaginator<int, Customer> */
-    public function customers(?string $search): LengthAwarePaginator
+    public function customers(?string $search, ?string $sort = null): LengthAwarePaginator
     {
         return Customer::query()
             ->select('customers.*')
@@ -34,9 +34,17 @@ final class CustomerReceivableQuery
                     },
                 ),
             )
-            ->orderByDesc('outstanding_kobo')
-            ->orderBy('name')
-            ->paginate(40)
+            ->when(
+                $sort === 'name',
+                static fn ($query) => $query->orderBy('name'),
+            )
+            ->when(
+                $sort !== 'name',
+                static fn ($query) => $query
+                    ->orderByDesc('outstanding_kobo')
+                    ->orderBy('name'),
+            )
+            ->paginate(config('pagination.default', 10))
             ->withQueryString();
     }
 }
