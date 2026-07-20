@@ -1,0 +1,70 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Admin\AccountingOperations;
+
+use App\Actions\AccountingOperations\CreateStandaloneReceipt;
+use App\Http\Requests\AccountingOperations\StoreStandaloneReceiptRequest;
+use App\Models\Account;
+use App\Models\Branch;
+use App\Models\Customer;
+use App\Models\PaymentMethod;
+use App\Models\StandaloneReceipt;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+
+final readonly class StandaloneReceiptController
+{
+    public function __construct(
+        private CreateStandaloneReceipt $create,
+    ) {}
+
+    public function index(): View
+    {
+        return view('admin.accounting-operations.receipts', [
+            'receipts' => StandaloneReceipt::query()
+                ->orderByDesc('received_at')
+                ->paginate(config('pagination.default', 10)),
+        ]);
+    }
+
+    public function create(): View
+    {
+        return view('admin.accounting-operations.receipt-create', [
+            'branches' => Branch::query()
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'customers' => Customer::query()
+                ->orderBy('name')
+                ->get(['id', 'name', 'phone']),
+            'paymentMethods' => PaymentMethod::query()
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(['id', 'name']),
+        ]);
+    }
+
+    public function store(
+        StoreStandaloneReceiptRequest $request,
+    ): RedirectResponse {
+        /** @var Account $actor */
+        $actor = $request->user();
+
+        $receipt = $this->create->execute(
+            $request,
+            $actor,
+            $request->validated(),
+        );
+
+        return redirect()
+            ->route(
+                'admin.accounting-operations.receipts.index',
+            )
+            ->with(
+                'status',
+                "Receipt {$receipt->receipt_number} issued.",
+            );
+    }
+}

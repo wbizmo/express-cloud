@@ -7,51 +7,61 @@ namespace App\Support\Authorization;
 final class RolePermissionPolicy
 {
     /** @var array<string, list<string>> */
-    private const MATRICES = [
-        'sales' => [
-            'dashboard.staff.view', 'sales.view.own', 'sales.create',
-            'sales.payments.record', 'sales.returns.create',
-            'vouchers.apply', 'quotes.convert',
-            'customers.view.assigned', 'customers.create', 'customers.update.assigned',
-            'documents.sales.print', 'catalog.sale-search',
-        ],
-        'inventory' => [
-            'dashboard.inventory.view', 'products.view', 'products.create', 'products.update',
-            'products.deactivate', 'categories.manage', 'brands.manage', 'tax-rates.manage',
+    private const PERMISSIONS = [
+        'system-owner' => [
+            'dashboard.view', 'dashboard.staff.view',
+            'branches.view', 'branches.create', 'branches.deactivate',
+            'staff.view', 'staff.create', 'staff.access-key.reveal', 'staff.suspend',
+            'staff.sessions.view', 'staff.sessions.revoke',
+            'roles.view', 'roles.create',
+            'products.view', 'products.create', 'products.update',
+            'products.import', 'products.import-history',
+            'products.prices.adjust',
+            'categories.manage', 'brands.manage', 'tax-rates.manage',
+            'suppliers.view', 'suppliers.create',
             'inventory.view', 'inventory.movements.view', 'inventory.intake',
-            'inventory.transfer', 'inventory.adjust', 'reports.low-stock',
-            'products.prices.adjust', 'products.zero-stock.manage',
-            'documents.products.labels', 'catalog.inventory-search',
-        ],
-        'procurement' => [
-            'dashboard.procurement.view', 'products.view', 'suppliers.view',
-            'suppliers.create', 'suppliers.update', 'procurement.view',
-            'procurement.create', 'procurement.receive', 'purchases.record',
-            'supplier-bills.view', 'supplier-bills.create',
-            'supplier-documents.download', 'catalog.procurement-search',
-        ],
-        'accounting' => [
-            'dashboard.accounting.view', 'customers.receivables.view',
-            'supplier-bills.view', 'supplier-bills.pay', 'reports.supplier-balances',
-            'receipts.view', 'receipts.create', 'purchase_returns.view',
-            'purchase_returns.create', 'assets.view', 'assets.manage',
-            'operation_documents.download', 'documents.branding.manage',
+            'inventory.transfer', 'inventory.adjust',
+            'procurement.view', 'procurement.create', 'procurement.approve', 'procurement.receive',
+            'sales.view', 'sales.view.all', 'sales.create', 'sales.payments.record',
+            'sales.returns.create', 'sales.export',
+            'customers.view', 'customers.create', 'customers.update',
+            'customers.receivables.view',
+            'payment-methods.view', 'payment-methods.manage',
+            'vouchers.manage', 'vouchers.apply',
+            'reports.hub.view', 'reports.export', 'reports.low-stock', 'reports.staff-performance',
+            'reports.supplier-balances',
+            'documents.sales.print', 'documents.products.labels', 'documents.branding.manage',
+            'operation_documents.download',
+            'catalog.sale-search', 'catalog.inventory-search',
             'accounting.accounts.view', 'accounting.accounts.manage',
-            'accounting.journals.view', 'accounting.journals.create',
-            'accounting.journals.reverse', 'accounting.periods.manage',
-            'accounting.reports.view', 'accounting.reports.export', 'accounting.sync', 'accounting.depreciation.post',
-            'reports.hub.view', 'reports.export', 'activity.view',
+            'accounting.journals.view', 'accounting.journals.create', 'accounting.journals.reverse',
+            'accounting.periods.manage',
+            'accounting.reports.view', 'accounting.reports.export',
+            'accounting.sync', 'accounting.depreciation.post',
+            'insights.view', 'insights.generate', 'insights.dismiss',
+            'lisa.chat', 'lisa.audit.view',
+            'activity.view', 'activity.products.view', 'activity.export',
+            'security.sessions.view', 'security.sessions.terminate',
+            'audit-log.view', 'audit-log.export',
+            'security-events.view',
+            'backups.view', 'backups.create', 'backups.verify',
+            'alerts.manage-recipients', 'alerts.view',
+            'settings.business.manage',
+            'exports.sales', 'exports.inventory', 'exports.procurement',
+            'supplier-bills.view', 'supplier-bills.create', 'supplier-bills.pay',
+            'supplier-documents.download',
+            'supplier-returns.view', 'supplier-returns.create',
+            'receipts.view', 'receipts.create',
+            'purchase_returns.view', 'purchase_returns.create',
+            'assets.view', 'assets.manage',
+            'purchases.record',
+            'operation_documents.download',
+            'accounting-operations.*',
+            'accounting.journals.manage',
         ],
-        'auditor' => [
-            'dashboard.audit.view', 'company.view', 'branches.view', 'staff.view',
-            'roles.view', 'products.view', 'suppliers.view', 'inventory.view',
-            'inventory.movements.view', 'procurement.view', 'sales.view.all',
-            'supplier-bills.view', 'supplier-returns.view', 'reports.hub.view',
-            'accounting.accounts.view', 'accounting.journals.view',
-            'accounting.reports.view', 'accounting.reports.export', 'activity.view', 'activity.products.view',
-            'security-events.view', 'audit-log.view', 'audit-log.export',
-            'sales.export',
-        ],
+        'super-admin' => self::PERMISSIONS['system-owner'],
+        'admin' => self::PERMISSIONS['system-owner'],
+        'company-owner' => self::PERMISSIONS['system-owner'],
         'branch-manager' => [
             'dashboard.view', 'branches.view', 'staff.view', 'products.view',
             'inventory.view', 'inventory.movements.view', 'inventory.intake',
@@ -61,42 +71,40 @@ final class RolePermissionPolicy
             'customers.update', 'procurement.view', 'procurement.create',
             'procurement.approve', 'procurement.receive', 'reports.staff-performance',
             'documents.sales.print', 'catalog.sale-search', 'catalog.inventory-search',
-            'activity.view',
+            'payment-methods.view', 'vouchers.apply', 'suppliers.view',
+            'reports.supplier-balances', 'supplier-bills.view', 'supplier-returns.view',
+            'accounting.accounts.view', 'accounting.journals.view',
+            'accounting.reports.view', 'accounting.reports.export',
+            'activity.view', 'activity.products.view', 'security-events.view',
+            'audit-log.view', 'audit-log.export',
+        ],
+        'auditor' => [
+            'dashboard.view', 'products.view', 'inventory.movements.view',
+            'procurement.view', 'sales.view.all', 'supplier-bills.view',
+            'supplier-returns.view', 'reports.hub.view',
+            'accounting.accounts.view', 'accounting.journals.view',
+            'accounting.reports.view', 'accounting.reports.export',
+            'activity.view', 'activity.products.view', 'security-events.view',
+            'audit-log.view', 'audit-log.export', 'sales.export',
+        ],
+        'cashier' => [
+            'dashboard.view', 'products.view', 'sales.create',
+            'sales.view', 'sales.payments.record', 'sales.returns.create',
+            'customers.view', 'customers.create', 'documents.sales.print',
+            'catalog.sale-search', 'catalog.inventory-search',
+            'payment-methods.view', 'vouchers.apply',
         ],
     ];
 
-    /** @param list<string> $requested @return list<string> */
-    public static function constrain(string $name, string $slug, array $requested): array
+    /** @return array<string, list<string>> */
+    public static function all(): array
     {
-        $family = self::family($name, $slug);
-        $requested = array_values(array_unique(array_filter($requested, 'is_string')));
-
-        if ($family === null || in_array($family, ['system-owner', 'administrator'], true)) {
-            return $requested;
-        }
-
-        return array_values(array_intersect($requested, self::MATRICES[$family] ?? []));
+        return self::PERMISSIONS;
     }
 
-    public static function family(string $name, string $slug): ?string
+    /** @return list<string> */
+    public static function forRole(string $slug): array
     {
-        $identity = mb_strtolower(trim($name.' '.$slug));
-        $patterns = [
-            'system-owner' => '/\b(system[ _-]?owner|owner)\b/u',
-            'administrator' => '/\b(admin|administrator)\b/u',
-            'branch-manager' => '/\b(branch[ _-]?manager|store[ _-]?manager)\b/u',
-            'sales' => '/\b(sales|cashier|salesperson|sales[ _-]?rep)\b/u',
-            'inventory' => '/\b(inventory|stock|warehouse|storekeeper)\b/u',
-            'procurement' => '/\b(procurement|purchasing|buyer)\b/u',
-            'accounting' => '/\b(accounting|accountant|finance|bookkeeper)\b/u',
-            'auditor' => '/\b(auditor|audit|compliance)\b/u',
-        ];
-        foreach ($patterns as $family => $pattern) {
-            if (preg_match($pattern, $identity) === 1) {
-                return $family;
-            }
-        }
-
-        return null;
+        return self::PERMISSIONS[$slug] ?? [];
     }
 }

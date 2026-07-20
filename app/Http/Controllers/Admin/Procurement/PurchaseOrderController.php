@@ -15,13 +15,17 @@ use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Services\Organisation\AuditLogger;
+use App\Services\Inventory\StockLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 final readonly class PurchaseOrderController
 {
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(
+        private AuditLogger $audit,
+        private StockLedger $ledger, // ✅ For stock updates
+    ) {}
 
     public function index(): View
     {
@@ -115,6 +119,9 @@ final readonly class PurchaseOrderController
             $request->array('lines'),
         );
 
+        // ✅ Update stock for received items
+        $this->updateStockForPurchaseOrder($order, $actor);
+
         $freshOrder = $order->fresh();
 
         if (! $freshOrder instanceof PurchaseOrder) {
@@ -138,5 +145,25 @@ final readonly class PurchaseOrderController
         );
 
         return back()->with('status', 'Goods receipt recorded.');
+    }
+
+    /**
+     * Update stock for all items in a purchase order using StockLedger.
+     */
+    private function updateStockForPurchaseOrder(PurchaseOrder $order, Account $actor): void
+    {
+        $items = $order->items()->with('product')->get();
+        foreach ($items as $item) {
+            $this->ledger->intake(
+                $item->product,
+                $order->branch,
+                $actor,
+                $item->quantity_milliunits,
+                0, // unit cost could be added later
+                'purchase_order_receive',
+                $order->id,
+                'Received from PO ' . $order->order_number
+            );
+        }
     }
 }

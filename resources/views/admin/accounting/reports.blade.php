@@ -256,3 +256,17 @@
         @endif
     </x-layout.app-shell>
 </x-layout.app>
+
+{{-- Export buttons for current report --}}
+@can('accounting.reports.export')
+    <div class="mb-6 flex flex-wrap gap-3">
+        @foreach (['csv' => 'CSV', 'xlsx' => 'Excel', 'pdf' => 'PDF'] as $format => $formatLabel)
+            <a
+                href="{{ route('admin.accounting.reports.export', array_merge(request()->query(), ['report' => $report, 'format' => $format])) }}"
+                class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+            >
+                Export {{ $formatLabel }}
+            </a>
+        @endforeach
+    </div>
+@endcan
