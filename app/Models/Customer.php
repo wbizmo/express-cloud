@@ -60,6 +60,17 @@ final class Customer extends Model
         );
     }
 
+    /**
+     * A positive figure the business owes this customer, built up from
+     * recorded overpayments (see AddSalePayment). This is separate from
+     * receivables/debt tracking, which is computed live from unpaid
+     * sales rather than from this field.
+     */
+    public function storeCreditKobo(): int
+    {
+        return max(0, -$this->balance_kobo);
+    }
+
     /** @return HasMany<Sale, $this> */
     public function sales(): HasMany
     {

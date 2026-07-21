@@ -40,6 +40,7 @@ use App\Http\Controllers\Admin\Operations\StaffPerformanceController;
 use App\Http\Controllers\Admin\Payments\PaymentMethodController;
 use App\Http\Controllers\Admin\Procurement\LowStockReportController;
 use App\Http\Controllers\Admin\Procurement\PurchaseOrderController;
+use App\Http\Controllers\Admin\Reports\AuditLogController;
 use App\Http\Controllers\Admin\Reports\ReportExportController;
 use App\Http\Controllers\Admin\Reports\ReportsHubController;
 use App\Http\Controllers\Admin\Reports\UniversalExportController;
@@ -324,6 +325,18 @@ Route::middleware([
             ->middleware('permission:sales.view')
             ->name('show');
 
+        Route::get('/{sale}/edit', [SaleController::class, 'edit'])
+            ->middleware('permission:sales.edit')
+            ->name('edit');
+
+        Route::put('/{sale}', [SaleController::class, 'update'])
+            ->middleware('permission:sales.edit')
+            ->name('update');
+
+        Route::post('/{sale}/void', [SaleController::class, 'void'])
+            ->middleware('permission:sales.void')
+            ->name('void');
+
         Route::post('/{sale}/payments', [SaleController::class, 'addPayment'])
             ->middleware('permission:sales.payments')
             ->name('payments.store');
@@ -411,6 +424,10 @@ Route::middleware([
     Route::get('/reports', ReportsHubController::class)
         ->middleware('permission:reports.hub.view')
         ->name('reports.hub');
+
+    Route::get('/activity-log', [AuditLogController::class, 'index'])
+        ->middleware('permission:activity.view')
+        ->name('activity-log.index');
 
     Route::prefix('reports/exports')->name('reports.exports.')->group(function (): void {
         Route::get('/sales', [ReportExportController::class, 'sales'])

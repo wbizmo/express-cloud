@@ -3,6 +3,28 @@
                                         :page-title="$sale->sale_code"
                                         :page-description="ucfirst($sale->sale_type->value).' · '.ucfirst($sale->status->value)"
                                     >
+                                        @if ($sale->status->value !== 'cancelled')
+                                            <div class="mb-5 flex flex-wrap gap-3">
+                                                @can('sales.edit')
+                                                    <a href="{{ route('admin.sales.edit', $sale) }}" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Edit / Reissue invoice</a>
+                                                @endcan
+                                                @can('sales.void')
+                                                    <form method="POST" action="{{ route('admin.sales.void', $sale) }}" onsubmit="return confirm('Void {{ $sale->sale_code }}? This reverses its stock and accounting impact and cannot be undone.');" class="inline-flex items-center gap-2">
+                                                        @csrf
+                                                        <input type="text" name="reason" required placeholder="Reason for voiding" class="min-h-10 rounded-lg border border-slate-300 px-3 text-sm">
+                                                        <button type="submit" class="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">Void sale</button>
+                                                    </form>
+                                                @endcan
+                                            </div>
+                                        @else
+                                            <div class="mb-5 rounded-lg bg-slate-100 px-4 py-3 text-sm text-slate-600">
+                                                This sale has been voided
+                                                @if ($sale->reissued_from_sale_id === null)
+                                                    and is no longer editable.
+                                                @endif
+                                            </div>
+                                        @endif
+
                                         {{-- Metrics cards – wrap in overflow-hidden --}}
                                         <div class="overflow-hidden">
                                             <section class="grid gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-4">

@@ -31,12 +31,12 @@ final class UniversalExportController
 
     public function audit(Request $request): StreamedResponse
     {/** @var Account $actor */ $actor = $request->user();
-        $q = AuditLog::query()->with(['branch', 'account'])->latest();
+        $q = AuditLog::query()->with(['branch', 'actor'])->latest('occurred_at');
         if (! $actor->is_allowed_all_branches) {
             $q->whereIn('branch_id', $actor->branches()->select('branches.id'));
         }if ($request->filled('branch')) {
             $q->where('branch_id', $request->string('branch')->toString());
-        }$rows = $q->limit(10000)->get()->map(fn ($a) => ['Time' => $a->created_at?->toDateTimeString(), 'Branch' => $a->branch?->name, 'Staff' => trim(($a->account?->first_name ?? '').' '.($a->account?->last_name ?? '')), 'Action' => $a->action, 'Subject' => $a->subject_type, 'Subject ID' => $a->subject_id, 'IP' => $a->ip_address])->all();
+        }$rows = $q->limit(10000)->get()->map(fn ($a) => ['Time' => $a->occurred_at?->toDateTimeString(), 'Branch' => $a->branch?->name, 'Staff' => $a->actor_name ?? trim((($a->actor?->first_name ?? '').' '.($a->actor?->last_name ?? ''))), 'Action' => $a->action, 'Subject' => $a->entity_type, 'Subject ID' => $a->entity_id, 'IP' => $a->ip_address])->all();
 
         return $this->download('audit-'.now()->format('Ymd-His').'.csv', $rows);
     }

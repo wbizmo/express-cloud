@@ -166,32 +166,44 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div x-data="{ revealed: false }">
                         <label for="access-key" class="mb-2 block text-sm font-medium text-slate-700">
                             Access key
                         </label>
 
-                        <input
-                            id="access-key"
-                            type="text"
-                            name="access_key"
-                            inputmode="text"
-                            autocomplete="one-time-code"
-                            maxlength="9"
-                            value="{{ old('access_key') }}"
-                            x-data
-                            x-on:input="
-                                let raw = $el.value
-                                    .toUpperCase()
-                                    .replace(/[^A-HJ-KM-NP-Z]/g, '')
-                                    .slice(0, 8);
+                        <div class="relative">
+                            <input
+                                id="access-key"
+                                x-bind:type="revealed ? 'text' : 'password'"
+                                name="access_key"
+                                inputmode="text"
+                                autocomplete="one-time-code"
+                                maxlength="9"
+                                value="{{ old('access_key') }}"
+                                x-on:input="
+                                    let raw = $el.value
+                                        .toUpperCase()
+                                        .replace(/[^A-HJ-KM-NP-Z]/g, '')
+                                        .slice(0, 8);
 
-                                $el.value = raw.length > 4
-                                    ? raw.slice(0, 4) + '-' + raw.slice(4)
-                                    : raw;
-                            "
-                            class="min-h-12 w-full rounded-lg border border-slate-300 bg-white px-4 font-mono text-lg font-semibold tracking-[0.14em] text-slate-950 placeholder:text-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                        >
+                                    $el.value = raw.length > 4
+                                        ? raw.slice(0, 4) + '-' + raw.slice(4)
+                                        : raw;
+                                "
+                                class="min-h-12 w-full rounded-lg border border-slate-300 bg-white px-4 pr-12 font-mono text-lg font-semibold tracking-[0.14em] text-slate-950 placeholder:text-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                            >
+
+                            <button
+                                type="button"
+                                x-on:click="revealed = !revealed"
+                                class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-700"
+                                tabindex="-1"
+                                aria-label="Show or hide access key"
+                            >
+                                <svg x-show="!revealed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg x-show="revealed" x-cloak xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 11s3.5 7 10 7a9.16 9.16 0 0 0 5.39-1.61"/><path d="M2 2l20 20"/><path d="M9.53 9.53a3 3 0 0 0 4.24 4.24"/></svg>
+                            </button>
+                        </div>
 
                         @error('access_key')
                             <p class="mt-2 text-sm text-red-700">{{ $message }}</p>

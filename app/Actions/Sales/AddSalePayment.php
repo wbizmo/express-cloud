@@ -6,6 +6,7 @@ namespace App\Actions\Sales;
 
 use App\Enums\Sales\SaleStatus;
 use App\Models\Account;
+use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\Sale;
@@ -50,9 +51,14 @@ final readonly class AddSalePayment
                 );
             }
 
-            if ($amountKobo > $lockedSale->balanceDueKobo()) {
+            $balanceDue = $lockedSale->balanceDueKobo();
+            $overpaymentKobo = max(0, $amountKobo - $balanceDue);
+
+            if ($overpaymentKobo > 0 && $lockedSale->customer_id === null) {
                 throw new \DomainException(
-                    'Payment amount exceeds the outstanding balance.',
+                    'Payment amount exceeds the outstanding balance. '
+                        .'Attach a customer to this sale to record the '
+                        .'excess as store credit.',
                 );
             }
 
@@ -65,8 +71,13 @@ final readonly class AddSalePayment
                 'paid_at' => now(),
             ]);
 
-            $newPaid = $lockedSale->paid_amount_kobo
-                + $amountKobo;
+            // The sale itself never shows as "paid" beyond its own total —
+            // any excess becomes store credit on the customer record
+            // instead (a negative balance_kobo = the business owes them).
+            $newPaid = min(
+                $lockedSale->grand_total_kobo,
+                $lockedSale->paid_amount_kobo + $amountKobo,
+            );
 
             $lockedSale->forceFill([
                 'paid_amount_kobo' => $newPaid,
@@ -75,6 +86,16 @@ final readonly class AddSalePayment
                     $lockedSale->grand_total_kobo,
                 ),
             ])->save();
+
+            if ($overpaymentKobo > 0) {
+                /** @var Customer $customer */
+                $customer = Customer::query()
+                    ->whereKey($lockedSale->customer_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $customer->decrement('balance_kobo', $overpaymentKobo);
+            }
 
             return $payment;
         });

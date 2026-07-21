@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Admin\Sales;
 use App\Actions\Sales\AddSalePayment;
 use App\Actions\Sales\ConvertQuote;
 use App\Actions\Sales\CreateSale;
+use App\Actions\Sales\ReissueSale;
+use App\Actions\Sales\VoidSale;
 use App\Enums\Sales\SaleStatus;
 use App\Enums\Sales\SaleType;
 use App\Http\Requests\Sales\AddSalePaymentRequest;
@@ -31,6 +33,8 @@ final readonly class SaleController
     public function __construct(
         private AuditLogger $audit,
         private TabularExport $export,
+        private VoidSale $void,
+        private ReissueSale $reissue,
     ) {}
 
     public function index(Request $request): View
@@ -329,5 +333,76 @@ final readonly class SaleController
         return redirect()
             ->route('admin.sales.show', $sale)
             ->with('status', 'Quote converted successfully.');
+    }
+
+    public function edit(Sale $sale): View
+    {
+        abort_if(
+            $sale->status === SaleStatus::Cancelled,
+            422,
+            'A voided sale cannot be reissued.',
+        );
+
+        $sale->load(['items.product', 'branch']);
+
+        return view('admin.sales.edit', [
+            'sale' => $sale,
+            'branches' => Branch::query()
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'products' => Product::query()
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(['id', 'name', 'sku', 'default_price_kobo', 'track_inventory']),
+            'paymentMethods' => PaymentMethod::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+        ]);
+    }
+
+    public function update(
+        StoreSaleRequest $request,
+        Sale $sale,
+    ): RedirectResponse {
+        /** @var Account $actor */
+        $actor = $request->user();
+
+        $reason = $request->string('reissue_reason', 'Invoice corrected')
+            ->toString();
+
+        $replacement = $this->reissue->execute(
+            $request,
+            $sale,
+            $actor,
+            $reason,
+        );
+
+        return redirect()
+            ->route('admin.sales.show', $replacement)
+            ->with(
+                'status',
+                "Invoice reissued as {$replacement->sale_code}. ".
+                    "The original ({$sale->sale_code}) has been voided.",
+            );
+    }
+
+    public function void(Request $request, Sale $sale): RedirectResponse
+    {
+        /** @var Account $actor */
+        $actor = $request->user();
+
+        $reason = $request->string('reason')->toString();
+
+        if ($reason === '') {
+            return back()->with('status', 'A reason is required to void a sale.');
+        }
+
+        $this->void->execute($request, $sale, $actor, $reason);
+
+        return redirect()
+            ->route('admin.sales.show', $sale)
+            ->with('status', "{$sale->sale_code} has been voided.");
     }
 }
