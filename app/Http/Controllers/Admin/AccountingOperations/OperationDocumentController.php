@@ -25,7 +25,9 @@ final readonly class OperationDocumentController
         string $type,
         string $id,
     ): Response {
-        $report = $this->factory->make($type, $id);
+        /** @var Account $actor */
+        $actor = $request->user();
+        $report = $this->factory->make($type, $id, $actor);
         $contents = $this->pdf->render($report);
 
         $this->log($request, $type, $id, 'pdf', $contents);
@@ -45,7 +47,9 @@ final readonly class OperationDocumentController
         string $type,
         string $id,
     ): Response {
-        $report = $this->factory->make($type, $id);
+        /** @var Account $actor */
+        $actor = $request->user();
+        $report = $this->factory->make($type, $id, $actor);
         $contents = $this->csv->render($report);
 
         $this->log(

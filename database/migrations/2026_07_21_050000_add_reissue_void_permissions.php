@@ -3,50 +3,98 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
+    /**
+     * @var array<string, array{name: string, group: string, description: string}>
+     */
+    private const PERMISSIONS = [
+        'sales.edit' => [
+            'name' => 'Edit / reissue an invoice',
+            'group' => 'Commercial',
+            'description' => 'Edit or reissue an existing sale document.',
+        ],
+        'sales.void' => [
+            'name' => 'Void a sale',
+            'group' => 'Commercial',
+            'description' => 'Void an eligible sale through the controlled workflow.',
+        ],
+        'activity.export' => [
+            'name' => 'Export activity history',
+            'group' => 'Operations',
+            'description' => 'Export authorised activity and audit history.',
+        ],
+    ];
+
+    /** @var list<string> */
+    private const PRIVILEGED_ROLE_SLUGS = [
+        'system-owner',
+        'super-admin',
+        'admin',
+        'company-owner',
+    ];
+
     public function up(): void
     {
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        $now = now();
+        $roleIds = DB::table('roles')
+            ->whereIn('slug', self::PRIVILEGED_ROLE_SLUGS)
+            ->pluck('id');
 
-        $newPermissions = [
-            'sales.edit',
-            'sales.void',
-            'activity.export',
-        ];
+        foreach (self::PERMISSIONS as $slug => $definition) {
+            $permissionId = DB::table('permissions')
+                ->where('slug', $slug)
+                ->value('id');
 
-        foreach ($newPermissions as $name) {
-            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+            if (! is_string($permissionId) || $permissionId === '') {
+                $permissionId = Str::ulid()->toString();
+
+                DB::table('permissions')->insert([
+                    'id' => $permissionId,
+                    'name' => $definition['name'],
+                    'slug' => $slug,
+                    'group' => $definition['group'],
+                    'description' => $definition['description'],
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            } else {
+                DB::table('permissions')
+                    ->where('id', $permissionId)
+                    ->update([
+                        'name' => $definition['name'],
+                        'group' => $definition['group'],
+                        'description' => $definition['description'],
+                        'updated_at' => $now,
+                    ]);
+            }
+
+            foreach ($roleIds as $roleId) {
+                DB::table('permission_role')->insertOrIgnore([
+                    'permission_id' => $permissionId,
+                    'role_id' => $roleId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
         }
-
-        $role = Role::where('name', 'system-owner')->first();
-        if ($role) {
-            $role->givePermissionTo($newPermissions);
-        }
-
-        $role = Role::where('name', 'admin')->first();
-        if ($role) {
-            $role->givePermissionTo($newPermissions);
-        }
-
-        $role = Role::where('name', 'company-owner')->first();
-        if ($role) {
-            $role->givePermissionTo($newPermissions);
-        }
-
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 
     public function down(): void
     {
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        $permissionIds = DB::table('permissions')
+            ->whereIn('slug', array_keys(self::PERMISSIONS))
+            ->pluck('id');
 
-        Permission::whereIn('name', ['sales.edit', 'sales.void', 'activity.export'])->delete();
+        DB::table('permission_role')
+            ->whereIn('permission_id', $permissionIds)
+            ->delete();
 
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        DB::table('permissions')
+            ->whereIn('slug', array_keys(self::PERMISSIONS))
+            ->delete();
     }
 };

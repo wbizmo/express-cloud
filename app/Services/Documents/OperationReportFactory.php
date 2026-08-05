@@ -4,30 +4,36 @@ declare(strict_types=1);
 
 namespace App\Services\Documents;
 
+use App\Models\Account;
 use App\Models\FixedAsset;
 use App\Models\PurchaseReceipt;
 use App\Models\PurchaseReturn;
 use App\Models\SaleReturn;
 use App\Models\StandaloneReceipt;
 use App\Models\StockMovement;
+use App\Services\Organisation\BranchAccess;
 use App\Support\Documents\OperationReportData;
 use BackedEnum;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-final class OperationReportFactory
+final readonly class OperationReportFactory
 {
+    public function __construct(private BranchAccess $branches) {}
+
     public function make(
         string $type,
         string $id,
+        ?Account $actor = null,
     ): OperationReportData {
         return match ($type) {
-            'standalone_receipt' => $this->standaloneReceipt($id),
-            'purchase_receipt' => $this->purchaseReceipt($id),
-            'purchase_return' => $this->purchaseReturn($id),
-            'sale_return' => $this->saleReturn($id),
-            'stock_operation' => $this->stockOperation($id),
-            'fixed_asset' => $this->fixedAsset($id),
+            'standalone_receipt' => $this->standaloneReceipt($id, $actor),
+            'purchase_receipt' => $this->purchaseReceipt($id, $actor),
+            'purchase_return' => $this->purchaseReturn($id, $actor),
+            'sale_return' => $this->saleReturn($id, $actor),
+            'stock_operation' => $this->stockOperation($id, $actor),
+            'fixed_asset' => $this->fixedAsset($id, $actor),
             default => throw new \InvalidArgumentException(
                 "Unsupported operation report type: {$type}",
             ),
@@ -36,9 +42,11 @@ final class OperationReportFactory
 
     private function standaloneReceipt(
         string $id,
+        ?Account $actor = null,
     ): OperationReportData {
         /** @var StandaloneReceipt $receipt */
         $receipt = StandaloneReceipt::query()->findOrFail($id);
+        $this->enforce($actor, $receipt);
 
         return new OperationReportData(
             title: 'Payment Receipt',
@@ -66,11 +74,13 @@ final class OperationReportFactory
 
     private function purchaseReceipt(
         string $id,
+        ?Account $actor = null,
     ): OperationReportData {
         /** @var PurchaseReceipt $purchase */
         $purchase = PurchaseReceipt::query()
             ->with('lines')
             ->findOrFail($id);
+        $this->enforce($actor, $purchase);
 
         $rows = [];
 
@@ -121,11 +131,13 @@ final class OperationReportFactory
 
     private function purchaseReturn(
         string $id,
+        ?Account $actor = null,
     ): OperationReportData {
         /** @var PurchaseReturn $return */
         $return = PurchaseReturn::query()
             ->with('lines')
             ->findOrFail($id);
+        $this->enforce($actor, $return);
 
         $rows = [];
 
@@ -166,12 +178,13 @@ final class OperationReportFactory
         );
     }
 
-    private function saleReturn(string $id): OperationReportData
+    private function saleReturn(string $id, ?Account $actor): OperationReportData
     {
         /** @var SaleReturn $return */
         $return = SaleReturn::query()
             ->with('items')
             ->findOrFail($id);
+        $this->enforce($actor, $return);
 
         $rows = [];
 
@@ -207,7 +220,7 @@ final class OperationReportFactory
         );
     }
 
-    private function stockOperation(string $id): OperationReportData
+    private function stockOperation(string $id, ?Account $actor): OperationReportData
     {
         $movements = StockMovement::query()
             ->where('reference_id', $id)
@@ -219,6 +232,10 @@ final class OperationReportFactory
         }
 
         $first = $movements->firstOrFail();
+
+        foreach ($movements as $movement) {
+            $this->enforce($actor, $movement);
+        }
         $rows = [];
 
         foreach ($movements as $movement) {
@@ -251,10 +268,11 @@ final class OperationReportFactory
         );
     }
 
-    private function fixedAsset(string $id): OperationReportData
+    private function fixedAsset(string $id, ?Account $actor): OperationReportData
     {
         /** @var FixedAsset $asset */
         $asset = FixedAsset::query()->findOrFail($id);
+        $this->enforce($actor, $asset);
 
         return new OperationReportData(
             title: 'Fixed Asset Record',
@@ -286,6 +304,13 @@ final class OperationReportFactory
             ],
             notes: $asset->notes,
         );
+    }
+
+    private function enforce(?Account $actor, Model $model): void
+    {
+        if ($actor !== null) {
+            $this->branches->enforceModel($actor, $model);
+        }
     }
 
     private static function dateTime(mixed $value): string

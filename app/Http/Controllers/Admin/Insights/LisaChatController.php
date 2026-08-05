@@ -39,7 +39,7 @@ final readonly class LisaChatController
 
     public function show(Request $request, LisaConversation $conversation): View
     {
-        abort_unless((string) $conversation->account_id === (string) $request->user()->getKey(), 403);
+        abort_unless((string) $conversation->account_id === (string) $request->user()->getKey(), 404);
 
         return view('admin.insights.chat', ['activeConversation' => $conversation->load('messages'), 'conversations' => LisaConversation::query()->where('account_id', $request->user()->getKey())->latest('last_message_at')->paginate(config('pagination.default', 10))]);
     }
@@ -47,7 +47,7 @@ final readonly class LisaChatController
     public function message(Request $request, LisaConversation $conversation): JsonResponse
     {
         /** @var Account $actor */ $actor = $request->user();
-        abort_unless((string) $conversation->account_id === (string) $actor->getKey(), 403);
+        abort_unless((string) $conversation->account_id === (string) $actor->getKey(), 404);
         $v = $request->validate(['message' => ['required', 'string', 'max:5000']]);
         $question = trim($v['message']);
         $start = hrtime(true);

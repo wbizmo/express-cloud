@@ -58,6 +58,7 @@ Route::middleware([
     'auth',
     'account.active',
     'session.inactivity',
+    'branch.scope',
 ])->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('/branches', [BranchController::class, 'index'])
         ->middleware('permission:branches.view')
@@ -306,7 +307,7 @@ Route::middleware([
 
     Route::prefix('sales')->name('sales.')->group(function (): void {
         Route::get('/', [SaleController::class, 'index'])
-            ->middleware('permission:sales.view')
+            ->middleware('permission.any:sales.view,sales.view.own,sales.view.all')
             ->name('index');
 
         Route::get('/export', [SaleController::class, 'export'])
@@ -322,27 +323,27 @@ Route::middleware([
             ->name('store');
 
         Route::get('/{sale}', [SaleController::class, 'show'])
-            ->middleware('permission:sales.view')
+            ->middleware(['permission.any:sales.view,sales.view.own,sales.view.all', 'sale.visible'])
             ->name('show');
 
         Route::get('/{sale}/edit', [SaleController::class, 'edit'])
-            ->middleware('permission:sales.edit')
+            ->middleware(['permission:sales.edit', 'sale.visible'])
             ->name('edit');
 
         Route::put('/{sale}', [SaleController::class, 'update'])
-            ->middleware('permission:sales.edit')
+            ->middleware(['permission:sales.edit', 'sale.visible'])
             ->name('update');
 
         Route::post('/{sale}/void', [SaleController::class, 'void'])
-            ->middleware('permission:sales.void')
+            ->middleware(['permission:sales.void', 'sale.visible'])
             ->name('void');
 
         Route::post('/{sale}/payments', [SaleController::class, 'addPayment'])
-            ->middleware('permission:sales.payments')
+            ->middleware(['permission:sales.payments.record', 'sale.visible'])
             ->name('payments.store');
 
         Route::post('/quotes/{quote}/convert', [SaleController::class, 'convert'])
-            ->middleware('permission:sales.convert-quotes')
+            ->middleware(['permission:quotes.convert', 'sale.visible'])
             ->name('quotes.convert');
     });
 
@@ -443,13 +444,13 @@ Route::middleware([
 
     Route::prefix('documents')->name('documents.')->group(function (): void {
         Route::get('/sales/{sale}/thermal', [SaleDocumentController::class, 'thermal'])
-            ->middleware('permission:documents.sales.print')
+            ->middleware(['permission:documents.sales.print', 'sale.visible'])
             ->name('sales.thermal');
         Route::get('/sales/{sale}/a4', [SaleDocumentController::class, 'a4'])
-            ->middleware('permission:documents.sales.print')
+            ->middleware(['permission:documents.sales.print', 'sale.visible'])
             ->name('sales.a4');
         Route::get('/sales/{sale}/pdf', [SaleDocumentController::class, 'pdf'])
-            ->middleware('permission:documents.sales.print')
+            ->middleware(['permission:documents.sales.print', 'sale.visible'])
             ->name('sales.pdf');
         Route::get('/products/{product}/label', ProductBarcodeController::class)
             ->middleware('permission:documents.products.labels')
@@ -672,7 +673,7 @@ Route::middleware([
         Route::get('/audit/{conversation}', [LisaChatController::class, 'auditShow'])->middleware('permission:lisa.audit.view')->name('audit.show');
     });
     Route::prefix('exports')->name('exports.')->group(function (): void {
-        Route::get('/sales/{sale}', [UniversalExportController::class, 'sale'])->middleware('permission:exports.sales')->name('sales');
+        Route::get('/sales/{sale}', [UniversalExportController::class, 'sale'])->middleware(['permission:exports.sales', 'sale.visible'])->name('sales');
         Route::get('/stock/{movement}', [UniversalExportController::class, 'movement'])->middleware('permission:exports.inventory')->name('stock');
         Route::get('/purchases/{order}', [UniversalExportController::class, 'purchase'])->middleware('permission:exports.procurement')->name('purchases');
         Route::get('/audit', [UniversalExportController::class, 'audit'])->middleware('permission:activity.export')->name('audit');

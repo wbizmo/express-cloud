@@ -6,6 +6,13 @@ namespace App\Support\Authorization;
 
 final class RolePermissionPolicy
 {
+    /** @var list<string> */
+    private const SYSTEM_OWNER_ALIASES = [
+        'super-admin',
+        'admin',
+        'company-owner',
+    ];
+
     /** @var array<string, list<string>> */
     private const PERMISSIONS = [
         'system-owner' => [
@@ -59,9 +66,9 @@ final class RolePermissionPolicy
             'accounting-operations.*',
             'accounting.journals.manage',
         ],
-        'super-admin' => self::PERMISSIONS['system-owner'],
-        'admin' => self::PERMISSIONS['system-owner'],
-        'company-owner' => self::PERMISSIONS['system-owner'],
+        'super-admin' => [],
+        'admin' => [],
+        'company-owner' => [],
         'branch-manager' => [
             'dashboard.view', 'branches.view', 'staff.view', 'products.view',
             'inventory.view', 'inventory.movements.view', 'inventory.intake',
@@ -99,12 +106,23 @@ final class RolePermissionPolicy
     /** @return array<string, list<string>> */
     public static function all(): array
     {
-        return self::PERMISSIONS;
+        $permissions = self::PERMISSIONS;
+        $systemOwnerPermissions = self::PERMISSIONS['system-owner'];
+
+        foreach (self::SYSTEM_OWNER_ALIASES as $alias) {
+            $permissions[$alias] = $systemOwnerPermissions;
+        }
+
+        return $permissions;
     }
 
     /** @return list<string> */
     public static function forRole(string $slug): array
     {
+        if (in_array($slug, self::SYSTEM_OWNER_ALIASES, true)) {
+            return self::PERMISSIONS['system-owner'];
+        }
+
         return self::PERMISSIONS[$slug] ?? [];
     }
 }

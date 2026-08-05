@@ -5,27 +5,24 @@ declare(strict_types=1);
 namespace App\Actions\Authentication;
 
 use App\Models\Account;
+use App\Services\Security\UploadSecurity;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-final class StoreProfilePicture
+final readonly class StoreProfilePicture
 {
+    public function __construct(private UploadSecurity $uploads) {}
+
     public function execute(Account $account, UploadedFile $picture): string
     {
-        $disk = (string) config(
-            'authentication.profile_picture.disk',
-            'public',
-        );
-
-        $directory = (string) config(
-            'authentication.profile_picture.directory',
-            'profile-pictures',
-        );
-
+        $validated = $this->uploads->image($picture);
+        $disk = (string) config('authentication.profile_picture.disk', 'public');
+        $directory = (string) config('authentication.profile_picture.directory', 'profile-pictures');
         $previousPath = $account->profile_picture_path;
 
-        $path = $picture->storePublicly(
+        $path = $picture->storePubliclyAs(
             $directory.'/'.$account->getKey(),
+            $this->uploads->randomFilename($validated['extension']),
             $disk,
         );
 
@@ -33,9 +30,7 @@ final class StoreProfilePicture
             Storage::disk($disk)->delete($previousPath);
         }
 
-        $account->forceFill([
-            'profile_picture_path' => $path,
-        ])->save();
+        $account->forceFill(['profile_picture_path' => $path])->save();
 
         return $path;
     }

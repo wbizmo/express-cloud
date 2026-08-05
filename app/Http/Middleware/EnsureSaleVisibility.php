@@ -15,11 +15,9 @@ final readonly class EnsureSaleVisibility
 {
     public function __construct(private SaleAccess $access) {}
 
-    public function handle(
-        Request $request,
-        Closure $next,
-    ): Response {
-        $sale = $request->route('sale');
+    public function handle(Request $request, Closure $next): Response
+    {
+        $sale = $request->route('sale') ?? $request->route('quote');
         $actor = $request->user();
 
         abort_unless(

@@ -13,6 +13,7 @@ Route::middleware([
     'auth',
     'account.active',
     'session.inactivity',
+    'branch.scope',
 ])->prefix('staff')->name('staff.')->group(function (): void {
     Route::get('/dashboard', StaffDashboardController::class)
         ->middleware('permission:dashboard.staff.view')

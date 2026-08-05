@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Middleware\ApplySecurityHeaders;
+use App\Http\Middleware\EnforceBranchScope;
 use App\Http\Middleware\EnforceSessionInactivity;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureSaleVisibility;
+use App\Http\Middleware\RequireAnyPermission;
 use App\Http\Middleware\RequirePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,10 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [ApplySecurityHeaders::class]);
+
         $middleware->alias([
             'account.active' => EnsureAccountIsActive::class,
+            'branch.scope' => EnforceBranchScope::class,
             'session.inactivity' => EnforceSessionInactivity::class,
             'permission' => RequirePermission::class,
+            'permission.any' => RequireAnyPermission::class,
             'sale.visible' => EnsureSaleVisibility::class,
         ]);
     })
