@@ -1,3 +1,5 @@
+import './resilience/index.js';
+import './lisa/client.js';
 import { createIcons, icons } from 'lucide';
 
 const renderIcons = () => {

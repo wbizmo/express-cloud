@@ -33,6 +33,7 @@ use App\Observers\FinancialSourceObserver;
 use App\Observers\ReferenceDataObserver;
 use App\Observers\WarehouseStockProjectionObserver;
 use App\Policies\BranchScopedResourcePolicy;
+use App\Services\Insights\BusinessSnapshotInvalidator;
 use App\Services\Organisation\AuthorizationService;
 use App\Services\Organisation\BranchAccess;
 use App\Services\Organisation\NavigationVisibility;
@@ -74,6 +75,9 @@ final class AppServiceProvider extends ServiceProvider
         }
 
         StockMovement::observe(WarehouseStockProjectionObserver::class);
+        foreach ([Sale::class, Payment::class, StockMovement::class, PurchaseOrder::class, JournalEntry::class] as $snapshotSource) {
+            $snapshotSource::observe(BusinessSnapshotInvalidator::class);
+        }
         Branch::observe(ReferenceDataObserver::class);
         PaymentMethod::observe(ReferenceDataObserver::class);
         ProductCategory::observe(ReferenceDataObserver::class);

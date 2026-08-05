@@ -1,0 +1,14 @@
+{
+  "name": "Express Cloud by Zivora",
+  "short_name": "Express Cloud",
+  "description": "Enterprise ERP, POS, inventory and accounting workspace.",
+  "start_url": "/admin/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0B1F3A",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icons/express-cloud.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

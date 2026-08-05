@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\Hr\HrAdministrationController;
 use App\Http\Controllers\Admin\Imports\ProductImportController;
 use App\Http\Controllers\Admin\Insights\LisaChatController;
 use App\Http\Controllers\Admin\Insights\LisaInsightController;
+use App\Http\Controllers\Admin\Insights\LisaSnapshotController;
 use App\Http\Controllers\Admin\Inventory\InventoryController;
 use App\Http\Controllers\Admin\Inventory\WarehouseController;
 use App\Http\Controllers\Admin\Operations\AdminDashboardController;
@@ -60,6 +61,7 @@ use App\Http\Controllers\Admin\SupplierFinance\SupplierBalanceReportController;
 use App\Http\Controllers\Admin\SupplierFinance\SupplierBillController;
 use App\Http\Controllers\Admin\SupplierFinance\SupplierReturnController;
 use App\Http\Controllers\Operations\OperationStatusController;
+use App\Http\Controllers\Resilience\OperationRecoveryController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([
@@ -679,6 +681,10 @@ Route::middleware([
         Route::post('/chat/{conversation}/message', [LisaChatController::class, 'message'])->middleware('permission:lisa.chat')->name('message');
         Route::get('/audit', [LisaChatController::class, 'audit'])->middleware('permission:lisa.audit.view')->name('audit');
         Route::get('/audit/{conversation}', [LisaChatController::class, 'auditShow'])->middleware('permission:lisa.audit.view')->name('audit.show');
+        Route::get('/snapshot', [LisaSnapshotController::class, 'show'])->middleware('permission:lisa.chat')->name('snapshot');
+        Route::get('/snapshot/{snapshot}/evidence', [LisaSnapshotController::class, 'evidence'])->middleware('permission:lisa.audit.view')->name('snapshot.evidence');
+        Route::get('/snapshot', [LisaSnapshotController::class, 'show'])->middleware('permission:lisa.chat')->name('snapshot');
+        Route::get('/snapshot/{snapshot}/evidence', [LisaSnapshotController::class, 'evidence'])->middleware('permission:lisa.audit.view')->name('snapshot.evidence');
     });
     Route::prefix('exports')->name('exports.')->group(function (): void {
         Route::get('/sales/{sale}', [UniversalExportController::class, 'sale'])->middleware(['permission:exports.sales', 'sale.visible'])->name('sales');
@@ -844,6 +850,11 @@ Route::middleware([
                 ->middleware('permission:settings.business.manage')
                 ->name('decide');
         });
+
+    Route::get('/operations/recovery/{scope}/{idempotencyKey}', OperationRecoveryController::class)
+        ->where('scope', '[A-Za-z0-9._-]+')
+        ->where('idempotencyKey', '[A-Za-z0-9._:-]+')
+        ->name('operations.recovery');
 
     Route::get('/operations/{operation}', [OperationStatusController::class, 'show'])
         ->name('operations.show');

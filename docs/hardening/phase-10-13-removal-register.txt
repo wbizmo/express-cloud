@@ -1,0 +1,6 @@
+public/build
+bootstrap/cache/packages.php
+bootstrap/cache/services.php
+express-cloud-emergency-recover-phase-9-baseline-v1.0.0.sh
+express-cloud-phases-10-11-12-and-13-hardening-v1.0.9-perl.sh
+app/Http/Controllers/Admin/Operations/CronDigestController.php

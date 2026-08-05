@@ -1,0 +1,43 @@
+Composer production audit exit: 0
+{
+    "advisories": [],
+    "abandoned": []
+}
+
+Composer complete audit exit: 0
+{
+    "advisories": [],
+    "abandoned": []
+}
+
+Composer severity summary:
+Production high/critical advisories: 0
+Development-only high/critical advisories: 0
+Production advisory detail:
+- none
+Development-only advisory detail:
+- none
+
+npm production audit exit: 0
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {},
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 2,
+      "dev": 99,
+      "optional": 44,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 100
+    }
+  }
+}

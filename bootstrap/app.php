@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureSaleVisibility;
 use App\Http\Middleware\RequireAnyPermission;
 use App\Http\Middleware\RequirePermission;
+use App\Http\Middleware\VerifyOperationsCronHmac;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => RequirePermission::class,
             'permission.any' => RequireAnyPermission::class,
             'sale.visible' => EnsureSaleVisibility::class,
+            'operations.cron.hmac' => VerifyOperationsCronHmac::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
