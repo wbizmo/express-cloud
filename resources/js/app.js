@@ -1,14 +1,8 @@
 import './resilience/index.js';
 import './lisa/client.js';
-import { createIcons, icons } from 'lucide';
-
 const renderIcons = () => {
-    createIcons({
-        icons,
-        attrs: {
-            'aria-hidden': 'true',
-            'stroke-width': 1.8,
-        },
+    document.querySelectorAll(".material-symbols-outlined").forEach((icon) => {
+        icon.setAttribute("aria-hidden", "true");
     });
 };
 
@@ -153,7 +147,7 @@ const addBackButtons = (root = document) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "ec-back-button";
-        button.innerHTML = "← <span>Back</span>";
+        button.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">arrow_back</span><span>Back</span>';
         button.addEventListener("click", () => {
             if (window.history.length > 1) {
                 window.history.back();

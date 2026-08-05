@@ -25,15 +25,16 @@
                     'bg-blue-50 text-blue-700': toast.type === 'info',
                 }"
             >
-                <i
-                    :data-lucide="{
-                        success: 'circle-check',
-                        error: 'circle-x',
-                        warning: 'triangle-alert',
+                <span
+                    class="material-symbols-outlined text-[18px] leading-none"
+                    aria-hidden="true"
+                    x-text="{
+                        success: 'check_circle',
+                        error: 'cancel',
+                        warning: 'warning',
                         info: 'info',
                     }[toast.type] ?? 'info'"
-                    class="h-4 w-4"
-                ></i>
+                ></span>
             </div>
 
             <div class="min-w-0 flex-1">

@@ -7,6 +7,7 @@ namespace App\Enums\Inventory;
 enum StockMovementType: string
 {
     case Purchase = 'purchase';
+    case PurchaseReturn = 'purchase_return';
     case TransferOut = 'transfer_out';
     case TransferIn = 'transfer_in';
     case Adjustment = 'adjustment';
@@ -18,4 +19,5 @@ enum StockMovementType: string
     case Quarantine = 'quarantine';
     case Damage = 'damage';
     case LandedCost = 'landed_cost';
+    case CostReversal = 'cost_reversal';
 }

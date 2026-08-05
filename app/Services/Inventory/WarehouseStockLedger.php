@@ -254,6 +254,163 @@ final readonly class WarehouseStockLedger
         }, 1);
     }
 
+    public function reverseReceipt(
+        Product $product,
+        Warehouse $warehouse,
+        Account $actor,
+        int $quantityMilliunits,
+        ?ProductVariant $variant = null,
+        ?InventoryBatch $batch = null,
+        string $condition = 'available',
+        ?string $referenceType = null,
+        ?string $referenceId = null,
+        ?OperationRequest $operation = null,
+        int $sequence = 1,
+        ?string $note = null,
+    ): StockMovement {
+        if ($quantityMilliunits <= 0) {
+            throw new \InvalidArgumentException('Reversed receipt quantity must be positive.');
+        }
+
+        return DB::transaction(function () use (
+            $product, $warehouse, $actor, $quantityMilliunits, $variant, $batch,
+            $condition, $referenceType, $referenceId, $operation, $sequence, $note,
+        ): StockMovement {
+            $balance = $this->lockBalance(
+                $warehouse,
+                $product,
+                $variant,
+                $batch,
+                $condition,
+            );
+            $newQuantity = $balance->quantity_milliunits - $quantityMilliunits;
+            if (
+                $newQuantity < 0
+                || $newQuantity < $balance->reserved_milliunits
+            ) {
+                throw new \DomainException(
+                    'The receipt cannot be voided because the stock is no longer available.',
+                );
+            }
+
+            $unitCost = $balance->weighted_average_cost_kobo;
+            $valueDelta = (int) round(
+                ($quantityMilliunits / 1000) * $unitCost,
+            );
+            $newValue = max(0, $balance->inventory_value_kobo - $valueDelta);
+            $newAverage = $newQuantity > 0
+                ? (int) round($newValue / ($newQuantity / 1000))
+                : 0;
+
+            $balance->forceFill([
+                'quantity_milliunits' => $newQuantity,
+                'inventory_value_kobo' => $newValue,
+                'weighted_average_cost_kobo' => $newAverage,
+                'version' => $balance->version + 1,
+                'last_movement_at' => now(),
+            ])->save();
+            $this->syncBranchAggregate($warehouse, $product);
+
+            return $this->movement(
+                $product,
+                $warehouse,
+                $actor,
+                StockMovementType::PurchaseReturn,
+                -$quantityMilliunits,
+                $newQuantity,
+                $unitCost,
+                $newValue,
+                $variant,
+                $batch,
+                $condition,
+                $referenceType,
+                $referenceId,
+                $operation?->getKey(),
+                'purchase_receipt_reversed',
+                $note,
+                $operation,
+                $sequence,
+            );
+        }, 3);
+    }
+
+    public function reverseCapitalizedCost(
+        Product $product,
+        Warehouse $warehouse,
+        Account $actor,
+        int $amountKobo,
+        ?ProductVariant $variant = null,
+        ?InventoryBatch $batch = null,
+        string $condition = 'available',
+        ?string $referenceId = null,
+        ?OperationRequest $operation = null,
+        int $sequence = 1,
+        ?string $note = null,
+    ): WarehouseStockBalance {
+        if ($amountKobo <= 0) {
+            throw new \InvalidArgumentException(
+                'Reversed capitalized cost must be positive.',
+            );
+        }
+
+        return DB::transaction(function () use (
+            $product, $warehouse, $actor, $amountKobo, $variant, $batch,
+            $condition, $referenceId, $operation, $sequence, $note,
+        ): WarehouseStockBalance {
+            $balance = $this->lockBalance(
+                $warehouse,
+                $product,
+                $variant,
+                $batch,
+                $condition,
+            );
+            if ($balance->quantity_milliunits <= 0) {
+                throw new \DomainException(
+                    'Capitalized cost cannot be reversed from an empty stock balance.',
+                );
+            }
+            if ($amountKobo > $balance->inventory_value_kobo) {
+                throw new \DomainException(
+                    'The capitalized cost exceeds the remaining inventory value.',
+                );
+            }
+
+            $newValue = $balance->inventory_value_kobo - $amountKobo;
+            $newAverage = (int) round(
+                $newValue / ($balance->quantity_milliunits / 1000),
+            );
+            $balance->forceFill([
+                'inventory_value_kobo' => $newValue,
+                'weighted_average_cost_kobo' => $newAverage,
+                'version' => $balance->version + 1,
+                'last_movement_at' => now(),
+            ])->save();
+
+            $this->movement(
+                $product,
+                $warehouse,
+                $actor,
+                StockMovementType::CostReversal,
+                0,
+                $balance->quantity_milliunits,
+                $newAverage,
+                $newValue,
+                $variant,
+                $batch,
+                $condition,
+                'landed_cost_reversal',
+                $referenceId,
+                $operation?->getKey(),
+                'landed_cost_reversed',
+                $note,
+                $operation,
+                $sequence,
+            );
+
+            return $balance;
+        }, 3);
+    }
+
     public function reserve(
         Product $product,
         Warehouse $warehouse,

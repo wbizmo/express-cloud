@@ -3,10 +3,7 @@
     'pageDescription' => null,
 ])
 
-<div
-    x-data
-    class="ec-app-frame min-h-screen max-w-full overflow-x-clip bg-[var(--ec-background)]"
->
+<div x-data class="ec-app-frame min-h-screen max-w-full overflow-x-clip bg-[var(--ec-background)]">
     <x-feedback.page-progress />
     <x-navigation.sidebar />
     <x-navigation.mobile-drawer />
@@ -15,10 +12,15 @@
         class="ec-page-content min-h-screen max-w-full overflow-x-clip transition-[padding] duration-200"
         :class="$store.shell.sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[280px]'"
     >
-        <div style="--ec-sidebar-offset: 280px" :style="'--ec-sidebar-offset: ' + (.shell.sidebarCollapsed ? '72px' : '280px')"><div style="--ec-sidebar-offset: 280px" :style="'--ec-sidebar-offset: ' + (.shell.sidebarCollapsed ? '72px' : '280px')"><x-navigation.topbar /></div></div>
+        <div
+            style="--ec-sidebar-offset: 280px"
+            :style="'--ec-sidebar-offset: ' + ($store.shell.sidebarCollapsed ? '72px' : '280px')"
+        >
+            <x-navigation.topbar />
+        </div>
 
-        <main class="ec-page-main w-full pt-20 pt-20 max-w-full overflow-x-clip px-4 py-6 sm:px-6 lg:px-6">
-            <header class="mb-6 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <main class="ec-page-main w-full max-w-full overflow-x-clip px-4 pb-10 pt-20 sm:px-6 lg:px-8">
+            <header class="ec-page-header mb-6 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div class="min-w-0">
                     <div class="mb-3 flex min-w-0 flex-wrap items-center gap-3">
                         <button
@@ -29,12 +31,12 @@
                             <x-ui.icon name="arrow-left" :size="16" />
                             <span>Back</span>
                         </button>
-                        <nav class="text-xs font-medium text-slate-500" aria-label="Breadcrumb">
+                        <nav class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400" aria-label="Breadcrumb">
                             Express Cloud / Workspace
                         </nav>
                     </div>
 
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-950 sm:text-[2rem]">
+                    <h1 class="text-2xl font-extrabold tracking-[-0.035em] text-slate-950 sm:text-[2rem]">
                         {{ $pageTitle }}
                     </h1>
 

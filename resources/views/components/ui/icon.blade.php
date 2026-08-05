@@ -3,9 +3,88 @@
     'size' => 18,
 ])
 
-<i
-    data-lucide="{{ $name }}"
-    width="{{ $size }}"
-    height="{{ $size }}"
-    {{ $attributes->class('shrink-0') }}
-></i>
+@php
+    $symbols = [
+        'activity' => 'monitoring',
+        'add' => 'add',
+        'add-shopping-cart' => 'add_shopping_cart',
+        'alert-circle' => 'error',
+        'arrow-left' => 'arrow_back',
+        'arrow-right' => 'arrow_forward',
+        'arrow-up-down' => 'swap_vert',
+        'badge-check' => 'verified',
+        'banknote' => 'payments',
+        'bell' => 'notifications',
+        'block' => 'block',
+        'boxes' => 'inventory_2',
+        'building-2' => 'domain',
+        'calendar-clock' => 'event_upcoming',
+        'cancel' => 'cancel',
+        'check' => 'check',
+        'check-circle' => 'check_circle',
+        'check-circle-2' => 'check_circle',
+        'chevron-down' => 'expand_more',
+        'chevron-left' => 'chevron_left',
+        'chevron-right' => 'chevron_right',
+        'circle-alert' => 'error',
+        'close' => 'close',
+        'credit-card' => 'credit_card',
+        'delete' => 'delete',
+        'download' => 'download',
+        'edit' => 'edit',
+        'eye' => 'visibility',
+        'eye-off' => 'visibility_off',
+        'file-text' => 'description',
+        'filter' => 'filter_alt',
+        'help-circle' => 'help',
+        'home' => 'home',
+        'inventory' => 'inventory_2',
+        'landmark' => 'account_balance',
+        'layout-dashboard' => 'dashboard',
+        'life-buoy' => 'support_agent',
+        'loader-circle' => 'progress_activity',
+        'lock' => 'lock',
+        'log-out' => 'logout',
+        'menu' => 'menu',
+        'minimize-2' => 'close_fullscreen',
+        'moon' => 'dark_mode',
+        'package' => 'package_2',
+        'package-search' => 'inventory',
+        'package-x' => 'inventory_2',
+        'panel-left' => 'left_panel_open',
+        'panel-right' => 'left_panel_close',
+        'pause' => 'pause',
+        'plug-zap' => 'electrical_services',
+        'plus' => 'add',
+        'printer' => 'print',
+        'receipt-text' => 'receipt_long',
+        'refresh-cw' => 'refresh',
+        'save' => 'save',
+        'scan-barcode' => 'barcode_scanner',
+        'scan-line' => 'document_scanner',
+        'scan-search' => 'manage_search',
+        'search' => 'search',
+        'settings' => 'settings',
+        'shield-check' => 'shield',
+        'shopping-cart' => 'shopping_cart',
+        'sliders-horizontal' => 'tune',
+        'smartphone' => 'smartphone',
+        'sun' => 'light_mode',
+        'triangle-alert' => 'warning',
+        'truck' => 'local_shipping',
+        'upload' => 'upload',
+        'user' => 'person',
+        'users' => 'group',
+        'users-round' => 'groups',
+        'wallet-cards' => 'account_balance_wallet',
+        'workflow' => 'account_tree',
+        'x' => 'close',
+    ];
+    $symbol = $symbols[$name] ?? str_replace('-', '_', $name);
+@endphp
+
+<span
+    aria-hidden="true"
+    style="font-size: {{ (int) $size }}px"
+    {{ $attributes->class('material-symbols-outlined shrink-0') }}
+>{{ $symbol }}</span>

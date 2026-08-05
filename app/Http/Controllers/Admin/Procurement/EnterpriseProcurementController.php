@@ -17,6 +17,7 @@ use App\Services\Catalog\MoneyInput;
 use App\Services\Operations\CommandBoundary;
 use App\Services\Organisation\BranchAccess;
 use App\Services\Procurement\EnterpriseProcurementWorkflow;
+use App\Services\Procurement\ProcurementReversalService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ final readonly class EnterpriseProcurementController
 {
     public function __construct(
         private EnterpriseProcurementWorkflow $workflow,
+        private ProcurementReversalService $reversals,
         private MoneyInput $money,
         private CommandBoundary $commands,
         private BranchAccess $branches,
@@ -49,7 +51,11 @@ final readonly class EnterpriseProcurementController
                 ->latest()->limit(30)->get(),
             'receipts' => GoodsReceipt::query()
                 ->whereIn('warehouse_id', clone $warehouseIds)
-                ->with(['purchaseOrder:id,order_number', 'warehouse:id,name'])
+                ->with([
+                    'purchaseOrder:id,order_number',
+                    'warehouse:id,name',
+                    'landedCosts',
+                ])
                 ->latest('received_at')->limit(30)->get(),
             'warehouses' => $this->branches->scope($actor, Warehouse::query())
                 ->where('status', 'active')->orderBy('name')->get(),
@@ -102,17 +108,12 @@ final readonly class EnterpriseProcurementController
         return back()->with('status', 'Purchase requisition submitted.');
     }
 
-    public function approve(
-        Request $request,
-        PurchaseRequisition $requisition,
-    ): RedirectResponse {
-        $validated = $request->validate([
-            'idempotency_key' => ['required', 'string', 'max:120'],
-        ]);
+    public function approve(Request $request, PurchaseRequisition $requisition): RedirectResponse
+    {
+        $validated = $request->validate(['idempotency_key' => ['required', 'string', 'max:120']]);
         /** @var Account $actor */
         $actor = $request->user();
         $this->branches->enforce($actor, (string) $requisition->branch_id);
-
         $this->commands->execute(
             'procurement.requisition.approve',
             $validated['idempotency_key'],
@@ -126,10 +127,8 @@ final readonly class EnterpriseProcurementController
         return back()->with('status', 'Purchase requisition approved.');
     }
 
-    public function convert(
-        Request $request,
-        PurchaseRequisition $requisition,
-    ): RedirectResponse {
+    public function convert(Request $request, PurchaseRequisition $requisition): RedirectResponse
+    {
         $validated = $request->validate([
             'idempotency_key' => ['required', 'string', 'max:120'],
             'supplier_id' => ['required', 'ulid'],
@@ -140,14 +139,10 @@ final readonly class EnterpriseProcurementController
         $this->branches->enforce($actor, (string) $requisition->branch_id);
         /** @var Supplier $supplier */
         $supplier = Supplier::query()->findOrFail($validated['supplier_id']);
-
         $this->commands->execute(
             'procurement.requisition.convert',
             $validated['idempotency_key'],
-            [
-                'requisition_id' => (string) $requisition->getKey(),
-                ...$validated,
-            ],
+            ['requisition_id' => (string) $requisition->getKey(), ...$validated],
             $actor,
             (string) $requisition->branch_id,
             fn (OperationRequest $operation): PurchaseOrder => $this->workflow->convertToOrder(
@@ -180,11 +175,8 @@ final readonly class EnterpriseProcurementController
         $this->branches->enforce($actor, (string) $order->branch_id);
         $warehouse = $this->warehouseForActor($actor, $validated['warehouse_id']);
         if ((string) $warehouse->branch_id !== (string) $order->branch_id) {
-            throw new \DomainException(
-                'Goods must be received into a warehouse owned by the purchase-order branch.',
-            );
+            throw new \DomainException('Goods must be received into a warehouse owned by the purchase-order branch.');
         }
-
         $this->commands->execute(
             'procurement.goods-receipt.create',
             $validated['idempotency_key'],
@@ -225,7 +217,6 @@ final readonly class EnterpriseProcurementController
         /** @var Warehouse $warehouse */
         $warehouse = $receipt->warehouse()->firstOrFail();
         $this->branches->enforce($actor, (string) $warehouse->branch_id);
-
         $this->commands->execute(
             'procurement.landed-cost.allocate',
             $validated['idempotency_key'],
@@ -246,12 +237,63 @@ final readonly class EnterpriseProcurementController
         return back()->with('status', 'Landed cost allocated to received inventory and posted to the ledger.');
     }
 
+    public function voidReceipt(Request $request, GoodsReceipt $receipt): RedirectResponse
+    {
+        $validated = $request->validate([
+            'idempotency_key' => ['required', 'string', 'max:120'],
+            'reason' => ['required', 'string', 'max:1000'],
+        ]);
+        /** @var Account $actor */
+        $actor = $request->user();
+        /** @var Warehouse $warehouse */
+        $warehouse = $receipt->warehouse()->firstOrFail();
+        $this->branches->enforce($actor, (string) $warehouse->branch_id);
+        $this->commands->execute(
+            'procurement.goods-receipt.void',
+            $validated['idempotency_key'],
+            ['goods_receipt_id' => (string) $receipt->getKey(), 'reason' => $validated['reason']],
+            $actor,
+            (string) $warehouse->branch_id,
+            fn (OperationRequest $operation): GoodsReceipt => $this->reversals
+                ->voidReceipt($receipt, $actor, $validated['reason'], $operation),
+        );
+
+        return back()->with('status', 'Goods receipt voided through compensating stock and accounting entries.');
+    }
+
+    public function reverseLandedCost(
+        Request $request,
+        LandedCostAllocation $allocation,
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'idempotency_key' => ['required', 'string', 'max:120'],
+            'reason' => ['required', 'string', 'max:1000'],
+        ]);
+        /** @var Account $actor */
+        $actor = $request->user();
+        /** @var GoodsReceipt $receipt */
+        $receipt = $allocation->goodsReceipt()->firstOrFail();
+        /** @var Warehouse $warehouse */
+        $warehouse = $receipt->warehouse()->firstOrFail();
+        $this->branches->enforce($actor, (string) $warehouse->branch_id);
+        $this->commands->execute(
+            'procurement.landed-cost.reverse',
+            $validated['idempotency_key'],
+            ['allocation_id' => (string) $allocation->getKey(), 'reason' => $validated['reason']],
+            $actor,
+            (string) $warehouse->branch_id,
+            fn (OperationRequest $operation): LandedCostAllocation => $this->reversals
+                ->reverseLandedCost($allocation, $actor, $validated['reason'], $operation),
+        );
+
+        return back()->with('status', 'Landed-cost allocation reversed with inventory and journal compensation.');
+    }
+
     private function warehouseForActor(Account $actor, string $warehouseId): Warehouse
     {
         /** @var Warehouse $warehouse */
         $warehouse = $this->branches->scope($actor, Warehouse::query())
-            ->whereKey($warehouseId)
-            ->firstOrFail();
+            ->whereKey($warehouseId)->firstOrFail();
 
         return $warehouse;
     }

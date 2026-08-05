@@ -10,14 +10,21 @@ enum PurchaseOrderStatus: string
     case Approved = 'approved';
     case PartiallyReceived = 'partially_received';
     case Received = 'received';
+    case PartiallyCancelled = 'partially_cancelled';
     case Cancelled = 'cancelled';
 
     public function receivable(): bool
     {
-        return in_array(
-            $this,
-            [self::Approved, self::PartiallyReceived],
-            true,
-        );
+        return in_array($this, [self::Approved, self::PartiallyReceived], true);
+    }
+
+    public function editable(): bool
+    {
+        return in_array($this, [self::Draft, self::Approved], true);
+    }
+
+    public function closed(): bool
+    {
+        return in_array($this, [self::Received, self::PartiallyCancelled, self::Cancelled], true);
     }
 }

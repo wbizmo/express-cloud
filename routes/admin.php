@@ -269,6 +269,22 @@ Route::middleware([
             ->middleware('permission:procurement.create')
             ->name('orders.store');
 
+        Route::get('/orders/{order}/edit', [PurchaseOrderController::class, 'edit'])
+            ->middleware('permission:procurement.create')
+            ->name('orders.edit');
+
+        Route::put('/orders/{order}', [PurchaseOrderController::class, 'update'])
+            ->middleware('permission:procurement.create')
+            ->name('orders.update');
+
+        Route::post('/orders/{order}/cancel', [PurchaseOrderController::class, 'cancel'])
+            ->middleware('permission:procurement.approve')
+            ->name('orders.cancel');
+
+        Route::post('/orders/{order}/cancel-outstanding', [PurchaseOrderController::class, 'cancelOutstanding'])
+            ->middleware('permission:procurement.approve')
+            ->name('orders.cancel-outstanding');
+
         Route::patch('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])
             ->middleware('permission:procurement.approve')
             ->name('orders.approve');
@@ -763,6 +779,12 @@ Route::middleware([
             Route::post('/receipts/{receipt}/landed-cost', [EnterpriseProcurementController::class, 'landedCost'])
                 ->middleware('permission:procurement.landed-cost.manage')
                 ->name('receipts.landed-cost');
+            Route::post('/receipts/{receipt}/void', [EnterpriseProcurementController::class, 'voidReceipt'])
+                ->middleware('permission:procurement.receipts.create')
+                ->name('receipts.void');
+            Route::post('/landed-costs/{allocation}/reverse', [EnterpriseProcurementController::class, 'reverseLandedCost'])
+                ->middleware('permission:procurement.landed-cost.manage')
+                ->name('landed-costs.reverse');
         });
 
     Route::prefix('sales/workflows')

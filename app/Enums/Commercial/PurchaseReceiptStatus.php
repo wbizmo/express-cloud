@@ -8,4 +8,5 @@ enum PurchaseReceiptStatus: string
 {
     case Recorded = 'recorded';
     case Cancelled = 'cancelled';
+    case Voided = 'voided';
 }

@@ -320,7 +320,7 @@
                         x-on:click="clearCustomer()"
                         class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     >
-                        <i data-lucide="x" class="h-4 w-4"></i>
+                        <span class="material-symbols-outlined text-base leading-none" aria-hidden="true">close</span>
                     </button>
                     <div
                         x-ref="customerResults"
@@ -399,7 +399,7 @@
 
                             <div class="ec-search-wrap">
                                 <span class="ec-search-icon">
-                                    <i data-lucide="scan-barcode" class="h-4 w-4"></i>
+                                    <span class="material-symbols-outlined text-base leading-none" aria-hidden="true">barcode_scanner</span>
                                 </span>
                                 <input
                                     type="search"
@@ -474,7 +474,7 @@
                                                 <p class="ec-line-price" x-text="money(line.unit_price_kobo) + ' each'"></p>
                                             </div>
                                             <button type="button" x-on:click="removeLine(line.id)" class="ec-remove-btn">
-                                                <i data-lucide="x" class="h-4 w-4"></i>
+                                                <span class="material-symbols-outlined text-base leading-none" aria-hidden="true">close</span>
                                             </button>
                                         </div>
 
@@ -588,7 +588,7 @@
                             </div>
 
                             <div id="customer-error" class="mt-2 hidden rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                                ⚠️ Please select a customer before submitting.
+                                ️ Please select a customer before submitting.
                             </div>
 
                             <textarea x-model="notes" rows="2" placeholder="Sale notes" class="ec-input mt-3 w-full" style="min-height: 60px; padding: 8px 12px;"></textarea>

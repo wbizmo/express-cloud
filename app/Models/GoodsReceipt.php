@@ -14,19 +14,11 @@ final class GoodsReceipt extends Model
     use HasUlids;
 
     protected $fillable = [
-        'receipt_number',
-        'purchase_order_id',
-        'purchase_receipt_id',
-        'warehouse_id',
-        'received_by_account_id',
-        'operation_request_id',
-        'supplier_reference',
-        'status',
-        'subtotal_kobo',
-        'tax_kobo',
-        'total_kobo',
-        'received_at',
-        'notes',
+        'receipt_number', 'purchase_order_id', 'purchase_receipt_id',
+        'warehouse_id', 'received_by_account_id', 'voided_by_account_id',
+        'operation_request_id', 'supplier_reference', 'status',
+        'subtotal_kobo', 'tax_kobo', 'total_kobo', 'received_at',
+        'voided_at', 'notes', 'void_reason',
     ];
 
     protected function casts(): array
@@ -36,6 +28,7 @@ final class GoodsReceipt extends Model
             'tax_kobo' => 'integer',
             'total_kobo' => 'integer',
             'received_at' => 'immutable_datetime',
+            'voided_at' => 'immutable_datetime',
         ];
     }
 
@@ -43,6 +36,12 @@ final class GoodsReceipt extends Model
     public function purchaseOrder(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrder::class);
+    }
+
+    /** @return BelongsTo<PurchaseReceipt, $this> */
+    public function purchaseReceipt(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseReceipt::class);
     }
 
     /** @return BelongsTo<Warehouse, $this> */
@@ -55,5 +54,11 @@ final class GoodsReceipt extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(GoodsReceiptLine::class);
+    }
+
+    /** @return HasMany<LandedCostAllocation, $this> */
+    public function landedCosts(): HasMany
+    {
+        return $this->hasMany(LandedCostAllocation::class);
     }
 }

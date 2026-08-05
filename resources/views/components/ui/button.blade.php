@@ -7,13 +7,12 @@
 ])
 
 @php
-    $base = 'inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-60';
-
+    $base = 'ec-button inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-60';
     $variants = [
-        'primary' => 'bg-blue-600 text-white hover:bg-blue-700',
-        'secondary' => 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
-        'ghost' => 'text-slate-600 hover:bg-slate-100 hover:text-slate-950',
-        'danger' => 'bg-red-600 text-white hover:bg-red-700',
+        'primary' => 'ec-button-primary',
+        'secondary' => 'ec-button-secondary',
+        'ghost' => 'ec-button-ghost',
+        'danger' => 'ec-button-danger',
     ];
 @endphp
 
@@ -29,7 +28,6 @@
         @if ($icon)
             <x-ui.icon :name="$icon" />
         @endif
-
         <span>{{ $slot }}</span>
     @endif
 </button>
