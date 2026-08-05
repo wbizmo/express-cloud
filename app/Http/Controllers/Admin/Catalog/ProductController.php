@@ -113,6 +113,7 @@ final readonly class ProductController
                         ->where('product_id', $product->getKey())
                         ->where('branch_id', (string) $row['branch_id'])
                         ->delete();
+
                     continue;
                 }
 

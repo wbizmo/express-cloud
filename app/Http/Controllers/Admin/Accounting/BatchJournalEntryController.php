@@ -61,11 +61,11 @@ final class BatchJournalEntryController
                 $totalCredit += (int) ($line['credit_kobo'] ?? 0);
             }
             if ($totalDebit !== $totalCredit) {
-                $errors[] = "Entry #" . ($index + 1) . " is unbalanced (Debit: $totalDebit, Credit: $totalCredit).";
+                $errors[] = 'Entry #'.($index + 1)." is unbalanced (Debit: $totalDebit, Credit: $totalCredit).";
             }
         }
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             return back()->withErrors(['entries' => implode(' ', $errors)])->withInput();
         }
 

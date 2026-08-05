@@ -1,8 +1,0 @@
-<x-layout.app title="Standalone receipts | Express Cloud">
-<x-layout.app-shell page-title="Standalone receipts" page-description="Receive money and issue a receipt without creating an invoice or sale.">
-<div data-page-header class="mb-5 flex justify-end"><a class="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white" href="{{ route('admin.accounting-operations.receipts.create') }}">Receive payment</a></div>
-<x-ui.card title="Receipt history">
-<div class="overflow-x-auto"><table class="w-full min-w-[820px] text-left text-sm"><thead><tr><th class="px-3 py-3">Receipt</th><th class="px-3 py-3">Payer</th><th class="px-3 py-3">Purpose</th><th class="px-3 py-3">Amount</th><th class="px-3 py-3">Received</th><th class="px-3 py-3">Documents</th></tr></thead><tbody>@forelse($receipts as $receipt)<tr class="border-t border-slate-100"><td class="px-3 py-4 font-mono">{{ $receipt->receipt_number }}</td><td class="px-3 py-4">{{ $receipt->payer_name }}</td><td class="px-3 py-4">{{ $receipt->purpose }}</td><td class="px-3 py-4 font-semibold">₦{{ number_format($receipt->amount_kobo/100,2) }}</td><td class="px-3 py-4">{{ $receipt->received_at?->format('d M Y H:i') }}</td><td class="px-3 py-4"><a href="{{ route('admin.accounting-operations.documents.pdf',['standalone_receipt',$receipt]) }}">PDF</a> · <a href="{{ route('admin.accounting-operations.documents.spreadsheet',['standalone_receipt',$receipt]) }}">Spreadsheet</a></td></tr>@empty<tr><td colspan="6" class="px-3 py-10 text-center text-slate-500">No standalone receipts issued.</td></tr>@endforelse</tbody></table></div>
-</x-ui.card>
-</x-layout.app-shell>
-</x-layout.app>

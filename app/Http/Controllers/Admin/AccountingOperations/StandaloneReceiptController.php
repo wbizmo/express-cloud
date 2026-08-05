@@ -9,11 +9,10 @@ use App\Models\Account;
 use App\Models\Branch;
 use App\Models\Product;
 use App\Models\StandaloneReceipt;
-use App\Services\Organisation\AuditLogger;
 use App\Services\Inventory\StockLedger;
+use App\Services\Organisation\AuditLogger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 final class StandaloneReceiptController
 {
@@ -75,7 +74,7 @@ final class StandaloneReceiptController
                 0,
                 'direct_purchase',
                 $receipt->id,
-                'Direct purchase receipt ' . $receipt->id
+                'Direct purchase receipt '.$receipt->id
             );
         }
 

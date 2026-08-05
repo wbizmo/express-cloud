@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // ✅ Only add the column if it doesn't already exist
-        if (!Schema::hasColumn('sale_items', 'unit_cost_kobo_snapshot')) {
+        if (! Schema::hasColumn('sale_items', 'unit_cost_kobo_snapshot')) {
             Schema::table('sale_items', function (Blueprint $table): void {
                 $table->unsignedBigInteger('unit_cost_kobo_snapshot')
                     ->default(0)
@@ -22,9 +22,9 @@ return new class extends Migration
 
         // Update existing rows using the appropriate syntax for each driver
         if (DB::getDriverName() === 'sqlite') {
-            DB::statement("UPDATE sale_items SET unit_cost_kobo_snapshot = (SELECT default_cost_price_kobo FROM products WHERE products.id = sale_items.product_id) WHERE unit_cost_kobo_snapshot = 0");
+            DB::statement('UPDATE sale_items SET unit_cost_kobo_snapshot = (SELECT default_cost_price_kobo FROM products WHERE products.id = sale_items.product_id) WHERE unit_cost_kobo_snapshot = 0');
         } else {
-            DB::statement("UPDATE sale_items si JOIN products p ON p.id = si.product_id SET si.unit_cost_kobo_snapshot = p.default_cost_price_kobo WHERE si.unit_cost_kobo_snapshot = 0");
+            DB::statement('UPDATE sale_items si JOIN products p ON p.id = si.product_id SET si.unit_cost_kobo_snapshot = p.default_cost_price_kobo WHERE si.unit_cost_kobo_snapshot = 0');
         }
 
         Schema::create('ledger_accounts', function (Blueprint $table): void {

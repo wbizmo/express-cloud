@@ -1,0 +1,2 @@
+tests/Feature/Regression/NoExternalPrintDependencyTest.php: corrected stale document-branch assertion
+database/migrations/2026_07_21_060000_fix_missing_permissions.php: removed one trailing space from the multiline SQL VALUES line

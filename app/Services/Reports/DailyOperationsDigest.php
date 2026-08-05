@@ -71,7 +71,7 @@ final class DailyOperationsDigest
                 fputcsv($f, array_values($r));
             }
         }rewind($f);
-        Storage::disk('local')->put($path,stream_get_contents($f) ?: '');
+        Storage::disk('local')->put($path, stream_get_contents($f) ?: '');
         fclose($f);
     }
 }

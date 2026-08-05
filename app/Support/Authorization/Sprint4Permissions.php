@@ -27,6 +27,6 @@ final class Sprint4Permissions
             array_push($all, ...$p);
         }
 
-return array_values(array_unique($all));
+        return array_values(array_unique($all));
     }
 }

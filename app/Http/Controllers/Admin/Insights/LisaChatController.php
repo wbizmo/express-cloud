@@ -71,6 +71,6 @@ final readonly class LisaChatController
 
     public function auditShow(LisaConversation $conversation): View
     {
-        return view('admin.insights.audit-show',['conversation' => $conversation->load(['account', 'branch', 'messages'])]);
+        return view('admin.insights.audit-show', ['conversation' => $conversation->load(['account', 'branch', 'messages'])]);
     }
 }

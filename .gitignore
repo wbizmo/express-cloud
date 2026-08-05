@@ -56,3 +56,41 @@ storage/app/public/company-branding/
 .local/
 .script-logs/
 .replit
+
+# BEGIN EXPRESS CLOUD PHASE 0 SANITATION
+# Local secrets and environment variants
+.env
+.env.*
+!.env.example
+
+# Generated release/package state
+/build/
+/release/
+
+# AI, cloud-IDE and local runner state
+/.agent/
+/.agents/
+/.cache/
+/.chat/
+/.codex/
+/.config/
+/.cursor/
+/.local/
+/.script-logs/
+/.sprint-logs/
+/.upm/
+/.replit
+/.replit.nix
+
+# Temporary source copies, patches and sprint runners
+*.bak
+*.backup
+*.diff
+*.orig
+*.patch
+*.rej
+*.sh
+*.swo
+*.swp
+*~
+# END EXPRESS CLOUD PHASE 0 SANITATION

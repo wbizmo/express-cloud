@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin\Accounting;
 use App\Enums\Accounting\AccountType;
 use App\Http\Requests\Admin\Accounting\StoreLedgerAccountRequest;
 use App\Http\Requests\Admin\Accounting\UpdateLedgerAccountRequest;
+use App\Models\AccountingPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\LedgerAccount;
@@ -28,7 +29,7 @@ final readonly class ChartOfAccountsController
             ->withCount([
                 'journalLines as balance_kobo' => function ($query) {
                     $query->select(DB::raw('COALESCE(SUM(debit_kobo) - SUM(credit_kobo), 0)'));
-                }
+                },
             ])
             ->orderBy('code')
             ->paginate(config('pagination.default', 10));
@@ -62,8 +63,8 @@ final readonly class ChartOfAccountsController
             $openingBalance = (int) $request->input('opening_balance_kobo', 0);
             if ($openingBalance !== 0) {
                 // Find an open accounting period (fallback to the first one)
-                $period = \App\Models\AccountingPeriod::where('status', 'open')->first();
-                if (!$period) {
+                $period = AccountingPeriod::where('status', 'open')->first();
+                if (! $period) {
                     throw new \RuntimeException('No open accounting period found. Please open a period first.');
                 }
 
@@ -72,7 +73,7 @@ final readonly class ChartOfAccountsController
                     'entry_date' => now()->toDateString(),
                     'accounting_period_id' => $period->id,
                     'status' => 'posted',
-                    'memo' => 'Opening balance for account ' . $account->code . ' - ' . $account->name,
+                    'memo' => 'Opening balance for account '.$account->code.' - '.$account->name,
                     'created_by_account_id' => $request->user()?->id,
                     'posted_at' => now(),
                 ]);
@@ -89,7 +90,7 @@ final readonly class ChartOfAccountsController
 
                 // The contra account is "Opening Balance Clearing" (code 9990) – we assume it exists.
                 $contraAccount = LedgerAccount::where('code', '9990')->first();
-                if (!$contraAccount) {
+                if (! $contraAccount) {
                     // fallback: create a temporary equity account? But better to warn.
                     throw new \RuntimeException('Opening Balance Clearing account (code 9990) not found. Please create it first.');
                 }
@@ -109,7 +110,7 @@ final readonly class ChartOfAccountsController
                     'ledger_account_id' => $contraAccount->id,
                     'debit_kobo' => $credit, // opposite
                     'credit_kobo' => $debit,
-                    'description' => 'Contra for opening balance of ' . $account->code,
+                    'description' => 'Contra for opening balance of '.$account->code,
                 ]);
 
                 $this->audit->record(
@@ -136,7 +137,7 @@ final readonly class ChartOfAccountsController
             return $account;
         });
 
-        return back()->with('status', 'Ledger account created.' . ($openingBalance ?? 0 !== 0 ? ' Opening balance posted.' : ''));
+        return back()->with('status', 'Ledger account created.'.($openingBalance ?? 0 !== 0 ? ' Opening balance posted.' : ''));
     }
 
     public function edit(LedgerAccount $ledgerAccount): View
@@ -189,6 +190,7 @@ final readonly class ChartOfAccountsController
             ->first();
 
         $number = $last ? (int) Str::after($last->journal_number, 'OP-') + 1 : 1;
+
         return 'OP-'.str_pad((string) $number, 6, '0', STR_PAD_LEFT);
     }
 }

@@ -3,7 +3,7 @@
 Express Cloud is a standalone enterprise sales, invoicing, purchasing,
 supplier, customer, and physical-inventory platform.
 
-The application is being built through 17 implementation sprints.
+The application was built through 19 implementation sprints and is now entering a phased production-hardening programme.
 
 ## Locked technical foundation
 

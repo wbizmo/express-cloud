@@ -42,7 +42,7 @@ final class NoExternalPrintDependencyTest extends TestCase
             $content,
         );
         self::assertStringContainsString(
-            'branch?->address',
+            '$documentBranch?->address',
             $content,
         );
     }

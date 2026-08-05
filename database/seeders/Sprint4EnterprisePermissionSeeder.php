@@ -8,7 +8,8 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Support\Authorization\Sprint4Permissions;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;  // 👈 added for slug generation
+
+// 👈 added for slug generation
 
 final class Sprint4EnterprisePermissionSeeder extends Seeder
 {

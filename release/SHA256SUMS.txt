@@ -1,4 +1,0 @@
-4a57d3c75279c8d458447f54193bf8f2034687914ccccb3deb02087e290b33ff  /workspaces/express-cloud/release/express-cloud-v1.0.0.zip
-6b2912922501b5725b7169832cc61c2d016309ec734c3e96e8a1adfd8e121b46  /workspaces/express-cloud/release/express-cloud-install.sql
-f8983de8b8c0516fd4cb37942e689ac9789906ddf8a4769931359a4c22d1f041  /workspaces/express-cloud/release/PRODUCTION.env
-1ecf930305669e7dfdc60c4338dc381b10ac14a0bb3ec4f59a2d35db16a8318b  /workspaces/express-cloud/release/FIRST_LOGIN.txt

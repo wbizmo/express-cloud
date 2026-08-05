@@ -14,8 +14,8 @@ use App\Models\Branch;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
-use App\Services\Organisation\AuditLogger;
 use App\Services\Inventory\StockLedger;
+use App\Services\Organisation\AuditLogger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -162,7 +162,7 @@ final readonly class PurchaseOrderController
                 0, // unit cost could be added later
                 'purchase_order_receive',
                 $order->id,
-                'Received from PO ' . $order->order_number
+                'Received from PO '.$order->order_number
             );
         }
     }

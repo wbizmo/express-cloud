@@ -1,7 +1,0 @@
-Express Cloud First Login
-=========================
-Administrator: Administrator Account
-Access key: EC19-7KQW
-
-Import express-cloud-install.sql, copy express-cloud-production.env to .env,
-update database and URL values, then sign in and rotate this key immediately.

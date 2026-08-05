@@ -11,11 +11,6 @@ final class StockService
 {
     /**
      * Increment stock for a product in a specific branch.
-     *
-     * @param string $productId
-     * @param string $branchId
-     * @param int $quantityMilliunits
-     * @return void
      */
     public function incrementStock(string $productId, string $branchId, int $quantityMilliunits): void
     {
@@ -32,10 +27,6 @@ final class StockService
     /**
      * Decrement stock for a product in a specific branch.
      *
-     * @param string $productId
-     * @param string $branchId
-     * @param int $quantityMilliunits
-     * @return void
      * @throws \RuntimeException if stock becomes negative
      */
     public function decrementStock(string $productId, string $branchId, int $quantityMilliunits): void
@@ -49,7 +40,7 @@ final class StockService
             ->where('branch_id', $branchId)
             ->first();
 
-        if (!$stock) {
+        if (! $stock) {
             throw new \RuntimeException("Stock record not found for product {$productId} in branch {$branchId}");
         }
 
