@@ -13,6 +13,7 @@ use App\Models\FixedAsset;
 use App\Models\JournalEntry;
 use App\Models\LisaConversation;
 use App\Models\LowStockAlert;
+use App\Models\Payment;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseReceipt;
 use App\Models\PurchaseReturn;
@@ -21,7 +22,9 @@ use App\Models\SaleReturn;
 use App\Models\StandaloneReceipt;
 use App\Models\StockMovement;
 use App\Models\SupplierBill;
+use App\Models\SupplierBillPayment;
 use App\Models\SupplierReturn;
+use App\Observers\FinancialSourceObserver;
 use App\Policies\BranchScopedResourcePolicy;
 use App\Services\Organisation\AuthorizationService;
 use App\Services\Organisation\BranchAccess;
@@ -47,6 +50,21 @@ final class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading(! app()->isProduction());
         Model::preventSilentlyDiscardingAttributes(! app()->isProduction());
         Model::preventAccessingMissingAttributes(! app()->isProduction());
+
+        foreach ([
+            Payment::class,
+            PurchaseReceipt::class,
+            PurchaseReturn::class,
+            SaleReturn::class,
+            StandaloneReceipt::class,
+            StockMovement::class,
+            SupplierBill::class,
+            SupplierBillPayment::class,
+            SupplierReturn::class,
+            FixedAsset::class,
+        ] as $financialSource) {
+            $financialSource::observe(FinancialSourceObserver::class);
+        }
 
         $permissions = PermissionCatalog::all();
 

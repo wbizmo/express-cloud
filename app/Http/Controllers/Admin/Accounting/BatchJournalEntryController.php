@@ -10,6 +10,7 @@ use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\LedgerAccount;
 use App\Models\OperationRequest;
+use App\Services\Accounting\FinancialPostingCoordinator;
 use App\Services\Operations\CommandBoundary;
 use App\Services\Organisation\AuditLogger;
 use Illuminate\Contracts\View\View;
@@ -23,6 +24,7 @@ final readonly class BatchJournalEntryController
     public function __construct(
         private AuditLogger $audit,
         private CommandBoundary $commands,
+        private FinancialPostingCoordinator $postings,
     ) {}
 
     public function create(): View
@@ -113,6 +115,20 @@ final readonly class BatchJournalEntryController
                             'credit_kobo' => (int) ($lineData['credit_kobo'] ?? 0),
                             'description' => $lineData['description'] ?? null,
                         ]);
+                    }
+
+                    if ($entryData['status'] === 'posted') {
+                        $this->postings->registerExistingJournal(
+                            $entry,
+                            'batch-posted',
+                        );
+                    } else {
+                        $this->postings->nonPosting(
+                            $entry,
+                            'batch-draft',
+                            'draft-journal',
+                            $operation,
+                        );
                     }
 
                     $this->audit->record(

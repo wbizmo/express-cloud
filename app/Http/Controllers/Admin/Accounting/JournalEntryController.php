@@ -10,6 +10,7 @@ use App\Models\AccountingPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\LedgerAccount;
+use App\Services\Accounting\FinancialPostingCoordinator;
 use App\Services\Organisation\AuditLogger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +20,10 @@ use Illuminate\Support\Str;
 
 final readonly class JournalEntryController
 {
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(
+        private AuditLogger $audit,
+        private FinancialPostingCoordinator $postings,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -105,6 +109,16 @@ final readonly class JournalEntryController
 
             if ($totalDebit !== $totalCredit) {
                 throw new \RuntimeException('Total debits must equal total credits.');
+            }
+
+            if ($entry->status === 'posted') {
+                $this->postings->registerExistingJournal($entry, 'manual-posted');
+            } else {
+                $this->postings->nonPosting(
+                    $entry,
+                    'manual-draft',
+                    'draft-journal',
+                );
             }
 
             $this->audit->record(
@@ -216,6 +230,19 @@ final readonly class JournalEntryController
 
             if ($totalDebit !== $totalCredit) {
                 throw new \RuntimeException('Total debits must equal total credits.');
+            }
+
+            if ($journalEntry->status === 'posted') {
+                $this->postings->registerExistingJournal(
+                    $journalEntry,
+                    'manual-posted',
+                );
+            } else {
+                $this->postings->nonPosting(
+                    $journalEntry,
+                    'manual-draft',
+                    'draft-journal',
+                );
             }
 
             $this->audit->record(

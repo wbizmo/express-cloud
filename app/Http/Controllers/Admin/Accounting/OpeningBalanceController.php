@@ -8,6 +8,7 @@ use App\Models\AccountingPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\LedgerAccount;
+use App\Services\Accounting\FinancialPostingCoordinator;
 use App\Services\Organisation\AuditLogger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -15,62 +16,71 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-final class OpeningBalanceController
+final readonly class OpeningBalanceController
 {
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(
+        private AuditLogger $audit,
+        private FinancialPostingCoordinator $postings,
+    ) {}
 
     public function create(): View
     {
-        $accounts = LedgerAccount::query()
-            ->where('is_active', true)
-            ->orderBy('code')
-            ->get(['id', 'code', 'name', 'type']);
-
-        $periods = AccountingPeriod::query()
-            ->where('status', 'open')
-            ->orderByDesc('starts_on')
-            ->get(['id', 'name']);
-
         return view('admin.accounting.opening-balance.create', [
-            'accounts' => $accounts,
-            'periods' => $periods,
+            'accounts' => LedgerAccount::query()
+                ->where('is_active', true)
+                ->orderBy('code')
+                ->get(['id', 'code', 'name', 'type']),
+            'periods' => AccountingPeriod::query()
+                ->where('status', 'open')
+                ->orderByDesc('starts_on')
+                ->get(['id', 'name']),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'entry_date' => ['required', 'date'],
             'accounting_period_id' => ['required', 'exists:accounting_periods,id'],
             'memo' => ['required', 'string', 'max:500'],
-            'balances' => ['required', 'array'],
+            'balances' => ['required', 'array', 'min:2'],
             'balances.*.ledger_account_id' => ['required', 'exists:ledger_accounts,id'],
             'balances.*.debit_kobo' => ['nullable', 'integer', 'min:0'],
             'balances.*.credit_kobo' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $validated): void {
+            /** @var AccountingPeriod $period */
+            $period = AccountingPeriod::query()
+                ->whereKey($validated['accounting_period_id'])
+                ->lockForUpdate()
+                ->firstOrFail();
+            abort_unless($period->status === 'open', 422, 'The accounting period is not open.');
+
             $entry = JournalEntry::query()->create([
-                'journal_number' => $this->generateOpeningJournalNumber(),
-                'entry_date' => $request->input('entry_date'),
-                'accounting_period_id' => $request->input('accounting_period_id'),
+                'journal_number' => 'OP-'.Str::upper(substr((string) Str::ulid(), -12)),
+                'entry_date' => $validated['entry_date'],
+                'accounting_period_id' => $period->getKey(),
                 'status' => 'posted',
-                'memo' => $request->input('memo', 'Opening balance entry'),
+                'memo' => $validated['memo'],
                 'created_by_account_id' => $request->user()?->id,
                 'posted_at' => now(),
             ]);
 
-            $totalDebit = 0;
-            $totalCredit = 0;
-
-            foreach ($request->input('balances') as $balance) {
+            $debits = 0;
+            $credits = 0;
+            foreach ($validated['balances'] as $balance) {
                 $debit = (int) ($balance['debit_kobo'] ?? 0);
                 $credit = (int) ($balance['credit_kobo'] ?? 0);
-                $totalDebit += $debit;
-                $totalCredit += $credit;
-
+                if (($debit > 0) === ($credit > 0)) {
+                    throw new \DomainException(
+                        'Each opening balance line requires exactly one debit or credit.',
+                    );
+                }
+                $debits += $debit;
+                $credits += $credit;
                 JournalLine::query()->create([
-                    'journal_entry_id' => $entry->id,
+                    'journal_entry_id' => $entry->getKey(),
                     'ledger_account_id' => $balance['ledger_account_id'],
                     'debit_kobo' => $debit,
                     'credit_kobo' => $credit,
@@ -78,9 +88,14 @@ final class OpeningBalanceController
                 ]);
             }
 
-            if ($totalDebit !== $totalCredit) {
-                throw new \RuntimeException('Total debits must equal total credits.');
+            if ($debits <= 0 || $debits !== $credits) {
+                throw new \DomainException('Opening balance debits and credits must balance.');
             }
+
+            $this->postings->registerExistingJournal(
+                $entry,
+                'opening-balance',
+            );
 
             $this->audit->record(
                 $request,
@@ -94,17 +109,5 @@ final class OpeningBalanceController
         return redirect()
             ->route('admin.accounting.journal-entries.index')
             ->with('status', 'Opening balance posted successfully.');
-    }
-
-    private function generateOpeningJournalNumber(): string
-    {
-        $last = JournalEntry::query()
-            ->where('journal_number', 'LIKE', 'OP-%')
-            ->orderByDesc('journal_number')
-            ->first();
-
-        $number = $last ? (int) Str::after($last->journal_number, 'OP-') + 1 : 1;
-
-        return 'OP-'.str_pad((string) $number, 6, '0', STR_PAD_LEFT);
     }
 }

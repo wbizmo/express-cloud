@@ -1,0 +1,19 @@
+sales: 0 scanned
+payments: 0 scanned
+purchase_receipts: 0 scanned
+supplier_bills: 0 scanned
+supplier_payments: 0 scanned
+sale_returns: 0 scanned
+purchase_returns: 0 scanned
+supplier_returns: 0 scanned
+standalone_receipts: 0 scanned
+fixed_assets: 0 scanned
+stock_movements: 0 scanned
+depreciation: 0 scanned
+manual_journals: 0 scanned
++--------+-------------+------+---------+
+| posted | non-posting | gaps | invalid |
++--------+-------------+------+---------+
+| 0      | 0           | 0    | 0       |
++--------+-------------+------+---------+
+Accounting reconciliation completed with zero differences.

@@ -1,0 +1,16 @@
+source_type	source_event	classification	debit_basis	credit_basis
+Sale	confirmed	posted	accounts_receivable;cost_of_goods_sold	sales_revenue;output_tax;inventory
+Sale	quote	non_posting	(none)	(none)
+Payment	received	posted	payment_method_ledger	accounts_receivable
+SaleReturn	completed	posted	sales_returns;output_tax;inventory	refund_or_receivable;cost_of_goods_sold
+PurchaseReceipt	recorded	posted	inventory	accounts_payable
+SupplierBill	posted	posted	general_expense	accounts_payable
+SupplierBillPayment	paid	posted	accounts_payable	payment_method_ledger
+SupplierReturn	confirmed	posted	accounts_payable	inventory
+PurchaseReturn	completed	posted	accounts_payable	inventory
+StandaloneReceipt	received	posted	payment_method_ledger	configured_income_or_receivable
+FixedAsset	acquired	posted	fixed_assets	fixed_asset_clearing
+FixedAsset	depreciation:period_end	posted	depreciation_expense	accumulated_depreciation
+StockMovement	adjustment	posted	inventory_or_variance_loss	inventory_or_variance_gain
+StockMovement	movement	non_posting	(none)	(none)
+JournalEntry	manual|batch|opening|reversal	posted	journal_lines	journal_lines

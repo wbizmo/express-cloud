@@ -6,12 +6,16 @@ namespace App\Actions\Accounting;
 
 use App\Models\Account;
 use App\Models\JournalEntry;
+use App\Services\Accounting\FinancialPostingCoordinator;
 use App\Services\Accounting\JournalPoster;
 use Illuminate\Support\Facades\DB;
 
 final readonly class ReverseJournalEntry
 {
-    public function __construct(private JournalPoster $journals) {}
+    public function __construct(
+        private JournalPoster $journals,
+        private FinancialPostingCoordinator $postings,
+    ) {}
 
     public function execute(
         JournalEntry $entry,
@@ -59,6 +63,11 @@ final readonly class ReverseJournalEntry
                 'status' => 'reversed',
                 'reversed_at' => now(),
             ])->save();
+
+            $this->postings->registerExistingJournal(
+                $reversal,
+                'reversal-posted',
+            );
 
             return $reversal;
         }, 3);

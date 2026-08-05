@@ -15,6 +15,7 @@ use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\Accounting\FinancialPostingCoordinator;
 use App\Services\Catalog\MoneyInput;
 use App\Services\Inventory\Quantity;
 use App\Services\Inventory\StockLedger;
@@ -32,6 +33,7 @@ final readonly class CreateSale
         private BranchAccess $branchAccess,
         private StockLedger $stock,
         private CommandBoundary $commands,
+        private FinancialPostingCoordinator $postings,
     ) {}
 
     public function execute(
@@ -227,6 +229,8 @@ final readonly class CreateSale
                         'paid_at' => now(),
                     ]);
                 }
+
+                $this->postings->sale($sale, $operation);
 
                 return $sale;
             },

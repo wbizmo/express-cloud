@@ -21,6 +21,8 @@ return [
         'sales_returns' => '4010',
         'cost_of_goods_sold' => '5000',
         'purchase_returns' => '5010',
+        'inventory_variance_gain' => '4020',
+        'inventory_variance_loss' => '5020',
         'depreciation_expense' => '6000',
         'general_expense' => '6100',
         'opening_balance' => '9990',

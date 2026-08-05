@@ -34,7 +34,17 @@ final readonly class JournalPoster
         ?string $sourceType = null,
         ?string $sourceId = null,
         ?string $sourceEvent = null,
+        ?string $operationRequestId = null,
+        ?int $operationSequence = null,
     ): JournalEntry {
+        $lines = array_values(array_filter(
+            $lines,
+            static fn (array $line): bool => (
+                (int) ($line['debit_kobo'] ?? 0) > 0
+                || (int) ($line['credit_kobo'] ?? 0) > 0
+            ),
+        ));
+
         $debits = array_sum(
             array_map(
                 static fn (array $line): int => (int) ($line['debit_kobo'] ?? 0),
@@ -63,6 +73,8 @@ final readonly class JournalPoster
             $sourceType,
             $sourceId,
             $sourceEvent,
+            $operationRequestId,
+            $operationSequence,
         ): JournalEntry {
             if (
                 $sourceType !== null
@@ -92,6 +104,8 @@ final readonly class JournalPoster
                 'source_type' => $sourceType,
                 'source_id' => $sourceId,
                 'source_event' => $sourceEvent,
+                'operation_request_id' => $operationRequestId,
+                'operation_sequence' => $operationSequence,
                 'status' => 'posted',
                 'memo' => $memo,
                 'created_by_account_id' => $actorId,
