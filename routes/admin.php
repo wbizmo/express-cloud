@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\Accounting\AccountingReportController;
 use App\Http\Controllers\Admin\Accounting\BatchJournalEntryController;
 use App\Http\Controllers\Admin\Accounting\ChartOfAccountsController;
+use App\Http\Controllers\Admin\Accounting\EnterpriseAccountingController;
 use App\Http\Controllers\Admin\Accounting\JournalEntryController;
 use App\Http\Controllers\Admin\Accounting\OpeningBalanceController;
 use App\Http\Controllers\Admin\AccountingOperations\DocumentBrandingController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Admin\Imports\ProductImportController;
 use App\Http\Controllers\Admin\Insights\LisaChatController;
 use App\Http\Controllers\Admin\Insights\LisaInsightController;
 use App\Http\Controllers\Admin\Inventory\InventoryController;
+use App\Http\Controllers\Admin\Inventory\WarehouseController;
 use App\Http\Controllers\Admin\Operations\AdminDashboardController;
 use App\Http\Controllers\Admin\Operations\AdminNotificationController;
 use App\Http\Controllers\Admin\Operations\AlertRecipientController;
@@ -38,6 +40,7 @@ use App\Http\Controllers\Admin\Operations\BackupController;
 use App\Http\Controllers\Admin\Operations\BusinessSettingsController;
 use App\Http\Controllers\Admin\Operations\StaffPerformanceController;
 use App\Http\Controllers\Admin\Payments\PaymentMethodController;
+use App\Http\Controllers\Admin\Procurement\EnterpriseProcurementController;
 use App\Http\Controllers\Admin\Procurement\LowStockReportController;
 use App\Http\Controllers\Admin\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Admin\Reports\AuditLogController;
@@ -679,6 +682,78 @@ Route::middleware([
         Route::get('/purchases/{order}', [UniversalExportController::class, 'purchase'])->middleware('permission:exports.procurement')->name('purchases');
         Route::get('/audit', [UniversalExportController::class, 'audit'])->middleware('permission:activity.export')->name('audit');
     });
+
+    Route::prefix('accounting/enterprise')
+        ->name('accounting.enterprise.')
+        ->group(function (): void {
+            Route::get('/', [EnterpriseAccountingController::class, 'index'])
+                ->middleware('permission:accounting.enterprise.view')
+                ->name('index');
+            Route::post('/periods/{period}/close', [EnterpriseAccountingController::class, 'close'])
+                ->middleware('permission:accounting.close')
+                ->name('periods.close');
+            Route::post('/treasury/transfers', [EnterpriseAccountingController::class, 'treasuryTransfer'])
+                ->middleware('permission:accounting.treasury.manage')
+                ->name('treasury.transfer');
+            Route::post('/bank-statements', [EnterpriseAccountingController::class, 'importBankStatement'])
+                ->middleware('permission:accounting.bank-reconcile')
+                ->name('bank-statements.import');
+            Route::post('/bank-lines/{statementLine}/match', [EnterpriseAccountingController::class, 'matchBankLine'])
+                ->middleware('permission:accounting.bank-reconcile')
+                ->name('bank-lines.match');
+            Route::post('/bank-statements/{statement}/finalize', [EnterpriseAccountingController::class, 'finalizeBankStatement'])
+                ->middleware('permission:accounting.bank-reconcile')
+                ->name('bank-statements.finalize');
+        });
+
+    Route::prefix('warehouses')
+        ->name('warehouses.')
+        ->group(function (): void {
+            Route::get('/', [WarehouseController::class, 'index'])
+                ->middleware('permission:warehouses.view')
+                ->name('index');
+            Route::post('/', [WarehouseController::class, 'store'])
+                ->middleware('permission:warehouses.manage')
+                ->name('store');
+            Route::post('/transfer', [WarehouseController::class, 'transfer'])
+                ->middleware('permission:warehouses.operate')
+                ->name('transfer');
+            Route::post('/reserve', [WarehouseController::class, 'reserve'])
+                ->middleware('permission:inventory.reservations.manage')
+                ->name('reserve');
+            Route::post('/reservations/{reservation}/release', [WarehouseController::class, 'release'])
+                ->middleware('permission:inventory.reservations.manage')
+                ->name('reservations.release');
+            Route::post('/condition', [WarehouseController::class, 'condition'])
+                ->middleware('permission:warehouses.operate')
+                ->name('condition');
+            Route::post('/count', [WarehouseController::class, 'count'])
+                ->middleware('permission:inventory.counts.manage')
+                ->name('count');
+        });
+
+    Route::prefix('procurement/enterprise')
+        ->name('procurement.enterprise.')
+        ->group(function (): void {
+            Route::get('/', [EnterpriseProcurementController::class, 'index'])
+                ->middleware('permission:procurement.requisitions.view')
+                ->name('index');
+            Route::post('/requisitions', [EnterpriseProcurementController::class, 'requisition'])
+                ->middleware('permission:procurement.requisitions.create')
+                ->name('requisitions.store');
+            Route::post('/requisitions/{requisition}/approve', [EnterpriseProcurementController::class, 'approve'])
+                ->middleware('permission:procurement.requisitions.approve')
+                ->name('requisitions.approve');
+            Route::post('/requisitions/{requisition}/convert', [EnterpriseProcurementController::class, 'convert'])
+                ->middleware('permission:procurement.requisitions.approve')
+                ->name('requisitions.convert');
+            Route::post('/orders/{order}/receive', [EnterpriseProcurementController::class, 'receive'])
+                ->middleware('permission:procurement.receipts.create')
+                ->name('orders.receive');
+            Route::post('/receipts/{receipt}/landed-cost', [EnterpriseProcurementController::class, 'landedCost'])
+                ->middleware('permission:procurement.landed-cost.manage')
+                ->name('receipts.landed-cost');
+        });
 
     Route::get('/operations/{operation}', [OperationStatusController::class, 'show'])
         ->name('operations.show');

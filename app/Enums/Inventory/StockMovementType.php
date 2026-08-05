@@ -12,4 +12,10 @@ enum StockMovementType: string
     case Adjustment = 'adjustment';
     case Sale = 'sale';
     case Return = 'return';
+    case Reservation = 'reservation';
+    case Release = 'release';
+    case StockCount = 'stock_count';
+    case Quarantine = 'quarantine';
+    case Damage = 'damage';
+    case LandedCost = 'landed_cost';
 }

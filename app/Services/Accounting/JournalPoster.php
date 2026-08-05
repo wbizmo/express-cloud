@@ -22,6 +22,12 @@ final readonly class JournalPoster
      *   branch_id?:string|null,
      *   customer_id?:string|null,
      *   supplier_id?:string|null,
+     *   warehouse_id?:string|null,
+     *   tax_rate_id?:string|null,
+     *   tax_basis_kobo?:int,
+     *   tax_amount_kobo?:int,
+     *   due_on?:string|null,
+     *   subledger_reference?:string|null,
      *   description?:string|null
      * }> $lines
      */
@@ -36,6 +42,7 @@ final readonly class JournalPoster
         ?string $sourceEvent = null,
         ?string $operationRequestId = null,
         ?int $operationSequence = null,
+        string $bookType = 'general',
     ): JournalEntry {
         $lines = array_values(array_filter(
             $lines,
@@ -75,6 +82,7 @@ final readonly class JournalPoster
             $sourceEvent,
             $operationRequestId,
             $operationSequence,
+            $bookType,
         ): JournalEntry {
             if (
                 $sourceType !== null
@@ -107,6 +115,7 @@ final readonly class JournalPoster
                 'operation_request_id' => $operationRequestId,
                 'operation_sequence' => $operationSequence,
                 'status' => 'posted',
+                'book_type' => $bookType,
                 'memo' => $memo,
                 'created_by_account_id' => $actorId,
                 'posted_at' => now(),
@@ -128,6 +137,12 @@ final readonly class JournalPoster
                     'branch_id' => $line['branch_id'] ?? $branchId,
                     'customer_id' => $line['customer_id'] ?? null,
                     'supplier_id' => $line['supplier_id'] ?? null,
+                    'warehouse_id' => $line['warehouse_id'] ?? null,
+                    'tax_rate_id' => $line['tax_rate_id'] ?? null,
+                    'tax_basis_kobo' => (int) ($line['tax_basis_kobo'] ?? 0),
+                    'tax_amount_kobo' => (int) ($line['tax_amount_kobo'] ?? 0),
+                    'due_on' => $line['due_on'] ?? null,
+                    'subledger_reference' => $line['subledger_reference'] ?? null,
                     'debit_kobo' => $debit,
                     'credit_kobo' => $credit,
                     'description' => $line['description'] ?? null,

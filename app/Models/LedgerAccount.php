@@ -20,8 +20,14 @@ final class LedgerAccount extends Model
         'code',
         'name',
         'type',
+        'group_code',
+        'normal_balance',
+        'report_section',
+        'cash_flow_section',
         'parent_id',
         'is_control_account',
+        'requires_subledger',
+        'tax_type',
         'is_system',
         'is_active',
         'allow_manual_posting',
@@ -33,23 +39,26 @@ final class LedgerAccount extends Model
         return [
             'type' => AccountType::class,
             'is_control_account' => 'boolean',
+            'requires_subledger' => 'boolean',
             'is_system' => 'boolean',
             'is_active' => 'boolean',
             'allow_manual_posting' => 'boolean',
         ];
     }
 
+    /** @return BelongsTo<self, $this> */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');
     }
 
+    /** @return HasMany<self, $this> */
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
     }
 
-    // ✅ Relationship to journal lines – needed for balance calculation
+    /** @return HasMany<JournalLine, $this> */
     public function journalLines(): HasMany
     {
         return $this->hasMany(JournalLine::class, 'ledger_account_id');

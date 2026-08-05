@@ -8,6 +8,7 @@ use App\Enums\Organisation\BranchStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Branch extends Model
 {
@@ -42,5 +43,11 @@ final class Branch extends Model
             'branch_id',
             'account_id',
         )->withTimestamps();
+    }
+
+    /** @return HasMany<Warehouse, $this> */
+    public function warehouses(): HasMany
+    {
+        return $this->hasMany(Warehouse::class);
     }
 }

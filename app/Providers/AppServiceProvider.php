@@ -16,6 +16,7 @@ use App\Models\LowStockAlert;
 use App\Models\Payment;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseReceipt;
+use App\Models\PurchaseRequisition;
 use App\Models\PurchaseReturn;
 use App\Models\Sale;
 use App\Models\SaleReturn;
@@ -24,7 +25,10 @@ use App\Models\StockMovement;
 use App\Models\SupplierBill;
 use App\Models\SupplierBillPayment;
 use App\Models\SupplierReturn;
+use App\Models\TreasuryMovement;
+use App\Models\Warehouse;
 use App\Observers\FinancialSourceObserver;
+use App\Observers\WarehouseStockProjectionObserver;
 use App\Policies\BranchScopedResourcePolicy;
 use App\Services\Organisation\AuthorizationService;
 use App\Services\Organisation\BranchAccess;
@@ -66,6 +70,8 @@ final class AppServiceProvider extends ServiceProvider
             $financialSource::observe(FinancialSourceObserver::class);
         }
 
+        StockMovement::observe(WarehouseStockProjectionObserver::class);
+
         $permissions = PermissionCatalog::all();
 
         foreach (RolePermissionPolicy::all() as $rolePermissions) {
@@ -91,6 +97,7 @@ final class AppServiceProvider extends ServiceProvider
             LowStockAlert::class,
             PurchaseOrder::class,
             PurchaseReceipt::class,
+            PurchaseRequisition::class,
             PurchaseReturn::class,
             Sale::class,
             SaleReturn::class,
@@ -98,6 +105,8 @@ final class AppServiceProvider extends ServiceProvider
             StockMovement::class,
             SupplierBill::class,
             SupplierReturn::class,
+            TreasuryMovement::class,
+            Warehouse::class,
         ] as $model) {
             Gate::policy($model, BranchScopedResourcePolicy::class);
         }

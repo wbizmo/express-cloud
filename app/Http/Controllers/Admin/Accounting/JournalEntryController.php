@@ -12,6 +12,7 @@ use App\Models\JournalLine;
 use App\Models\LedgerAccount;
 use App\Services\Accounting\FinancialPostingCoordinator;
 use App\Services\Organisation\AuditLogger;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -188,7 +189,9 @@ final readonly class JournalEntryController
 
         DB::transaction(function () use ($validated, $request, $journalEntry) {
             $before = [
-                'entry_date' => $journalEntry->entry_date?->toDateString(),
+                'entry_date' => $journalEntry->entry_date !== null
+                    ? CarbonImmutable::parse((string) $journalEntry->entry_date)->toDateString()
+                    : null,
                 'memo' => $journalEntry->memo,
                 'status' => $journalEntry->status,
             ];
@@ -252,7 +255,9 @@ final readonly class JournalEntryController
                 $journalEntry,
                 before: $before,
                 after: [
-                    'entry_date' => $journalEntry->entry_date?->toDateString(),
+                    'entry_date' => $journalEntry->entry_date !== null
+                    ? CarbonImmutable::parse((string) $journalEntry->entry_date)->toDateString()
+                    : null,
                     'memo' => $journalEntry->memo,
                     'status' => $journalEntry->status,
                 ],

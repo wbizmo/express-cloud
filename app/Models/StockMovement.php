@@ -20,16 +20,23 @@ final class StockMovement extends Model
     /** @var list<string> */
     protected $fillable = [
         'product_id',
+        'product_variant_id',
+        'inventory_batch_id',
+        'inventory_serial_id',
         'branch_id',
+        'warehouse_id',
         'account_id',
         'movement_type',
+        'stock_condition',
         'quantity_delta_milliunits',
         'balance_after_milliunits',
         'unit_cost_kobo',
+        'inventory_value_after_kobo',
         'reference_type',
         'reference_id',
         'correlation_id',
         'reason_code',
+        'stock_reservation_id',
         'note',
         'operation_request_id',
         'operation_sequence',
@@ -43,6 +50,7 @@ final class StockMovement extends Model
             'quantity_delta_milliunits' => 'integer',
             'balance_after_milliunits' => 'integer',
             'unit_cost_kobo' => 'integer',
+            'inventory_value_after_kobo' => 'integer',
             'operation_sequence' => 'integer',
             'occurred_at' => 'immutable_datetime',
         ];
@@ -58,6 +66,12 @@ final class StockMovement extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    /** @return BelongsTo<Warehouse, $this> */
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     /** @return BelongsTo<Account, $this> */

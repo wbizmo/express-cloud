@@ -21,16 +21,23 @@ final class PurchaseOrder extends Model
         'order_number',
         'supplier_id',
         'branch_id',
+        'warehouse_id',
+        'purchase_requisition_id',
         'created_by_account_id',
         'approved_by_account_id',
         'status',
+        'approval_status',
+        'currency',
         'expected_at',
         'subtotal_kobo',
         'tax_kobo',
         'total_kobo',
+        'landed_cost_kobo',
         'reference_note',
         'approved_at',
         'received_at',
+        'backordered_at',
+        'closed_at',
     ];
 
     protected function casts(): array
@@ -41,8 +48,11 @@ final class PurchaseOrder extends Model
             'subtotal_kobo' => 'integer',
             'tax_kobo' => 'integer',
             'total_kobo' => 'integer',
+            'landed_cost_kobo' => 'integer',
             'approved_at' => 'immutable_datetime',
             'received_at' => 'immutable_datetime',
+            'backordered_at' => 'immutable_datetime',
+            'closed_at' => 'immutable_datetime',
         ];
     }
 
@@ -58,9 +68,27 @@ final class PurchaseOrder extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    /** @return BelongsTo<Warehouse, $this> */
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
+    /** @return BelongsTo<PurchaseRequisition, $this> */
+    public function requisition(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseRequisition::class, 'purchase_requisition_id');
+    }
+
     /** @return HasMany<PurchaseOrderLine, $this> */
     public function lines(): HasMany
     {
         return $this->hasMany(PurchaseOrderLine::class);
+    }
+
+    /** @return HasMany<GoodsReceipt, $this> */
+    public function goodsReceipts(): HasMany
+    {
+        return $this->hasMany(GoodsReceipt::class);
     }
 }

@@ -23,6 +23,7 @@ return [
                 ['label' => 'Brands', 'icon' => 'tags', 'route' => 'admin.catalog.brands.index', 'permission' => 'brands.manage'],
                 ['label' => 'Product Import', 'icon' => 'file-up', 'route' => 'admin.imports.products.index', 'permission_any' => ['products.import', 'products.import-history']],
                 ['label' => 'Inventory', 'icon' => 'warehouse', 'route' => 'admin.inventory.index', 'permission' => 'inventory.view'],
+                ['label' => 'Warehouses', 'icon' => 'boxes', 'route' => 'admin.warehouses.index', 'permission' => 'warehouses.view'],
                 ['label' => 'Stock Movements', 'icon' => 'arrow-left-right', 'route' => 'admin.inventory.movements', 'permission' => 'inventory.movements.view'],
                 ['label' => 'Low Stock', 'icon' => 'triangle-alert', 'route' => 'admin.reports.low-stock', 'permission' => 'reports.low-stock'],
             ],
@@ -32,6 +33,7 @@ return [
             'items' => [
                 ['label' => 'Suppliers', 'icon' => 'contact-round', 'route' => 'admin.catalog.suppliers.index', 'permission' => 'suppliers.view'],
                 ['label' => 'Purchase Orders', 'icon' => 'truck', 'route' => 'admin.procurement.orders.index', 'permission' => 'procurement.view'],
+                ['label' => 'Requisitions & Receipts', 'icon' => 'clipboard-check', 'route' => 'admin.procurement.enterprise.index', 'permission' => 'procurement.requisitions.view'],
                 ['label' => 'Direct Purchases', 'icon' => 'package-plus', 'route' => 'admin.commercial.purchases.index', 'permission' => 'purchases.view'],
                 ['label' => 'Supplier Bills', 'icon' => 'file-text', 'route' => 'admin.supplier-finance.bills.index', 'permission' => 'supplier-bills.view'],
                 ['label' => 'Supplier Returns', 'icon' => 'undo-2', 'route' => 'admin.supplier-finance.returns.index', 'permission' => 'supplier-returns.view'],
@@ -45,6 +47,7 @@ return [
                 ['label' => 'Opening Balance', 'icon' => 'scale', 'route' => 'admin.accounting.opening-balance.create', 'permission' => 'accounting.journals.manage'],
                 ['label' => 'Batch Journal Entry', 'icon' => 'layers', 'route' => 'admin.accounting.batch-journal.create', 'permission' => 'accounting.journals.manage'],
                 ['label' => 'Accounting', 'icon' => 'landmark', 'route' => 'admin.accounting.reports.index', 'permission' => 'accounting.reports.view'],
+                ['label' => 'Enterprise Finance', 'icon' => 'badge-dollar-sign', 'route' => 'admin.accounting.enterprise.index', 'permission' => 'accounting.enterprise.view'],
                 ['label' => 'Fixed Assets', 'icon' => 'building-2', 'route' => 'admin.accounting-operations.assets.index', 'permission' => 'assets.view'],
                 ['label' => 'Reports', 'icon' => 'chart-no-axes-combined', 'route' => 'admin.reports.hub', 'permission' => 'reports.hub.view'],
                 ['label' => 'HR & Performance', 'icon' => 'users-round', 'route' => 'admin.reports.staff-performance', 'permission' => 'reports.staff-performance'],

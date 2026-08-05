@@ -13,5 +13,6 @@ final class DatabaseSeeder extends Seeder
         $this->call(ProductionBootstrapSeeder::class);
         $this->call(Sprint4EnterprisePermissionSeeder::class);
         $this->call(AddJournalPermissionsSeeder::class);
+        $this->call(EnterpriseAccountingInventorySeeder::class);
     }
 }

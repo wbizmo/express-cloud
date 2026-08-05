@@ -18,42 +18,39 @@ final class JournalLine extends Model
         'journal_entry_id',
         'ledger_account_id',
         'branch_id',
+        'warehouse_id',
         'customer_id',
         'supplier_id',
+        'tax_rate_id',
+        'tax_basis_kobo',
+        'tax_amount_kobo',
+        'due_on',
+        'subledger_reference',
         'debit_kobo',
         'credit_kobo',
         'description',
     ];
 
-    protected $casts = [
-        'debit_kobo' => 'integer',
-        'credit_kobo' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'tax_basis_kobo' => 'integer',
+            'tax_amount_kobo' => 'integer',
+            'due_on' => 'immutable_date',
+            'debit_kobo' => 'integer',
+            'credit_kobo' => 'integer',
+        ];
+    }
 
-    // ✅ Relationship to journal entry
+    /** @return BelongsTo<JournalEntry, $this> */
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class);
     }
 
-    // ✅ The missing relationship that caused the error
+    /** @return BelongsTo<LedgerAccount, $this> */
     public function ledgerAccount(): BelongsTo
     {
         return $this->belongsTo(LedgerAccount::class);
-    }
-
-    public function branch(): BelongsTo
-    {
-        return $this->belongsTo(Branch::class);
-    }
-
-    public function customer(): BelongsTo
-    {
-        return $this->belongsTo(Customer::class);
-    }
-
-    public function supplier(): BelongsTo
-    {
-        return $this->belongsTo(Supplier::class);
     }
 }
