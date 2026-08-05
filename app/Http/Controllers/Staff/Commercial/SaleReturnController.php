@@ -49,6 +49,7 @@ final readonly class SaleReturnController
             $request->filled('refund_method')
                 ? $request->string('refund_method')->toString()
                 : null,
+            $request->string('idempotency_key')->trim()->toString(),
         );
 
         return redirect()

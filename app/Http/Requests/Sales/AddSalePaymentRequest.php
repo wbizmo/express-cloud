@@ -17,6 +17,7 @@ final class AddSalePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'idempotency_key' => ['required', 'string', 'max:120'],
             'payment_method_id' => ['required', 'ulid'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'reference' => ['nullable', 'string', 'max:160'],

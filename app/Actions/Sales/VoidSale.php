@@ -51,8 +51,8 @@ final readonly class VoidSale
                         - $alreadyReturned;
 
                     return $remaining > 0 ? [
-                        'sale_item_id' => $item->getKey(),
-                        'quantity' => $remaining / 1000,
+                        'sale_item_id' => (string) $item->getKey(),
+                        'quantity' => (string) ($remaining / 1000),
                         'restock' => true,
                     ] : null;
                 },
@@ -69,7 +69,11 @@ final readonly class VoidSale
                 );
             }
 
-            $before = ['status' => $sale->status->value];
+            $before = [
+                'status' => $sale->status instanceof SaleStatus
+                    ? $sale->status->value
+                    : (string) $sale->status,
+            ];
 
             $sale->forceFill([
                 'status' => SaleStatus::Cancelled,

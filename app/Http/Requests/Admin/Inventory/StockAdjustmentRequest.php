@@ -19,11 +19,12 @@ final class StockAdjustmentRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'idempotency_key' => ['required', 'string', 'max:120'],
             'product_id' => ['required', 'ulid'],
             'branch_id' => ['required', 'ulid'],
             'quantity_delta' => [
                 'required',
-                'regex:/^-?\d+(?:\.\d{1,3})?$/',
+                'regex:/^-?\\d+(?:\\.\\d{1,3})?$/',
                 'not_in:0,0.0,0.00,0.000',
             ],
             'reason_code' => [

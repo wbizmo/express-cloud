@@ -80,6 +80,7 @@
                             <x-ui.card title="Record payment">
                                 <form method="POST" action="{{ route('admin.sales.payments.store', $sale) }}" class="space-y-4">
                                     @csrf
+                                    <input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::ulid() }}">
                                     <select name="payment_method_id" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3.5 text-sm">
                                         <option value="">Select method</option>
                                         @foreach ($paymentMethods as $method)

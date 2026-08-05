@@ -32,6 +32,7 @@ final readonly class SaleSettlementController
         abort_unless($this->access->canView($actor, $sale), 403);
 
         $validated = $request->validate([
+            'idempotency_key' => ['required', 'string', 'max:100'],
             'payment_method_id' => [
                 'required',
                 'ulid',
@@ -52,6 +53,7 @@ final readonly class SaleSettlementController
             $actor,
             $validated['amount'],
             $validated['reference'] ?? null,
+            (string) $validated['idempotency_key'],
         );
 
         $this->audit->record(

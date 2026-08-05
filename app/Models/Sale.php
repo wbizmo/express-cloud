@@ -34,6 +34,7 @@ final class Sale extends Model
         'paid_amount_kobo',
         'status',
         'idempotency_key',
+        'operation_request_id',
         'notes',
         'credit_note',
         'confirmed_at',

@@ -1,0 +1,8 @@
+scope	entry point	result	concurrency boundary
+sale.create	CreateSale	Sale	branch/product/stock ordered locks
+sale.payment	AddSalePayment	Payment	sale row lock and exact balance guard
+sale.return	CreateSaleReturn	SaleReturn	sale and ordered sale-item locks
+stock.intake	InventoryController::intake	StockMovement	product-branch balance lock
+stock.transfer	InventoryController::transfer	StockMovement	both branch balances locked in sorted order
+stock.adjust	InventoryController::adjust	StockMovement	product-branch balance lock
+journal.batch	BatchJournalEntryController::store	JournalEntry	unique operation sequence and ULID journal number

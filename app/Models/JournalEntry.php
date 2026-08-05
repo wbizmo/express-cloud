@@ -27,6 +27,8 @@ final class JournalEntry extends Model
         'memo',
         'created_by_account_id',
         'reversal_of_entry_id',
+        'operation_request_id',
+        'operation_sequence',
         'posted_at',
         'reversed_at',
     ];
@@ -35,6 +37,7 @@ final class JournalEntry extends Model
         'entry_date' => 'date',
         'posted_at' => 'datetime',
         'reversed_at' => 'datetime',
+        'operation_sequence' => 'integer',
     ];
 
     // ✅ Fixed: relationship to accounting period

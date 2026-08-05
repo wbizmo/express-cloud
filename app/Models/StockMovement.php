@@ -31,6 +31,8 @@ final class StockMovement extends Model
         'correlation_id',
         'reason_code',
         'note',
+        'operation_request_id',
+        'operation_sequence',
         'occurred_at',
     ];
 
@@ -41,6 +43,7 @@ final class StockMovement extends Model
             'quantity_delta_milliunits' => 'integer',
             'balance_after_milliunits' => 'integer',
             'unit_cost_kobo' => 'integer',
+            'operation_sequence' => 'integer',
             'occurred_at' => 'immutable_datetime',
         ];
     }

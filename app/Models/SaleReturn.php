@@ -24,6 +24,7 @@ final class SaleReturn extends Model
         'refund_method',
         'status',
         'reason',
+        'operation_request_id',
         'returned_at',
     ];
 

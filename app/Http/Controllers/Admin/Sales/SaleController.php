@@ -217,23 +217,25 @@ final readonly class SaleController
         $actor = $request->user();
         $sale = $creator->execute($request, $actor);
 
-        $this->audit->record(
-            $request,
-            'sale.created',
-            'sale',
-            $sale,
-            after: [
-                'sale_code' => $sale->sale_code,
-                'sale_type' => $sale->sale_type instanceof SaleType
-                    ? $sale->sale_type->value
-                    : (string) $sale->sale_type,
-                'grand_total_kobo' => $sale->grand_total_kobo,
-                'paid_amount_kobo' => $sale->paid_amount_kobo,
-                'status' => $sale->status instanceof SaleStatus
-                    ? $sale->status->value
-                    : (string) $sale->status,
-            ],
-        );
+        if ($sale->wasRecentlyCreated) {
+            $this->audit->record(
+                $request,
+                'sale.created',
+                'sale',
+                $sale,
+                after: [
+                    'sale_code' => $sale->sale_code,
+                    'sale_type' => $sale->sale_type instanceof SaleType
+                        ? $sale->sale_type->value
+                        : (string) $sale->sale_type,
+                    'grand_total_kobo' => $sale->grand_total_kobo,
+                    'paid_amount_kobo' => $sale->paid_amount_kobo,
+                    'status' => $sale->status instanceof SaleStatus
+                        ? $sale->status->value
+                        : (string) $sale->status,
+                ],
+            );
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -288,19 +290,22 @@ final readonly class SaleController
             $request->filled('reference')
                 ? $request->string('reference')->trim()->toString()
                 : null,
+            $request->string('idempotency_key')->trim()->toString(),
         );
 
-        $this->audit->record(
-            $request,
-            'sale.payment-recorded',
-            'payment',
-            $payment,
-            after: [
-                'sale_id' => (string) $sale->getKey(),
-                'amount_kobo' => $payment->amount_kobo,
-                'payment_method_id' => (string) $method->getKey(),
-            ],
-        );
+        if ($payment->wasRecentlyCreated) {
+            $this->audit->record(
+                $request,
+                'sale.payment-recorded',
+                'payment',
+                $payment,
+                after: [
+                    'sale_id' => (string) $sale->getKey(),
+                    'amount_kobo' => $payment->amount_kobo,
+                    'payment_method_id' => (string) $method->getKey(),
+                ],
+            );
+        }
 
         return back()->with('status', 'Payment recorded.');
     }

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Operations\OperationStatusController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Staff\Commercial\SaleReturnController;
 use App\Http\Controllers\Staff\Commercial\SaleSettlementController;
@@ -51,5 +52,8 @@ Route::middleware([
                 ->middleware('permission:sales.returns.create')
                 ->name('returns.store');
         });
+
+    Route::get('/operations/{operation}', [OperationStatusController::class, 'show'])
+        ->name('operations.show');
 
 });

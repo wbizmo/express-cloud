@@ -6,6 +6,7 @@
         <x-ui.card>
             <form method="POST" action="{{ route('admin.accounting.batch-journal.store') }}" class="space-y-6" x-data="batchJournalForm()">
                 @csrf
+                <input type="hidden" name="idempotency_key" value="{{ (string) \Illuminate\Support\Str::ulid() }}">
 
                 <div class="flex items-center justify-between">
                     <h3 class="text-sm font-medium text-slate-700">Journal Entries</h3>

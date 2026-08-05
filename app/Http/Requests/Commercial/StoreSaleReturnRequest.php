@@ -17,6 +17,7 @@ final class StoreSaleReturnRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'idempotency_key' => ['required', 'string', 'max:120'],
             'reason' => ['required', 'string', 'min:3', 'max:1000'],
             'refund_method' => ['nullable', 'string', 'max:80'],
             'items' => ['required', 'array', 'min:1'],

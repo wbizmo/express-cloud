@@ -21,6 +21,8 @@ final class Payment extends Model
         'amount_kobo',
         'recorded_by_account_id',
         'reference',
+        'operation_request_id',
+        'operation_sequence',
         'paid_at',
     ];
 
@@ -28,6 +30,7 @@ final class Payment extends Model
     {
         return [
             'amount_kobo' => 'integer',
+            'operation_sequence' => 'integer',
             'paid_at' => 'immutable_datetime',
         ];
     }

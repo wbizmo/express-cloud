@@ -52,6 +52,7 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\SupplierFinance\SupplierBalanceReportController;
 use App\Http\Controllers\Admin\SupplierFinance\SupplierBillController;
 use App\Http\Controllers\Admin\SupplierFinance\SupplierReturnController;
+use App\Http\Controllers\Operations\OperationStatusController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([
@@ -678,5 +679,8 @@ Route::middleware([
         Route::get('/purchases/{order}', [UniversalExportController::class, 'purchase'])->middleware('permission:exports.procurement')->name('purchases');
         Route::get('/audit', [UniversalExportController::class, 'audit'])->middleware('permission:activity.export')->name('audit');
     });
+
+    Route::get('/operations/{operation}', [OperationStatusController::class, 'show'])
+        ->name('operations.show');
 
 });
