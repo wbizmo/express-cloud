@@ -45,11 +45,13 @@ final readonly class FinancialPostingCoordinator
             ? $sale->sale_type
             : SaleType::from((string) $sale->sale_type);
 
-        if ($type === SaleType::Quote) {
+        if ($type->isPreFinancial()) {
             return $this->nonPosting(
                 $sale,
-                'quote',
-                'quote-is-non-financial',
+                $type->value,
+                $type === SaleType::Quote
+                    ? 'quote-is-non-financial'
+                    : 'sales-order-is-non-financial',
                 $operation,
             );
         }

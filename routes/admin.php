@@ -28,6 +28,8 @@ use App\Http\Controllers\Admin\Customers\CustomerController;
 use App\Http\Controllers\Admin\Customers\QuickCustomerController;
 use App\Http\Controllers\Admin\Documents\ProductBarcodeController;
 use App\Http\Controllers\Admin\Documents\SaleDocumentController;
+use App\Http\Controllers\Admin\Governance\AdminChangeController;
+use App\Http\Controllers\Admin\Hr\HrAdministrationController;
 use App\Http\Controllers\Admin\Imports\ProductImportController;
 use App\Http\Controllers\Admin\Insights\LisaChatController;
 use App\Http\Controllers\Admin\Insights\LisaInsightController;
@@ -40,6 +42,7 @@ use App\Http\Controllers\Admin\Operations\BackupController;
 use App\Http\Controllers\Admin\Operations\BusinessSettingsController;
 use App\Http\Controllers\Admin\Operations\StaffPerformanceController;
 use App\Http\Controllers\Admin\Payments\PaymentMethodController;
+use App\Http\Controllers\Admin\Pos\PosWorkstationController;
 use App\Http\Controllers\Admin\Procurement\EnterpriseProcurementController;
 use App\Http\Controllers\Admin\Procurement\LowStockReportController;
 use App\Http\Controllers\Admin\Procurement\PurchaseOrderController;
@@ -49,6 +52,7 @@ use App\Http\Controllers\Admin\Reports\ReportsHubController;
 use App\Http\Controllers\Admin\Reports\UniversalExportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\Sales\SaleController;
+use App\Http\Controllers\Admin\Sales\SalesWorkflowController;
 use App\Http\Controllers\Admin\Security\LiveSessionController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\StaffController;
@@ -753,6 +757,92 @@ Route::middleware([
             Route::post('/receipts/{receipt}/landed-cost', [EnterpriseProcurementController::class, 'landedCost'])
                 ->middleware('permission:procurement.landed-cost.manage')
                 ->name('receipts.landed-cost');
+        });
+
+    Route::prefix('sales/workflows')
+        ->name('sales.workflows.')
+        ->group(function (): void {
+            Route::get('/', [SalesWorkflowController::class, 'index'])
+                ->middleware('permission:sales.view')
+                ->name('index');
+            Route::get('/export', [SalesWorkflowController::class, 'export'])
+                ->middleware('permission:sales.export')
+                ->name('export');
+            Route::post('/{sale}/convert', [SalesWorkflowController::class, 'convert'])
+                ->middleware('permission:sales.edit')
+                ->name('convert');
+            Route::post('/{sale}/deliver', [SalesWorkflowController::class, 'deliver'])
+                ->middleware('permission:sales.edit')
+                ->name('deliver');
+        });
+
+    Route::prefix('pos')
+        ->name('pos.')
+        ->group(function (): void {
+            Route::get('/', [PosWorkstationController::class, 'index'])
+                ->middleware('permission:sales.create')
+                ->name('index');
+            Route::post('/terminals/{terminal}/open', [PosWorkstationController::class, 'open'])
+                ->middleware('permission:sales.create')
+                ->name('open');
+            Route::post('/shifts/{shift}/complete', [PosWorkstationController::class, 'complete'])
+                ->middleware('permission:sales.create')
+                ->name('complete');
+            Route::post('/shifts/{shift}/cash', [PosWorkstationController::class, 'cash'])
+                ->middleware('permission:sales.create')
+                ->name('cash');
+            Route::post('/shifts/{shift}/hold', [PosWorkstationController::class, 'hold'])
+                ->middleware('permission:sales.create')
+                ->name('hold');
+            Route::post('/shifts/{shift}/held/{heldSale}/resume', [PosWorkstationController::class, 'resume'])
+                ->middleware('permission:sales.create')
+                ->name('resume');
+            Route::post('/shifts/{shift}/close', [PosWorkstationController::class, 'close'])
+                ->middleware('permission:sales.create')
+                ->name('close');
+            Route::post('/sales/{sale}/print', [PosWorkstationController::class, 'print'])
+                ->middleware('permission:documents.sales.print')
+                ->name('print');
+        });
+
+    Route::prefix('hr')
+        ->name('hr.')
+        ->group(function (): void {
+            Route::get('/', [HrAdministrationController::class, 'index'])
+                ->middleware('permission:staff.view')
+                ->name('index');
+            Route::post('/employees', [HrAdministrationController::class, 'employee'])
+                ->middleware('permission:staff.create')
+                ->name('employees.store');
+            Route::post('/employees/{employee}/assign', [HrAdministrationController::class, 'assign'])
+                ->middleware('permission:staff.create')
+                ->name('employees.assign');
+            Route::post('/employees/{employee}/attendance', [HrAdministrationController::class, 'attendance'])
+                ->middleware('permission:staff.create')
+                ->name('employees.attendance');
+            Route::post('/holidays', [HrAdministrationController::class, 'holiday'])
+                ->middleware('permission:staff.create')
+                ->name('holidays.store');
+            Route::post('/employees/{employee}/reviews', [HrAdministrationController::class, 'review'])
+                ->middleware('permission:reports.staff-performance')
+                ->name('employees.reviews');
+            Route::post('/payroll', [HrAdministrationController::class, 'payroll'])
+                ->middleware('permission:settings.business.manage')
+                ->name('payroll.store');
+        });
+
+    Route::prefix('governance/changes')
+        ->name('governance.changes.')
+        ->group(function (): void {
+            Route::get('/', [AdminChangeController::class, 'index'])
+                ->middleware('permission:settings.business.manage')
+                ->name('index');
+            Route::post('/', [AdminChangeController::class, 'store'])
+                ->middleware('permission:settings.business.manage')
+                ->name('store');
+            Route::post('/{change}/decide', [AdminChangeController::class, 'decide'])
+                ->middleware('permission:settings.business.manage')
+                ->name('decide');
         });
 
     Route::get('/operations/{operation}', [OperationStatusController::class, 'show'])

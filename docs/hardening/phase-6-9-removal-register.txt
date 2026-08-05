@@ -1,0 +1,4 @@
+public/build
+bootstrap/cache/services.php
+bootstrap/cache/packages.php
+express-cloud-phases-6-7-8-and-9-hardening-v1.0.1-perl.sh

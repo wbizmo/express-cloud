@@ -14,6 +14,8 @@ use App\Models\JournalEntry;
 use App\Models\LisaConversation;
 use App\Models\LowStockAlert;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
+use App\Models\ProductCategory;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseReceipt;
 use App\Models\PurchaseRequisition;
@@ -28,6 +30,7 @@ use App\Models\SupplierReturn;
 use App\Models\TreasuryMovement;
 use App\Models\Warehouse;
 use App\Observers\FinancialSourceObserver;
+use App\Observers\ReferenceDataObserver;
 use App\Observers\WarehouseStockProjectionObserver;
 use App\Policies\BranchScopedResourcePolicy;
 use App\Services\Organisation\AuthorizationService;
@@ -71,6 +74,9 @@ final class AppServiceProvider extends ServiceProvider
         }
 
         StockMovement::observe(WarehouseStockProjectionObserver::class);
+        Branch::observe(ReferenceDataObserver::class);
+        PaymentMethod::observe(ReferenceDataObserver::class);
+        ProductCategory::observe(ReferenceDataObserver::class);
 
         $permissions = PermissionCatalog::all();
 

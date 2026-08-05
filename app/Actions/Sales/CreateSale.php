@@ -15,6 +15,7 @@ use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\SalesDocumentEvent;
 use App\Services\Accounting\FinancialPostingCoordinator;
 use App\Services\Catalog\MoneyInput;
 use App\Services\Inventory\Quantity;
@@ -135,8 +136,14 @@ final readonly class CreateSale
                     $taxTotal += $taxKobo;
                 }
 
-                $grandTotal = $subtotal - $discountTotal + $taxTotal;
-                $paymentData = $type === SaleType::Quote
+                $roundingAdjustment = $this->roundingAdjustmentKobo(
+                    $request->input('rounding_adjustment'),
+                );
+                $grandTotal = max(
+                    0,
+                    $subtotal - $discountTotal + $taxTotal + $roundingAdjustment,
+                );
+                $paymentData = $type->isPreFinancial()
                     ? []
                     : $this->normalizedPayments(
                         $request->array('payments'),
@@ -166,7 +173,7 @@ final readonly class CreateSale
                     'tax_amount_kobo' => $taxTotal,
                     'grand_total_kobo' => $grandTotal,
                     'paid_amount_kobo' => $paidTotal,
-                    'status' => $type === SaleType::Quote
+                    'status' => $type->isPreFinancial()
                         ? SaleStatus::Draft
                         : SaleStatus::fromPayment(
                             $paidTotal,
@@ -180,7 +187,31 @@ final readonly class CreateSale
                     'credit_note' => $request->filled('credit_note')
                         ? $request->string('credit_note')->trim()->toString()
                         : null,
-                    'confirmed_at' => $type === SaleType::Quote
+                    'workflow_state' => $type->isPreFinancial()
+                        ? 'draft'
+                        : 'confirmed',
+                    'due_date' => $request->filled('due_date')
+                        ? $request->date('due_date')
+                        : null,
+                    'payment_terms_days' => $request->integer(
+                        'payment_terms_days',
+                        (int) config('sales.default_payment_terms_days', 0),
+                    ),
+                    'rounding_adjustment_kobo' => $roundingAdjustment,
+                    'fulfilment_status' => $type === SaleType::Order
+                        ? 'pending'
+                        : 'not_required',
+                    'document_version' => 1,
+                    'approval_memo' => $request->filled('approval_memo')
+                        ? $request->string('approval_memo')->trim()->toString()
+                        : null,
+                    'pos_shift_id' => $request->filled('pos_shift_id')
+                        ? $request->string('pos_shift_id')->toString()
+                        : null,
+                    'pos_terminal_id' => $request->filled('pos_terminal_id')
+                        ? $request->string('pos_terminal_id')->toString()
+                        : null,
+                    'confirmed_at' => $type->isPreFinancial()
                         ? null
                         : now(),
                 ]);
@@ -230,6 +261,20 @@ final readonly class CreateSale
                     ]);
                 }
 
+                SalesDocumentEvent::query()->create([
+                    'sale_id' => $sale->getKey(),
+                    'account_id' => $actor->getKey(),
+                    'event_type' => 'created',
+                    'from_state' => null,
+                    'to_state' => $sale->workflow_state,
+                    'details' => [
+                        'sale_type' => $type->value,
+                        'operation_id' => (string) $operation->getKey(),
+                    ],
+                    'memo' => $sale->approval_memo,
+                    'occurred_at' => now(),
+                ]);
+
                 $this->postings->sale($sale, $operation);
 
                 return $sale;
@@ -241,6 +286,15 @@ final readonly class CreateSale
         }
 
         return $result;
+    }
+
+    private function roundingAdjustmentKobo(mixed $value): int
+    {
+        if ($value === null || $value === '') {
+            return 0;
+        }
+
+        return (int) round((float) $value * 100);
     }
 
     /**

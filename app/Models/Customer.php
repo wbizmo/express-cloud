@@ -32,6 +32,16 @@ final class Customer extends Model
         'is_wholesale',
         'status',
         'created_by_account_id',
+        'customer_group_id',
+        'customer_type',
+        'contact_person',
+        'billing_address',
+        'shipping_address',
+        'tax_number',
+        'payment_terms_days',
+        'price_group',
+        'archived_at',
+        'archived_by_account_id',
     ];
 
     protected function casts(): array
@@ -40,6 +50,8 @@ final class Customer extends Model
             'credit_limit_kobo' => 'integer',
             'balance_kobo' => 'integer',
             'is_wholesale' => 'boolean',
+            'payment_terms_days' => 'integer',
+            'archived_at' => 'immutable_datetime',
         ];
     }
 
@@ -49,6 +61,15 @@ final class Customer extends Model
         return $this->belongsTo(
             Account::class,
             'created_by_account_id',
+        );
+    }
+
+    /** @return BelongsTo<CustomerGroup, $this> */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(
+            CustomerGroup::class,
+            'customer_group_id',
         );
     }
 

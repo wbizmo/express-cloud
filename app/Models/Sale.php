@@ -38,6 +38,18 @@ final class Sale extends Model
         'notes',
         'credit_note',
         'confirmed_at',
+        'workflow_state',
+        'due_date',
+        'payment_terms_days',
+        'rounding_adjustment_kobo',
+        'fulfilment_status',
+        'document_version',
+        'discount_approved_by_account_id',
+        'price_override_approved_by_account_id',
+        'commercial_approval_request_id',
+        'approval_memo',
+        'pos_shift_id',
+        'pos_terminal_id',
     ];
 
     protected function casts(): array
@@ -52,6 +64,10 @@ final class Sale extends Model
             'grand_total_kobo' => 'integer',
             'paid_amount_kobo' => 'integer',
             'confirmed_at' => 'immutable_datetime',
+            'due_date' => 'immutable_date',
+            'payment_terms_days' => 'integer',
+            'rounding_adjustment_kobo' => 'integer',
+            'document_version' => 'integer',
         ];
     }
 

@@ -9,6 +9,8 @@ return [
             'items' => [
                 ['label' => 'Admin Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.dashboard', 'permission' => 'dashboard.view'],
                 ['label' => 'Create Sale', 'icon' => 'shopping-cart', 'route' => 'admin.sales.create', 'permission' => 'sales.create'],
+                ['label' => 'POS Workstation', 'icon' => 'scan-barcode', 'route' => 'admin.pos.index', 'permission' => 'sales.create'],
+                ['label' => 'Sales Workflows', 'icon' => 'workflow', 'route' => 'admin.sales.workflows.index', 'permission' => 'sales.view'],
                 ['label' => 'Sales & Quotes', 'icon' => 'receipt-text', 'route' => 'admin.sales.index', 'permission_any' => ['sales.view', 'sales.view.own', 'sales.view.all']],
                 ['label' => 'Customers & Credit', 'icon' => 'users', 'route' => 'admin.customers.index', 'permission' => 'customers.view'],
                 ['label' => 'Receivables', 'icon' => 'hand-coins', 'route' => 'admin.commercial.receivables.index', 'permission' => 'customers.receivables.view'],
@@ -60,6 +62,8 @@ return [
             'items' => [
                 ['label' => 'Branches', 'icon' => 'map-pin-house', 'route' => 'admin.branches.index', 'permission' => 'branches.view'],
                 ['label' => 'Staff', 'icon' => 'user-cog', 'route' => 'admin.staff.index', 'permission' => 'staff.view'],
+                ['label' => 'HR Administration', 'icon' => 'users-round', 'route' => 'admin.hr.index', 'permission' => 'staff.view'],
+                ['label' => 'Change Approvals', 'icon' => 'badge-check', 'route' => 'admin.governance.changes.index', 'permission' => 'settings.business.manage'],
                 ['label' => 'Roles & Permissions', 'icon' => 'shield-check', 'route' => 'admin.roles.index', 'permission' => 'roles.view'],
                 ['label' => 'Payment Methods', 'icon' => 'credit-card', 'route' => 'admin.payment-methods.index', 'permission' => 'payment-methods.view'],
                 ['label' => 'Business Settings', 'icon' => 'settings', 'route' => 'admin.operations.settings.edit', 'permission' => 'settings.business.manage'],
