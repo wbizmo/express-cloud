@@ -6,6 +6,7 @@ namespace App\Queries\Authentication;
 
 use App\Enums\Authentication\AccountStatus;
 use App\Models\Account;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 final class SearchActiveAccounts
@@ -15,11 +16,18 @@ final class SearchActiveAccounts
      */
     public function execute(string $term): Collection
     {
-        $normalized = trim($term);
+        $normalized = preg_replace('/\s+/u', ' ', mb_strtolower(trim($term)));
 
-        if (mb_strlen($normalized) < 2) {
+        if (! is_string($normalized) || mb_strlen($normalized) < 2) {
             return new Collection;
         }
+
+        $parts = preg_split(
+            '/\s+/u',
+            $normalized,
+            -1,
+            PREG_SPLIT_NO_EMPTY,
+        ) ?: [];
 
         return Account::query()
             ->select([
@@ -30,13 +38,59 @@ final class SearchActiveAccounts
                 'profile_picture_path',
             ])
             ->where('status', AccountStatus::Active->value)
-            ->where(function ($query) use ($normalized): void {
+            ->where(function (Builder $query) use (
+                $normalized,
+                $parts,
+            ): void {
                 $query
-                    ->where('first_name', 'like', $normalized.'%')
-                    ->orWhere('last_name', 'like', $normalized.'%')
-                    ->orWhereRaw(
-                        "CONCAT(first_name, ' ', last_name) LIKE ?",
+                    ->whereRaw(
+                        'LOWER(first_name) LIKE ?',
                         [$normalized.'%'],
+                    )
+                    ->orWhereRaw(
+                        'LOWER(last_name) LIKE ?',
+                        [$normalized.'%'],
+                    );
+
+                if (count($parts) < 2) {
+                    return;
+                }
+
+                $first = array_shift($parts);
+                $last = implode(' ', $parts);
+
+                $query
+                    ->orWhere(
+                        static function (Builder $nameQuery) use (
+                            $first,
+                            $last,
+                        ): void {
+                            $nameQuery
+                                ->whereRaw(
+                                    'LOWER(first_name) LIKE ?',
+                                    [$first.'%'],
+                                )
+                                ->whereRaw(
+                                    'LOWER(last_name) LIKE ?',
+                                    [$last.'%'],
+                                );
+                        },
+                    )
+                    ->orWhere(
+                        static function (Builder $nameQuery) use (
+                            $first,
+                            $last,
+                        ): void {
+                            $nameQuery
+                                ->whereRaw(
+                                    'LOWER(last_name) LIKE ?',
+                                    [$first.'%'],
+                                )
+                                ->whereRaw(
+                                    'LOWER(first_name) LIKE ?',
+                                    [$last.'%'],
+                                );
+                        },
                     );
             })
             ->orderBy('last_name')

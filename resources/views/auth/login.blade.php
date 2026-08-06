@@ -200,8 +200,18 @@
                                 tabindex="-1"
                                 aria-label="Show or hide access key"
                             >
-                                <svg x-show="!revealed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                <svg x-show="revealed" x-cloak xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 11s3.5 7 10 7a9.16 9.16 0 0 0 5.39-1.61"/><path d="M2 2l20 20"/><path d="M9.53 9.53a3 3 0 0 0 4.24 4.24"/></svg>
+                                <span
+                                    x-cloak
+                                    x-show="!revealed"
+                                    class="material-symbols-outlined text-[20px]"
+                                    aria-hidden="true"
+                                >visibility</span>
+                                <span
+                                    x-cloak
+                                    x-show="revealed"
+                                    class="material-symbols-outlined text-[20px]"
+                                    aria-hidden="true"
+                                >visibility_off</span>
                             </button>
                         </div>
 
